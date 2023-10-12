@@ -49,7 +49,7 @@ fun Route.adminUsers(
         call.respond(
             HttpStatusCode.OK, MyResponse(
                 success = true,
-                message = "no admins user is found .",
+                message = "admins user is found .",
                 data = users
             )
         )
