@@ -30,6 +30,7 @@ class MYSqlUserDataSource(private val db: Database) : UserDataSource {
 
     override suspend fun register(newUser: AdminUser) = withContext(Dispatchers.IO){
             val result=db.insert(AdminUserEntity) {
+                set(it.full_name, newUser.full_name)
                 set(it.username, newUser.username)
                 set(it.password, newUser.password)
                 set(it.salt, newUser.salt)

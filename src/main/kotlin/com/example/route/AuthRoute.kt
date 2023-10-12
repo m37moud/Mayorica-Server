@@ -22,7 +22,7 @@ import java.time.LocalDateTime
 
 
 const val ENDPOINT = "/api/v1"
-const val USERS = "$ENDPOINT /users"
+const val USERS = "$ENDPOINT/users"
 const val REGISTER_REQUEST = "$USERS/register"
 const val LOGIN_REQUEST = "$USERS/login"
 const val ME_REQUEST = "$USERS/me"
