@@ -1,10 +1,10 @@
 package com.example.plugins
 
 import com.example.data.admin_user.UserDataSource
-import com.example.route.adminUsers
-import com.example.route.getSecretInfo
-import com.example.route.login
-import com.example.route.register
+import com.example.route.client_admin_side.adminUsers
+import com.example.route.client_admin_side.getSecretInfo
+import com.example.route.client_admin_side.login
+import com.example.route.client_admin_side.register
 import com.example.security.hash.HashingService
 import com.example.security.token.TokenConfig
 import com.example.security.token.TokenService

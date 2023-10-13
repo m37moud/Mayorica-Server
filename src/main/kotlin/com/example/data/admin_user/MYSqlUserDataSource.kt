@@ -70,13 +70,13 @@ class MYSqlUserDataSource(private val db: Database) : UserDataSource {
     override suspend fun getAllUser(): List<AdminUser> = withContext(Dispatchers.IO) {
         val notes = db.from(AdminUserEntity).select()
             .mapNotNull {
-                rowToNote(it)
+                rowToAminUser(it)
             }
 
         notes
     }
 
-    private fun rowToNote(row: QueryRowSet?): AdminUser? {
+    private fun rowToAminUser(row: QueryRowSet?): AdminUser? {
         return if (row == null) {
             null
         } else {
@@ -87,7 +87,7 @@ class MYSqlUserDataSource(private val db: Database) : UserDataSource {
                 row[AdminUserEntity.password] ?: "",
                 row[AdminUserEntity.salt] ?:"",
                 row[AdminUserEntity.role] ?: "",
-                row[AdminUserEntity.created_at] ?:"#333333",
+                row[AdminUserEntity.created_at] ?:"",
                 row[AdminUserEntity.updated_at] ?:"",
             )
         }

@@ -1,14 +1,15 @@
-package com.example.route
+package com.example.route.client_admin_side
 
 import com.example.data.admin_user.UserDataSource
 import com.example.models.AdminUser
-import com.example.models.request.AdminRegister
-import com.example.models.request.UserRequest
+import com.example.models.request.auth.AdminRegister
+import com.example.models.request.auth.LoginRequest
 import com.example.security.hash.HashingService
 import com.example.security.hash.SaltedHash
 import com.example.security.token.TokenClaim
 import com.example.security.token.TokenConfig
 import com.example.security.token.TokenService
+import com.example.utils.Constants.ENDPOINT
 import com.example.utils.MyResponse
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -21,7 +22,6 @@ import mu.KotlinLogging
 import java.time.LocalDateTime
 
 
-const val ENDPOINT = "/api/v1"
 const val USERS = "$ENDPOINT/users"
 const val REGISTER_REQUEST = "$USERS/register"
 const val LOGIN_REQUEST = "$USERS/login"
@@ -68,7 +68,7 @@ fun Route.login(
         logger.debug { "POST /$LOGIN_REQUEST" }
         // check body request if  missing some fields
         val loginRequest = try {
-            call.receive<UserRequest>()
+            call.receive<LoginRequest>()
         } catch (e: Exception) {
             call.respond(
                 HttpStatusCode.OK,
@@ -272,4 +272,5 @@ fun Route.register(
 
     }
 }
+
 
