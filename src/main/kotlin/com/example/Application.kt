@@ -1,6 +1,8 @@
 package com.example
 
 import com.example.data.admin_user.MYSqlUserDataSource
+import com.example.data.order.MYSqlOrderDataSource
+import com.example.data.order.MYSqlOrderStatusDataSource
 import com.example.database.Database
 import com.example.plugins.*
 import com.example.security.hash.SHA256HashingService
@@ -21,6 +23,8 @@ fun Application.module() {
     val appConfig = HoconApplicationConfig(ConfigFactory.load())
     val db = Database.db
     val userDataSource = MYSqlUserDataSource(db = db)
+    val orderDataSource = MYSqlOrderDataSource(db = db)
+    val orderStatusDataSource = MYSqlOrderStatusDataSource(db = db)
     val hashingService = SHA256HashingService()
     val tokenService = JWTTokenService()
 
@@ -37,6 +41,8 @@ fun Application.module() {
     configureSecurity(config = config)
     configureRouting(
         userDataSource = userDataSource,
+        orderDataSource=orderDataSource,
+        orderStatusDataSource=orderStatusDataSource,
         hashingService = hashingService,
         tokenService = tokenService,
         config = config

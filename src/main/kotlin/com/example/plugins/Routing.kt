@@ -1,10 +1,13 @@
 package com.example.plugins
 
 import com.example.data.admin_user.UserDataSource
+import com.example.data.order.OrderDataSource
+import com.example.data.order.OrderStatusDataSource
 import com.example.route.client_admin_side.adminUsers
 import com.example.route.client_admin_side.getSecretInfo
 import com.example.route.client_admin_side.login
 import com.example.route.client_admin_side.register
+import com.example.route.client_user_side.userOrderRequest
 import com.example.security.hash.HashingService
 import com.example.security.token.TokenConfig
 import com.example.security.token.TokenService
@@ -17,6 +20,8 @@ import io.ktor.server.routing.*
 
 fun Application.configureRouting(
     userDataSource: UserDataSource,
+    orderDataSource: OrderDataSource,
+    orderStatusDataSource: OrderStatusDataSource,
     hashingService: HashingService,
     tokenService: TokenService,
     config: TokenConfig
@@ -41,6 +46,10 @@ fun Application.configureRouting(
         register(
             userDataSource = userDataSource,
             hashingService = hashingService
+        )
+        userOrderRequest(
+            orderDataSource = orderDataSource,
+            orderStatusDataSource = orderStatusDataSource
         )
         get("/") {
             call.respondText("Hello World!")

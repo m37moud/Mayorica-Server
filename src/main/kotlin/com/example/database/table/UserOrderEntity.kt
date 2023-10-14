@@ -12,6 +12,6 @@ object UserOrderEntity : Table<Nothing>("user_request"){
     val country= varchar("country")
     val governorate= varchar("governorate")
     val created_at = varchar("created_at")
-    val update_at= varchar("update_at")
+    val updated_at= varchar("updated_at")
 
 }

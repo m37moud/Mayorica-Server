@@ -8,5 +8,5 @@ data class UserOrder(
     val country: String,
     val governorate: String,
     val created_at :String,
-    val update_at: String
+    val updated_at: String
 )

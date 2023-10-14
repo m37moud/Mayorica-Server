@@ -10,12 +10,12 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
 
-const val ORDER_RESPONSE = "${Constants.ENDPOINT}/orders"
+const val ORDER_RESPONSE = "${ADMIN_CLIENT}/orders"
 private val logger = KotlinLogging.logger {}
 
 fun Route.getOrders(orderDataSource: OrderDataSource) {
     authenticate {
-        // Get the orders info --> GET /api/orders (with token)
+        // Get the orders info --> GET /api/admin-client/orders (with token)
         route(ORDER_RESPONSE) {
             get {
                 logger.debug { "get /$ORDER_RESPONSE" }

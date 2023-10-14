@@ -9,6 +9,7 @@ import com.example.security.hash.SaltedHash
 import com.example.security.token.TokenClaim
 import com.example.security.token.TokenConfig
 import com.example.security.token.TokenService
+import com.example.utils.Constants
 import com.example.utils.Constants.ENDPOINT
 import com.example.utils.MyResponse
 import io.ktor.http.*
@@ -21,8 +22,8 @@ import io.ktor.server.routing.*
 import mu.KotlinLogging
 import java.time.LocalDateTime
 
-
-const val USERS = "$ENDPOINT/users"
+const val ADMIN_CLIENT = "${ENDPOINT}/admin-client"
+const val USERS = "$ADMIN_CLIENT/users"
 const val REGISTER_REQUEST = "$USERS/register"
 const val LOGIN_REQUEST = "$USERS/login"
 const val ME_REQUEST = "$USERS/me"

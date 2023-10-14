@@ -1,7 +1,9 @@
 package com.example.route.client_user_side
 
 import com.example.data.order.OrderDataSource
+import com.example.data.order.OrderStatusDataSource
 import com.example.models.UserOrder
+import com.example.models.UserOrderStatus
 import com.example.models.request.order.UserOrderRequest
 import com.example.route.client_admin_side.LOGIN_REQUEST
 import com.example.utils.Constants
@@ -14,9 +16,9 @@ import io.ktor.server.routing.*
 import mu.KotlinLogging
 import java.time.LocalDateTime
 
-
-const val USER_REQUEST = "${Constants.ENDPOINT}/user-request"
-const val CREATE_USER_REQUEST = "$USER_REQUEST/create"
+const val USER_CLIENT = "${Constants.ENDPOINT}/user-client"
+const val ORDER_REQUEST = "$USER_CLIENT/order-request"
+const val CREATE_ORDER_REQUEST = "$ORDER_REQUEST/create"
 
 private val logger = KotlinLogging.logger {}
 
@@ -24,10 +26,24 @@ private val logger = KotlinLogging.logger {}
  * create new order from
  * client user app
  */
-fun Route.userOrderRequest(orderDataSource: OrderDataSource) {
-    // create a user order --> POST /api/v1/user/create
-    post(CREATE_USER_REQUEST) {
-        logger.debug { "POST /$LOGIN_REQUEST" }
+/*
+{
+  {
+    "full_name" : "mahmoud ali",
+     "id_number" : "26911170025003",
+     "department" : "militry",
+     "country" : "egypt",
+     "governorate" : "bani swef"
+}
+}
+ */
+fun Route.userOrderRequest(
+    orderDataSource: OrderDataSource,
+    orderStatusDataSource: OrderStatusDataSource
+) {
+    // create a user order --> POST/api/v1/user-client/order-request/create
+    post(CREATE_ORDER_REQUEST) {
+        logger.debug { "POST /$CREATE_ORDER_REQUEST" }
 
         val userOrderRequest = try {
             call.receive<UserOrderRequest>()
@@ -45,12 +61,12 @@ fun Route.userOrderRequest(orderDataSource: OrderDataSource) {
         // check if operation connected db successfully
 
         try {
-            val userOrder =
+            val checkUserOrder =
                 orderDataSource.getOrderByNameAndIdNumber(
                     userOrderRequest.full_name,
                     userOrderRequest.id_number
                 )
-            if (userOrder == null) {
+            if (checkUserOrder == null) {
                 val userOrder = UserOrder(
                     fullName = userOrderRequest.full_name,
                     id_number = userOrderRequest.id_number,
@@ -58,19 +74,46 @@ fun Route.userOrderRequest(orderDataSource: OrderDataSource) {
                     country = userOrderRequest.country,
                     governorate = userOrderRequest.governorate,
                     created_at = LocalDateTime.now().toString(),
-                    update_at = ""
+                    updated_at = ""
                 )
+
                 val result = orderDataSource.createOrder(userOrder)
                 if (result > 0) {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = true,
-                            message = "Registration Successfully",
-                            data = null
-                        )
-                    )
-                    return@post
+                    // TODO: delete record when crash from status table
+                    orderDataSource
+                        .getOrderByNameAndIdNumber(
+                            name = userOrderRequest.full_name,
+                            id_number = userOrderRequest.id_number
+                        ).let {
+
+                            UserOrderStatus(
+                                requestUser_id = it!!.id, approveByAdminId = 1
+                            ).let { userOrderStatus ->
+                                val insertResult = orderStatusDataSource.createOrderStatus(userOrderStatus)
+                                if (insertResult > 0) {
+                                    call.respond(
+                                        HttpStatusCode.OK,
+                                        MyResponse(
+                                            success = true,
+                                            message = "Order Successfully",
+                                            data = userOrderStatus.requestUser_id
+                                        )
+                                    )
+                                    return@post
+                                } else {
+                                    call.respond(
+                                        HttpStatusCode.OK,
+                                        MyResponse(
+                                            success = false,
+                                            message = "Failed to create new order.",
+                                            data = null
+                                        )
+                                    )
+                                    return@post
+                                }
+                            }
+                        }
+
                 } else {
                     call.respond(
                         HttpStatusCode.OK,
