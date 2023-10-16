@@ -5,6 +5,8 @@ import com.example.data.order.OrderStatusDataSource
 import com.example.models.UserOrder
 import com.example.models.UserOrderStatus
 import com.example.models.request.order.UserOrderRequest
+import com.example.models.response.AcceptedOrderResponse
+import com.example.models.response.RejectedOrderResponse
 import com.example.route.client_admin_side.LOGIN_REQUEST
 import com.example.utils.Constants
 import com.example.utils.MyResponse
@@ -17,7 +19,7 @@ import mu.KotlinLogging
 import java.time.LocalDateTime
 
 const val USER_CLIENT = "${Constants.ENDPOINT}/user-client"
-const val ORDER_REQUEST = "$USER_CLIENT/order-request"
+const val ORDER_REQUEST = "$USER_CLIENT/order"
 const val CREATE_ORDER_REQUEST = "$ORDER_REQUEST/create"
 
 private val logger = KotlinLogging.logger {}
@@ -77,42 +79,51 @@ fun Route.userOrderRequest(
                     updated_at = ""
                 )
 
-                val result = orderDataSource.createOrder(userOrder)
+                val result = orderDataSource.createOrderWithOrderStatus(userOrder)
                 if (result > 0) {
-                    // TODO: delete record when crash from status table
-                    orderDataSource
-                        .getOrderByNameAndIdNumber(
-                            name = userOrderRequest.full_name,
-                            id_number = userOrderRequest.id_number
-                        ).let {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        MyResponse(
+                            success = true,
+                            message = "Order Successfully",
+                            data = null
+                        )
+                    )
+                    return@post
 
-                            UserOrderStatus(
-                                requestUser_id = it!!.id, approveByAdminId = 1
-                            ).let { userOrderStatus ->
-                                val insertResult = orderStatusDataSource.createOrderStatus(userOrderStatus)
-                                if (insertResult > 0) {
-                                    call.respond(
-                                        HttpStatusCode.OK,
-                                        MyResponse(
-                                            success = true,
-                                            message = "Order Successfully",
-                                            data = userOrderStatus.requestUser_id
-                                        )
-                                    )
-                                    return@post
-                                } else {
-                                    call.respond(
-                                        HttpStatusCode.OK,
-                                        MyResponse(
-                                            success = false,
-                                            message = "Failed to create new order.",
-                                            data = null
-                                        )
-                                    )
-                                    return@post
-                                }
-                            }
-                        }
+//                    orderDataSource
+//                        .getOrderByNameAndIdNumber(
+//                            name = userOrderRequest.full_name,
+//                            id_number = userOrderRequest.id_number
+//                        ).let {
+//
+//                            UserOrderStatus(
+//                                requestUser_id = it!!.id, approveByAdminId = 1
+//                            ).let { userOrderStatus ->
+//                                val insertResult = orderStatusDataSource.createOrderStatus(userOrderStatus)
+//                                if (insertResult > 0) {
+//                                    call.respond(
+//                                        HttpStatusCode.OK,
+//                                        MyResponse(
+//                                            success = true,
+//                                            message = "Order Successfully",
+//                                            data = userOrderStatus.requestUser_id
+//                                        )
+//                                    )
+//                                    return@post
+//                                } else {
+//                                    call.respond(
+//                                        HttpStatusCode.OK,
+//                                        MyResponse(
+//                                            success = false,
+//                                            message = "Failed to create new order.",
+//                                            data = null
+//                                        )
+//                                    )
+//                                    return@post
+//                                }
+//                            }
+//                        }
 
                 } else {
                     call.respond(
@@ -154,4 +165,152 @@ fun Route.userOrderRequest(
     }
 
 }
+
+fun Route.getUserOrder(
+    orderDataSource: OrderDataSource,
+    orderStatusDataSource: OrderStatusDataSource
+) {
+    //api/v1/user-client/order/{id_card}
+    get("$ORDER_REQUEST/{id_card}") {
+        logger.debug { "GET /$ORDER_REQUEST" }
+        call.parameters["id_card"]?.let { idNumber ->
+            try {
+                orderDataSource.getOrderByIdNumber(idNumber = idNumber)?.let { order ->
+                    when (order.approveState) {
+                        0 -> {
+                            call.respond(
+                                HttpStatusCode.OK, MyResponse(
+                                    success = true,
+                                    message = "get order successful .",
+                                    data = order
+                                )
+                            )
+                        }
+
+                        1 -> {
+                            call.respond(
+                                HttpStatusCode.OK, MyResponse(
+                                    success = true,
+                                    message = "get order successful .",
+                                    data = order
+                                )
+                            )
+                        }
+
+                        2 -> {
+                            orderStatusDataSource
+                                .getAllOrderStatusByRequestUserId(requestUserId = order.id)?.let { statue ->
+                                    AcceptedOrderResponse(
+                                        fullName = order.fullName,
+                                        id_number = order.id_number,
+                                        department = order.department,
+                                        country = order.country,
+                                        governorate = order.governorate,
+                                        approveState = 2,
+                                        created_at = order.created_at,
+                                        updated_at = order.updated_at,
+                                        totalAmount = statue.totalAmount,
+                                        takenAmount = statue.takenAmount,
+                                        availableAmount = statue.availableAmount
+                                    ).apply {
+                                        call.respond(
+                                            HttpStatusCode.OK,
+                                            MyResponse(
+                                                success = true,
+                                                message = "got order successfully .",
+                                                data = this
+                                            )
+                                        )
+                                    }
+
+                                } ?: call.respond(
+                                HttpStatusCode.OK,
+                                MyResponse(
+                                    success = false,
+                                    message = "no order is found .",
+                                    data = null
+                                )
+                            )
+
+                        }
+
+                        3 -> {
+                            orderStatusDataSource
+                                .getAllOrderStatusByRequestUserId(requestUserId = order.id)?.let { statue ->
+                                    RejectedOrderResponse(
+                                        fullName = order.fullName,
+                                        id_number = order.id_number,
+                                        department = order.department,
+                                        country = order.country,
+                                        governorate = order.governorate,
+                                        approveState = 3,
+                                        created_at = order.created_at,
+                                        updated_at = order.updated_at,
+                                        reason = statue.note
+                                    ).apply {
+                                        call.respond(
+                                            HttpStatusCode.OK,
+                                            MyResponse(
+                                                success = true,
+                                                message = "got order successfully .",
+                                                data = this
+                                            )
+                                        )
+                                    }
+
+                                } ?: call.respond(
+                                HttpStatusCode.OK,
+                                MyResponse(
+                                    success = false,
+                                    message = "no order is found .",
+                                    data = null
+                                )
+                            )
+                        }
+
+                        else -> {
+                            call.respond(
+                                HttpStatusCode.OK,
+                                MyResponse(
+                                    success = false,
+                                    message = "statue not from 0 to 4 .",
+                                    data = null
+                                )
+                            )
+                        }
+                    }
+
+                } ?: call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = false,
+                        message = "no order is found .",
+                        data = null
+                    )
+                )
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Conflict during get note",
+                        data = null
+                    )
+                )
+            }
+
+
+        } ?: call.respond(
+            HttpStatusCode.BadRequest,
+            MyResponse(
+                success = false,
+                message = "Missing parameter .",
+                data = null
+            )
+        )
+    }
+
+}
+
+
 

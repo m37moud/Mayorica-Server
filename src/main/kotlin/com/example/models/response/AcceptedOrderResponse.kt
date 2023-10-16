@@ -1,7 +1,6 @@
-package com.example.models
+package com.example.models.response
 
-data class UserOrder(
-    val id: Int = -1,
+data class AcceptedOrderResponse(
     val fullName: String,
     val id_number: String,
     val department: String,
@@ -17,5 +16,8 @@ data class UserOrder(
     val approveState: Int = 0,
     val created_at :String,
     val updated_at: String,
+    val totalAmount: Double = 0.0,
+    val takenAmount: Double = 0.0,
+    val availableAmount: Double = 0.0,
 
-)
+    )

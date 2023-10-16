@@ -1,7 +1,6 @@
-package com.example.models
+package com.example.models.response
 
-data class UserOrder(
-    val id: Int = -1,
+data class RejectedOrderResponse(
     val fullName: String,
     val id_number: String,
     val department: String,
@@ -15,7 +14,7 @@ data class UserOrder(
      * 3 -> order rejected
      */
     val approveState: Int = 0,
-    val created_at :String,
+    val created_at: String,
     val updated_at: String,
-
+    val reason: String
 )

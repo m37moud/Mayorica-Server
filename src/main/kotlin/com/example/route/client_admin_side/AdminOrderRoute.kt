@@ -57,7 +57,7 @@ fun Route.getOrders(orderDataSource: OrderDataSource) {
                 val id = call.parameters["id"]?.toIntOrNull()
                 try {
                     id?.let {
-                        orderDataSource.getOrderById(id)?.run {
+                        orderDataSource.getOrderById(it)?.run {
                             call.respond(
                                 HttpStatusCode.OK, MyResponse(
                                     success = true,

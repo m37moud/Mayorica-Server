@@ -10,21 +10,7 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.*
 
 class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSource {
-    override suspend fun createOrderStatus(userOrderStatus: UserOrderStatus): Int {
-        return withContext(Dispatchers.IO) {
-            val result = db.insert(UserOrderStatusEntity) {
-                set(it.requestUser_id, userOrderStatus.requestUser_id)
-                set(it.approve, userOrderStatus.approve)
-                set(it.approveDate, userOrderStatus.approveDate)
-                set(it.approveUpdateDate, userOrderStatus.approveUpdateDate)
-                set(it.approveByAdminId, userOrderStatus.approveByAdminId)
-                set(it.totalAmount, userOrderStatus.totalAmount)
-                set(it.takenAmount, userOrderStatus.takenAmount)
-                set(it.availableAmount, userOrderStatus.availableAmount)
-            }
-            result
-        }
-    }
+
 
     override suspend fun getAllOrderStatusByRequestUserId(requestUserId: Int): UserOrderStatus? {
         return withContext(Dispatchers.IO) {
@@ -39,10 +25,13 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
         }
     }
 
-    override suspend fun getAllOrderStatusByApprove(approve: Boolean): List<UserOrderStatus> {
+    override suspend fun getAllOrderStatusByApprove(approveState: Int): List<UserOrderStatus> {
         return withContext(Dispatchers.IO) {
             val userOrderStatusList = db.from(UserOrderStatusEntity)
                 .select()
+                .where {
+                    UserOrderStatusEntity.approve_state eq approveState
+                }
                 .mapNotNull {
                     rowToUserOrderStatus(it)
                 }
@@ -57,13 +46,14 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
             UserOrderStatus(
                 row[UserOrderStatusEntity.id] ?: -1,
                 row[UserOrderStatusEntity.requestUser_id] ?: -1,
-                row[UserOrderStatusEntity.approve] ?: false,
+                row[UserOrderStatusEntity.approve_state] ?: 0,
                 row[UserOrderStatusEntity.approveDate] ?: "",
                 row[UserOrderStatusEntity.approveUpdateDate] ?: "",
                 row[UserOrderStatusEntity.approveByAdminId] ?: -1,
                 row[UserOrderStatusEntity.totalAmount] ?: 0.0,
                 row[UserOrderStatusEntity.takenAmount] ?: 0.0,
                 row[UserOrderStatusEntity.availableAmount] ?: 0.0,
+                row[UserOrderStatusEntity.note] ?: "",
             )
         }
     }
