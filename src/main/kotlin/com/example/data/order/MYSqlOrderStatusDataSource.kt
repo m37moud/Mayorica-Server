@@ -12,9 +12,10 @@ import org.ktorm.dsl.*
 class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSource {
 
 
-    override suspend fun getAllOrderStatusByRequestUserId(requestUserId: Int): UserOrderStatus? {
+    override suspend fun getOrderStatusByRequestUserId(requestUserId: Int): UserOrderStatus? {
         return withContext(Dispatchers.IO) {
             val userOrderStatus = db.from(UserOrderStatusEntity)
+
                 .select()
                 .where {
                     UserOrderStatusEntity.requestUser_id eq requestUserId
@@ -37,6 +38,34 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                 }
             userOrderStatusList
         }
+    }
+
+    override suspend fun updateOrderStatus(
+        requestUserId: Int,
+        userOrderStatus: UserOrderStatus
+    ): Int {
+        return withContext(Dispatchers.IO) {
+            val result = db.update(UserOrderStatusEntity) {
+                set(it.approve_state, userOrderStatus.approveState)
+                set(it.approveDate, userOrderStatus.approveDate)
+                set(it.approveUpdateDate, userOrderStatus.approveUpdateDate)
+                set(it.approveByAdminId, userOrderStatus.approveByAdminId)
+                set(it.totalAmount, userOrderStatus.totalAmount)
+                set(it.takenAmount, userOrderStatus.takenAmount)
+                set(it.availableAmount, userOrderStatus.availableAmount)
+                set(it.note, userOrderStatus.note)
+                where {
+                    it.requestUser_id eq requestUserId
+                }
+            }
+
+
+            result
+        }
+    }
+
+    override suspend fun deleteOrderStatus(requestUserId: Int): Int {
+        TODO("Not yet implemented")
     }
 
     private fun rowToUserOrderStatus(row: QueryRowSet?): UserOrderStatus? {

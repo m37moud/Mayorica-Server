@@ -1,15 +1,14 @@
 package com.example.database.table
 
-import org.ktorm.schema.Table
-import org.ktorm.schema.int
-import org.ktorm.schema.long
-import org.ktorm.schema.varchar
+import org.ktorm.schema.*
 
 object UserOrderEntity : Table<Nothing>("user_request"){
     val id =int("id").primaryKey()
     val full_name = varchar("full_name")
     val id_number= varchar("id_number")
     val department= varchar("department")
+    val latitude = double("latitude")
+    val longitude = double("longitude")
     val country= varchar("country")
     val governorate= varchar("governorate")
     val approve_state= int("approve_state")

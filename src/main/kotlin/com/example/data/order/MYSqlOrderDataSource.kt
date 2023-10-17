@@ -141,6 +141,8 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 set(it.full_name, userOrder.fullName)
                 set(it.id_number, userOrder.id_number)
                 set(it.department, userOrder.department)
+                set(it.latitude, userOrder.latitude)
+                set(it.longitude, userOrder.longitude)
                 set(it.country, userOrder.country)
                 set(it.governorate, userOrder.governorate)
                 set(it.approve_state, userOrder.approveState)
@@ -195,6 +197,8 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 row[UserOrderEntity.full_name] ?: "",
                 row[UserOrderEntity.id_number] ?: "",
                 row[UserOrderEntity.department] ?: "",
+                row[UserOrderEntity.latitude] ?: 0.0,
+                row[UserOrderEntity.longitude] ?: 0.0,
                 row[UserOrderEntity.country] ?: "",
                 row[UserOrderEntity.governorate] ?: "",
                 row[UserOrderEntity.approve_state] ?: 0,

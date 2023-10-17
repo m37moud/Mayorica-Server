@@ -76,6 +76,19 @@ class MYSqlUserDataSource(private val db: Database) : UserDataSource {
         notes
     }
 
+    override suspend fun isAdmin(id:Int): Boolean {
+      return withContext(Dispatchers.IO){
+          val isAdmin = db.from(AdminUserEntity)
+              .select(AdminUserEntity.role)
+              .where {
+                  AdminUserEntity.id eq id
+              }
+              .map { row -> row[AdminUserEntity.role] }
+              .firstOrNull()
+          isAdmin == Role.ADMIN.name
+      }
+    }
+
     private fun rowToAminUser(row: QueryRowSet?): AdminUser? {
         return if (row == null) {
             null

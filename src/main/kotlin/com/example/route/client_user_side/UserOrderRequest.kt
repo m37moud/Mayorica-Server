@@ -10,6 +10,7 @@ import com.example.models.response.RejectedOrderResponse
 import com.example.route.client_admin_side.LOGIN_REQUEST
 import com.example.utils.Constants
 import com.example.utils.MyResponse
+import com.example.utils.toDatabaseString
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -73,9 +74,12 @@ fun Route.userOrderRequest(
                     fullName = userOrderRequest.full_name,
                     id_number = userOrderRequest.id_number,
                     department = userOrderRequest.department,
+                    latitude = userOrderRequest.latitude,
+                    longitude = userOrderRequest.longitude,
                     country = userOrderRequest.country,
                     governorate = userOrderRequest.governorate,
-                    created_at = LocalDateTime.now().toString(),
+                    approveState = userOrderRequest.approve_state,
+                    created_at = LocalDateTime.now().toDatabaseString(),
                     updated_at = ""
                 )
 
@@ -91,39 +95,6 @@ fun Route.userOrderRequest(
                     )
                     return@post
 
-//                    orderDataSource
-//                        .getOrderByNameAndIdNumber(
-//                            name = userOrderRequest.full_name,
-//                            id_number = userOrderRequest.id_number
-//                        ).let {
-//
-//                            UserOrderStatus(
-//                                requestUser_id = it!!.id, approveByAdminId = 1
-//                            ).let { userOrderStatus ->
-//                                val insertResult = orderStatusDataSource.createOrderStatus(userOrderStatus)
-//                                if (insertResult > 0) {
-//                                    call.respond(
-//                                        HttpStatusCode.OK,
-//                                        MyResponse(
-//                                            success = true,
-//                                            message = "Order Successfully",
-//                                            data = userOrderStatus.requestUser_id
-//                                        )
-//                                    )
-//                                    return@post
-//                                } else {
-//                                    call.respond(
-//                                        HttpStatusCode.OK,
-//                                        MyResponse(
-//                                            success = false,
-//                                            message = "Failed to create new order.",
-//                                            data = null
-//                                        )
-//                                    )
-//                                    return@post
-//                                }
-//                            }
-//                        }
 
                 } else {
                     call.respond(
@@ -166,7 +137,7 @@ fun Route.userOrderRequest(
 
 }
 
-fun Route.getUserOrder(
+fun Route.getUserOrderClient(
     orderDataSource: OrderDataSource,
     orderStatusDataSource: OrderStatusDataSource
 ) {
@@ -197,9 +168,9 @@ fun Route.getUserOrder(
                             )
                         }
 
-                        2 -> {
+                        2 -> { // approve state = accepted
                             orderStatusDataSource
-                                .getAllOrderStatusByRequestUserId(requestUserId = order.id)?.let { statue ->
+                                .getOrderStatusByRequestUserId(requestUserId = order.id)?.let { statue ->
                                     AcceptedOrderResponse(
                                         fullName = order.fullName,
                                         id_number = order.id_number,
@@ -236,7 +207,7 @@ fun Route.getUserOrder(
 
                         3 -> {
                             orderStatusDataSource
-                                .getAllOrderStatusByRequestUserId(requestUserId = order.id)?.let { statue ->
+                                .getOrderStatusByRequestUserId(requestUserId = order.id)?.let { statue ->
                                     RejectedOrderResponse(
                                         fullName = order.fullName,
                                         id_number = order.id_number,

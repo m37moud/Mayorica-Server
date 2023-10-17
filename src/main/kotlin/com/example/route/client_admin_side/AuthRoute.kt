@@ -12,6 +12,7 @@ import com.example.security.token.TokenService
 import com.example.utils.Constants
 import com.example.utils.Constants.ENDPOINT
 import com.example.utils.MyResponse
+import com.example.utils.toDatabaseString
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -151,7 +152,7 @@ fun Route.login(
 fun Route.getSecretInfo() {
 
     authenticate {
-        // Get the user info --> GET /api/users/me (with token)
+        // Get the user info --> GET /api/v1/users/me (with token)
         get(ME_REQUEST) {
             logger.debug { "get /$ME_REQUEST" }
 
@@ -220,7 +221,7 @@ fun Route.register(
                     password = saltedHash.hash,
                     salt = saltedHash.salt,
                     role = registerRequest.role,
-                    created_at = LocalDateTime.now().toString(),
+                    created_at = LocalDateTime.now().toDatabaseString(),
                     updated_at = ""
                 )
 

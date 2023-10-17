@@ -3,10 +3,8 @@ package com.example.plugins
 import com.example.data.admin_user.UserDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
-import com.example.route.client_admin_side.adminUsers
-import com.example.route.client_admin_side.getSecretInfo
-import com.example.route.client_admin_side.login
-import com.example.route.client_admin_side.register
+import com.example.route.client_admin_side.*
+import com.example.route.client_user_side.getUserOrderClient
 import com.example.route.client_user_side.userOrderRequest
 import com.example.security.hash.HashingService
 import com.example.security.token.TokenConfig
@@ -51,8 +49,17 @@ fun Application.configureRouting(
             orderDataSource = orderDataSource,
             orderStatusDataSource = orderStatusDataSource
         )
+        getUserOrderClient(
+            orderDataSource = orderDataSource,
+            orderStatusDataSource = orderStatusDataSource,
+        )
+        orders(
+            orderDataSource = orderDataSource,
+            orderStatusDataSource = orderStatusDataSource,
+            userDataSource = userDataSource
+        )
         get("/") {
-            call.respondText("Hello World!")
+            call.respondText("\uD83D\uDC4B Hello Mayorca Reactive API REST!")
         }
         // Static plugin. Try to access `/static/index.html`
         static("/static") {

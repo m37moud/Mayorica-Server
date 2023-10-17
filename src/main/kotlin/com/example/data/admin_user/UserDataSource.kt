@@ -8,4 +8,6 @@ interface UserDataSource {
     suspend fun register(newUser: AdminUser): Int
     suspend fun getAllUser(): List<AdminUser>
 
+    suspend fun isAdmin(id:Int): Boolean
+
 }

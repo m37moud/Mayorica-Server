@@ -1,5 +1,8 @@
 package com.example.models
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class UserOrderStatus(
     val id: Int = -1,
     val requestUser_id: Int,

@@ -1,10 +1,15 @@
 package com.example.models
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class UserOrder(
     val id: Int = -1,
     val fullName: String,
     val id_number: String,
     val department: String,
+    val latitude: Double,
+    val longitude: Double,
     val country: String,
     val governorate: String,
     /**
@@ -15,7 +20,7 @@ data class UserOrder(
      * 3 -> order rejected
      */
     val approveState: Int = 0,
-    val created_at :String,
+    val created_at: String,
     val updated_at: String,
 
-)
+    )
