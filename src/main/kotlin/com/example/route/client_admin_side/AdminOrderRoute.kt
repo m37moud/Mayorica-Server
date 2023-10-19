@@ -58,6 +58,7 @@ fun Route.orders(
                                     data = null
                                 )
                             )
+                            return@get
                         } else {
                             call.respond(
                                 HttpStatusCode.OK, MyResponse(
