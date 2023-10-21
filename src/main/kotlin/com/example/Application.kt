@@ -1,6 +1,7 @@
 package com.example
 
 import com.example.data.admin_user.MYSqlUserDataSource
+import com.example.data.ceramic_provider.MySqlCeramicProviderDataSource
 import com.example.data.order.MYSqlOrderDataSource
 import com.example.data.order.MYSqlOrderStatusDataSource
 import com.example.database.Database
@@ -25,6 +26,7 @@ fun Application.module() {
     val userDataSource = MYSqlUserDataSource(db = db)
     val orderDataSource = MYSqlOrderDataSource(db = db)
     val orderStatusDataSource = MYSqlOrderStatusDataSource(db = db)
+    val ceramicProviderDataSource = MySqlCeramicProviderDataSource(db = db)
     val hashingService = SHA256HashingService()
     val tokenService = JWTTokenService()
 

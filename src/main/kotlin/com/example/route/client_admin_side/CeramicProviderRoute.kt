@@ -223,11 +223,42 @@ fun Route.provider(
 
         }
         //put update providers //api/v1/admin-client/provider/delete/6
-        delete ("$DELETE_PROVIDER/{id}"){
+        delete("$DELETE_PROVIDER/{id}") {
             logger.debug { "delete /$DELETE_PROVIDER/{id}" }
+            val id = call.parameters["id"]?.toIntOrNull()
+            id?.let {
+                val result = ceramicProvider.deleteCeramicProvider(id)
+                if (result > 0) {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        MyResponse(
+                            success = true,
+                            message = "delete provider success .",
+                            data = null
+                        )
+                    )
+                    return@delete
+                } else {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        MyResponse(
+                            success = false,
+                            message = "fail to delete provider .",
+                            data = null
+                        )
+                    )
+                    return@delete
+                }
 
-            // TODO: handle delete funcation provider route handle
-          }
+            } ?: call.respond(
+                HttpStatusCode.BadRequest,
+                MyResponse(
+                    success = false,
+                    message = "Missing parameters .",
+                    data = null
+                )
+            )
+        }
     }
 
 

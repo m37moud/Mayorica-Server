@@ -11,6 +11,10 @@ interface CeramicProviderDataSource {
 
     //CRUD
     suspend fun addCeramicProvider(ceramicProvider: CeramicProvider): Int
-    suspend fun updateCeramicProvider(providerId :Int ,ceramicProvider: CeramicProvider): Int
+    suspend fun updateCeramicProvider(providerId: Int, ceramicProvider: CeramicProvider): Int
     suspend fun deleteCeramicProvider(id: Int): Int
+
+
+    // user client no auth need
+    suspend fun getNearlyProvider(latitude: Double, longitude: Double): List<CeramicProvider>
 }

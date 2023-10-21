@@ -6,8 +6,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import java.util.*
+import kotlin.Comparator
 
 class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProviderDataSource {
+
+
     override suspend fun getAllCeramicProvider(): List<CeramicProvider> {
         return withContext(Dispatchers.IO) {
             val providers = db.from(CeramicProviderEntity)
@@ -113,29 +117,47 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
 
         }
     }
-}
 
-private fun rowToCeramicProvider(row: QueryRowSet?): CeramicProvider? {
-    return if (row == null)
-        null
-    else {
-        val id = row[CeramicProviderEntity.id] ?: -1
-        val name = row[CeramicProviderEntity.name] ?: ""
-        val latitude = row[CeramicProviderEntity.latitude] ?: 0.0
-        val longitude = row[CeramicProviderEntity.longitude] ?: 0.0
-        val country = row[CeramicProviderEntity.country] ?: ""
-        val governorate = row[CeramicProviderEntity.governorate] ?: ""
-        val address = row[CeramicProviderEntity.address] ?: ""
+    override suspend fun getNearlyProvider(latitude: Double, longitude: Double): List<CeramicProvider> {
+        return withContext(Dispatchers.IO) {
+            val providers = db.from(CeramicProviderEntity)
+                .select()
+                .mapNotNull {
+                    rowToCeramicProvider(it)
+                }
+            Collections.sort(providers, Comparator<CeramicProvider> { o1, o2 ->
+                val dist1: Int = o1.calculationByDistance(o1.latitude,o1.longitude,latitude,longitude)
+                val dist2: Int = o2.calculationByDistance(o2.latitude,o2.longitude,latitude,longitude)
+                dist1.compareTo(dist2)
+            })
 
-        CeramicProvider(
-            id = id,
-            name = name,
-            latitude = latitude,
-            longitude = longitude,
-            country = country,
-            governorate = governorate,
-            address = address
+            providers
+        }
+    }
 
-        )
+    private fun rowToCeramicProvider(row: QueryRowSet?): CeramicProvider? {
+        return if (row == null)
+            null
+        else {
+            val id = row[CeramicProviderEntity.id] ?: -1
+            val name = row[CeramicProviderEntity.name] ?: ""
+            val latitude = row[CeramicProviderEntity.latitude] ?: 0.0
+            val longitude = row[CeramicProviderEntity.longitude] ?: 0.0
+            val country = row[CeramicProviderEntity.country] ?: ""
+            val governorate = row[CeramicProviderEntity.governorate] ?: ""
+            val address = row[CeramicProviderEntity.address] ?: ""
+
+            CeramicProvider(
+                id = id,
+                name = name,
+                latitude = latitude,
+                longitude = longitude,
+                country = country,
+                governorate = governorate,
+                address = address
+
+            )
+        }
     }
 }
+

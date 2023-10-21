@@ -1,5 +1,6 @@
 package com.example.route.client_user_side
 
+import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
 import com.example.models.UserOrder
@@ -21,6 +22,7 @@ import java.time.LocalDateTime
 
 const val USER_CLIENT = "${Constants.ENDPOINT}/user-client"
 const val ORDER_REQUEST = "$USER_CLIENT/order"
+const val NEARLY_LOCATION = "$USER_CLIENT/nearlyLocation"
 const val CREATE_ORDER_REQUEST = "$ORDER_REQUEST/create"
 
 private val logger = KotlinLogging.logger {}
@@ -283,5 +285,53 @@ fun Route.getUserOrderClient(
 
 }
 
+fun Route.getNearlyProvider(providerDataSource: CeramicProviderDataSource) {
+    post(NEARLY_LOCATION) {
+        val latitude: Double
+        val longitude: Double
+        try {
+            latitude = call.request.queryParameters["latitude"]!!.toDouble()
+            longitude = call.request.queryParameters["longitude"]!!.toDouble()
+        } catch (e: Exception) {
+            call.respond(
+                HttpStatusCode.BadGateway,
+                MyResponse(
+                    success = false,
+                    message = "Missing Some Failed",
+                    data = null
+                )
+            )
+            return@post
+        }
+
+        try {
+
+            val providers = providerDataSource.getNearlyProvider(latitude, longitude)
+            call.respond(
+                HttpStatusCode.OK,
+                MyResponse(
+                    success = true,
+                    message = "success",
+                    data = providers
+                )
+            )
+            return@post
+
+        } catch (e: Exception) {
+            call.respond(
+                HttpStatusCode.Conflict,
+                MyResponse(
+                    success = false,
+                    message = e.message ?: "Failed",
+                    data = null
+                )
+            )
+            return@post
+        }
+
+
+    }
+
+}
 
 
