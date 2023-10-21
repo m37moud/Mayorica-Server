@@ -285,53 +285,6 @@ fun Route.getUserOrderClient(
 
 }
 
-fun Route.getNearlyProvider(providerDataSource: CeramicProviderDataSource) {
-    post(NEARLY_LOCATION) {
-        val latitude: Double
-        val longitude: Double
-        try {
-            latitude = call.request.queryParameters["latitude"]!!.toDouble()
-            longitude = call.request.queryParameters["longitude"]!!.toDouble()
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.BadGateway,
-                MyResponse(
-                    success = false,
-                    message = "Missing Some Failed",
-                    data = null
-                )
-            )
-            return@post
-        }
 
-        try {
-
-            val providers = providerDataSource.getNearlyProvider(latitude, longitude)
-            call.respond(
-                HttpStatusCode.OK,
-                MyResponse(
-                    success = true,
-                    message = "success",
-                    data = providers
-                )
-            )
-            return@post
-
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed",
-                    data = null
-                )
-            )
-            return@post
-        }
-
-
-    }
-
-}
 
 

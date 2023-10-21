@@ -85,6 +85,8 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 set(it.country, ceramicProvider.country)
                 set(it.governorate, ceramicProvider.governorate)
                 set(it.address, ceramicProvider.address)
+                set(it.created_at, ceramicProvider.created_at)
+                set(it.updated_at, ceramicProvider.updated_at)
 
             }
             result
@@ -100,6 +102,8 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 set(it.country, ceramicProvider.country)
                 set(it.governorate, ceramicProvider.governorate)
                 set(it.address, ceramicProvider.address)
+                set(it.created_at, ceramicProvider.created_at)
+                set(it.updated_at, ceramicProvider.updated_at)
                 where {
                     it.id eq providerId
                 }
@@ -146,6 +150,8 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
             val country = row[CeramicProviderEntity.country] ?: ""
             val governorate = row[CeramicProviderEntity.governorate] ?: ""
             val address = row[CeramicProviderEntity.address] ?: ""
+            val created_at = row[CeramicProviderEntity.created_at] ?: ""
+            val updated_at = row[CeramicProviderEntity.updated_at] ?: ""
 
             CeramicProvider(
                 id = id,
@@ -154,7 +160,9 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 longitude = longitude,
                 country = country,
                 governorate = governorate,
-                address = address
+                address = address,
+                created_at = created_at,
+                updated_at = updated_at
 
             )
         }

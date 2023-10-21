@@ -26,7 +26,7 @@ fun Application.module() {
     val userDataSource = MYSqlUserDataSource(db = db)
     val orderDataSource = MYSqlOrderDataSource(db = db)
     val orderStatusDataSource = MYSqlOrderStatusDataSource(db = db)
-    val ceramicProviderDataSource = MySqlCeramicProviderDataSource(db = db)
+    val ceramicProvider = MySqlCeramicProviderDataSource(db = db)
     val hashingService = SHA256HashingService()
     val tokenService = JWTTokenService()
 
@@ -43,8 +43,9 @@ fun Application.module() {
     configureSecurity(config = config)
     configureRouting(
         userDataSource = userDataSource,
-        orderDataSource=orderDataSource,
-        orderStatusDataSource=orderStatusDataSource,
+        orderDataSource = orderDataSource,
+        orderStatusDataSource = orderStatusDataSource,
+        ceramicProvider = ceramicProvider,
         hashingService = hashingService,
         tokenService = tokenService,
         config = config

@@ -1,9 +1,11 @@
 package com.example.plugins
 
 import com.example.data.admin_user.UserDataSource
+import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
 import com.example.route.client_admin_side.*
+import com.example.route.client_user_side.getNearlyProvider
 import com.example.route.client_user_side.getUserOrderClient
 import com.example.route.client_user_side.userOrderRequest
 import com.example.security.hash.HashingService
@@ -20,6 +22,7 @@ fun Application.configureRouting(
     userDataSource: UserDataSource,
     orderDataSource: OrderDataSource,
     orderStatusDataSource: OrderStatusDataSource,
+    ceramicProvider: CeramicProviderDataSource,
     hashingService: HashingService,
     tokenService: TokenService,
     config: TokenConfig
@@ -58,6 +61,8 @@ fun Application.configureRouting(
             orderStatusDataSource = orderStatusDataSource,
             userDataSource = userDataSource
         )
+        providerAdminClient(ceramicProvider = ceramicProvider)
+        getNearlyProvider(ceramicProvider = ceramicProvider)
         get("/") {
             call.respondText("\uD83D\uDC4B Hello Mayorca Reactive API REST!")
         }

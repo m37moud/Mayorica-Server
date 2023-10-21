@@ -10,9 +10,12 @@ data class CeramicProvider(
     val longitude: Double,
     val country: String,
     val governorate: String,
-    val address: String
+    val address: String,
+    val created_at: String = "",
+    val updated_at: String = ""
+
 ) {
-    fun calculationByDistance(lat1:Double,lon1:Double, lat2:Double,lon2:Double): Int {
+    fun calculationByDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Int {
         val Radius = 6371 // radius of earth in Km
 
         val dLat = Math.toRadians(lat2 - lat1)
@@ -30,7 +33,7 @@ data class CeramicProvider(
         val meterInDec: Int = Integer.valueOf(newFormat.format(meter))
 
         //return Radius * c
-        return  kmInDec
+        return kmInDec
     }
 
 }

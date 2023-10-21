@@ -1,7 +1,8 @@
 package com.example.route.client_admin_side
 
 import com.example.data.ceramic_provider.CeramicProviderDataSource
-import com.example.mapper.toModel
+import com.example.mapper.toModelCreate
+import com.example.mapper.toModelUpdate
 import com.example.models.request.ceramic_provider.CeramicProviderRequest
 import com.example.utils.MyResponse
 import io.ktor.http.*
@@ -23,7 +24,7 @@ const val DELETE_PROVIDER = "$PROVIDER/delete"
 private val logger = KotlinLogging.logger {}
 
 
-fun Route.provider(
+fun Route.providerAdminClient(
     ceramicProvider: CeramicProviderDataSource
 ) {
     authenticate {
@@ -121,7 +122,7 @@ fun Route.provider(
                     )
                     return@put
                 }
-                val updateResult = ceramicProvider.updateCeramicProvider(it, updateProvider.toModel())
+                val updateResult = ceramicProvider.updateCeramicProvider(it, updateProvider.toModelUpdate())
                 if (updateResult > 0) {
                     call.respond(
                         HttpStatusCode.BadRequest,
@@ -178,7 +179,7 @@ fun Route.provider(
                 val provider = ceramicProvider.getCeramicProviderByName(providerRequest.name)
 
                 if (provider == null) {
-                    val result = ceramicProvider.addCeramicProvider(providerRequest.toModel())
+                    val result = ceramicProvider.addCeramicProvider(providerRequest.toModelCreate())
                     if (result > 0) {
                         call.respond(
                             HttpStatusCode.OK, MyResponse(
