@@ -1,5 +1,7 @@
 package com.example.models
 
+import kotlinx.serialization.Serializable
+@Serializable
 data class ColorCategory(
     val id: Int = -1,
     val typeCategoryId: Int,
@@ -9,4 +11,15 @@ data class ColorCategory(
     val createdAt: String,
     val updatedAt: String
 )
+
+/**
+ * ColorCategory DTO for response with pagination
+ */
+@Serializable
+data class ColorCategoryPage(
+    val page: Int,
+    val perPage: Int,
+    val data: List<ColorCategory>
+)
+
 

@@ -9,7 +9,7 @@ object SizeCategoryEntity : Table<Nothing>("t_size_category") {
     val id = int("id").primaryKey()
     val typeCategoryId = int("typeCategory_id")
     val size = varchar("size")
-    val adminId = int("admin_id")
+    val userAdminID = int("admin_id")
     val createdAt = varchar("created_at")
     val updatedAt = varchar("updated_at")
 }

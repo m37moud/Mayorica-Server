@@ -10,7 +10,7 @@ object ColorCategoryEntity :Table<Nothing>("t_color_category") {
     val typeCategoryId = int("typeCategory_id")
     val sizeCategoryId = int("sizeCategory_id")
     val color = varchar("size")
-    val adminId = int("admin_id")
+    val userAdminID = int("admin_id")
     val createdAt = varchar("created_at")
     val updatedAt = varchar("updated_at")
 }

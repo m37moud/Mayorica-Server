@@ -3,8 +3,10 @@ package com.example.route.client_admin_side
 import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.mapper.toModelCreate
 import com.example.mapper.toModelUpdate
+import com.example.models.CeramicProvider
 import com.example.models.request.ceramic_provider.CeramicProviderRequest
 import com.example.utils.MyResponse
+import com.example.utils.toDatabaseString
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -12,6 +14,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import mu.KotlinLogging
 import io.ktor.server.routing.*
+import java.time.LocalDateTime
 
 // get all providers
 const val PROVIDERS = "$ADMIN_CLIENT/providers"
@@ -76,7 +79,7 @@ fun Route.providerAdminClient(
             id?.let {
                 ceramicProvider.getCeramicProviderByID(it)?.let { provider ->
                     call.respond(
-                        HttpStatusCode.BadRequest,
+                        HttpStatusCode.OK,
                         MyResponse(
                             success = true,
                             message = "provider is found .",
@@ -84,7 +87,7 @@ fun Route.providerAdminClient(
                         )
                     )
                 } ?: call.respond(
-                    HttpStatusCode.BadRequest,
+                    HttpStatusCode.OK,
                     MyResponse(
                         success = false,
                         message = "no provider found .",
@@ -110,7 +113,7 @@ fun Route.providerAdminClient(
             val id = call.parameters["id"]?.toIntOrNull()
             id?.let {
                 val updateProvider = try {
-                    call.receive<CeramicProviderRequest>()
+                    call.receive<CeramicProvider>()
                 } catch (exc: Exception) {
                     call.respond(
                         HttpStatusCode.OK,
@@ -122,30 +125,46 @@ fun Route.providerAdminClient(
                     )
                     return@put
                 }
-                val updateResult = ceramicProvider.updateCeramicProvider(it, updateProvider.toModelUpdate())
-                if (updateResult > 0) {
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        MyResponse(
-                            success = true,
-                            message = "provider update successfully .",
-                            data = null
+                ceramicProvider.getCeramicProviderByID(id)?.let { temp ->
+                    val updateResult = ceramicProvider.updateCeramicProvider(
+                        it,
+                        updateProvider.copy(
+                            created_at = temp.created_at,
+                            updated_at = LocalDateTime.now().toDatabaseString()
                         )
                     )
-                    return@put
-
-                } else {
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        MyResponse(
-                            success = false,
-                            message = "no provider found .",
-                            data = null
+                    if (updateResult > 0) {
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            MyResponse(
+                                success = true,
+                                message = "provider update successfully .",
+                                data = null
+                            )
                         )
-                    )
-                    return@put
+                        return@put
 
-                }
+                    } else {
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            MyResponse(
+                                success = false,
+                                message = "no provider found .",
+                                data = null
+                            )
+                        )
+                        return@put
+
+                    }
+                } ?: call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = "no provider found .",
+                        data = null
+                    )
+                )
+
 
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
