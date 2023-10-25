@@ -1,4 +1,4 @@
-package com.example.data.categories
+package com.example.data.gallery.categories
 
 import com.example.models.ColorCategory
 import com.example.models.SizeCategory

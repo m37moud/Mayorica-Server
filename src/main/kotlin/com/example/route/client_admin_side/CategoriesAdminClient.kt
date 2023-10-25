@@ -1,6 +1,6 @@
 package com.example.route.client_admin_side
 
-import com.example.data.categories.CategoryDataSource
+import com.example.data.gallery.categories.CategoryDataSource
 import com.example.mapper.toModelCreate
 import com.example.models.*
 import com.example.models.request.categories.ColorCategoryRequest

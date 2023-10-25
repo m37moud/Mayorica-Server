@@ -65,7 +65,7 @@ fun Route.login(
     tokenService: TokenService,
     config: TokenConfig
 ) {
-    // Login a user --> POST /api/v1/users/login
+    // Login a user --> POST /api/v1/admin-client/users/login
     post(LOGIN_REQUEST) {
         logger.debug { "POST /$LOGIN_REQUEST" }
         // check body request if  missing some fields
@@ -76,7 +76,7 @@ fun Route.login(
                 HttpStatusCode.OK,
                 MyResponse(
                     success = false,
-                    message = "Missing Some Fields",
+                    message = e.message ?:"Missing Some Fields",
                     data = null
                 )
             )

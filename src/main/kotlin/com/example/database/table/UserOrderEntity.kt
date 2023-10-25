@@ -2,7 +2,7 @@ package com.example.database.table
 
 import org.ktorm.schema.*
 
-object UserOrderEntity : Table<Nothing>("user_request"){
+object UserOrderEntity : Table<Nothing>("t_user_request"){
     val id =int("id").primaryKey()
     val full_name = varchar("full_name")
     val id_number= varchar("id_number")

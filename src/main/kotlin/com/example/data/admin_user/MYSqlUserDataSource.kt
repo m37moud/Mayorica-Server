@@ -42,6 +42,31 @@ class MYSqlUserDataSource(private val db: Database) : UserDataSource {
         }
 
 
+
+    override suspend fun getAllUser(): List<AdminUser> = withContext(Dispatchers.IO) {
+        val notes = db.from(AdminUserEntity)
+            .select()
+            .orderBy(AdminUserEntity.created_at.desc())
+            .mapNotNull {
+                rowToAdminUser(it)
+            }
+
+        notes
+    }
+
+    override suspend fun isAdmin(id:Int): Boolean {
+      return withContext(Dispatchers.IO){
+          val isAdmin = db.from(AdminUserEntity)
+              .select(AdminUserEntity.role)
+              .where {
+                  AdminUserEntity.id eq id
+              }
+              .map { row -> row[AdminUserEntity.role] }
+              .firstOrNull()
+          isAdmin == Role.ADMIN.name
+      }
+    }
+
     private fun rowToAdminUser(row: QueryRowSet?): AdminUser? {
         return if (row == null) {
             null
@@ -61,48 +86,11 @@ class MYSqlUserDataSource(private val db: Database) : UserDataSource {
                 password = password,
                 salt = salt,
                 role = role,
-                created_at = createdAt,
-                updated_at = updatedAt
+                created_at = createdAt.toString(),
+                updated_at = updatedAt.toString()
             )
         }
     }
 
-    override suspend fun getAllUser(): List<AdminUser> = withContext(Dispatchers.IO) {
-        val notes = db.from(AdminUserEntity).select()
-            .mapNotNull {
-                rowToAminUser(it)
-            }
 
-        notes
-    }
-
-    override suspend fun isAdmin(id:Int): Boolean {
-      return withContext(Dispatchers.IO){
-          val isAdmin = db.from(AdminUserEntity)
-              .select(AdminUserEntity.role)
-              .where {
-                  AdminUserEntity.id eq id
-              }
-              .map { row -> row[AdminUserEntity.role] }
-              .firstOrNull()
-          isAdmin == Role.ADMIN.name
-      }
-    }
-
-    private fun rowToAminUser(row: QueryRowSet?): AdminUser? {
-        return if (row == null) {
-            null
-        } else {
-            AdminUser(
-                row[AdminUserEntity.id] ?: -1,
-                row[AdminUserEntity.full_name] ?: "",
-                row[AdminUserEntity.username] ?: "",
-                row[AdminUserEntity.password] ?: "",
-                row[AdminUserEntity.salt] ?:"",
-                row[AdminUserEntity.role] ?: "",
-                row[AdminUserEntity.created_at] ?:"",
-                row[AdminUserEntity.updated_at] ?:"",
-            )
-        }
-    }
 }

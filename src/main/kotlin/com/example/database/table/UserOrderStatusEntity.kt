@@ -2,7 +2,7 @@ package com.example.database.table
 
 import org.ktorm.schema.*
 
-object UserOrderStatusEntity : Table<Nothing>("user_request_status") {
+object UserOrderStatusEntity : Table<Nothing>("t_user_request_status") {
     val id = int("id").primaryKey()
     val requestUser_id = int("requestUser_id")
     val approve_state = int("approve_state")

@@ -1,4 +1,4 @@
-package com.example.data.categories
+package com.example.data.gallery.categories
 
 import com.example.database.table.CeramicProviderEntity
 import com.example.database.table.ColorCategoryEntity

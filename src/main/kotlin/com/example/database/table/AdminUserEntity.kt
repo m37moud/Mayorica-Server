@@ -1,10 +1,11 @@
 package com.example.database.table
 
 import org.ktorm.schema.Table
+import org.ktorm.schema.datetime
 import org.ktorm.schema.int
 import org.ktorm.schema.varchar
 
-object AdminUserEntity : Table<Nothing>("admin_users") {
+object AdminUserEntity : Table<Nothing>("t_admin_users") {
     val id = int("id").primaryKey()
     val full_name = varchar("full_name")
     val username = varchar("username")
