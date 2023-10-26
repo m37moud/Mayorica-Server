@@ -5,6 +5,7 @@ import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
 import com.example.models.request.order.UserOrderStatusRequest
 import com.example.utils.Constants
+import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.MyResponse
 import com.example.utils.toDatabaseString
 import io.ktor.http.*
@@ -36,7 +37,7 @@ fun Route.orders(
                     principal?.getClaim("userId", String::class)?.toIntOrNull()
                 } catch (e: Exception) {
                     call.respond(
-                        HttpStatusCode.OK,
+                        HttpStatusCode.Conflict,
                         MyResponse(
                             success = false,
                             message = e.message ?: "Failed ",

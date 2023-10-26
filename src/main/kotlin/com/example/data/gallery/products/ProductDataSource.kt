@@ -12,7 +12,7 @@ interface ProductDataSource {
     suspend fun updateProduct(product: Product): Int
     suspend fun deleteProduct(productId: Int): Int
     suspend fun deleteAllProduct(): Int
-    suspend fun saveAllProduct(typeCategories: Iterable<Product>): Int
+    suspend fun saveAllProduct(productList: Iterable<Product>): Int
 
 
 }

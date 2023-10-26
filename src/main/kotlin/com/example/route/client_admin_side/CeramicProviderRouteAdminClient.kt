@@ -5,6 +5,7 @@ import com.example.mapper.toModelCreate
 import com.example.mapper.toModelUpdate
 import com.example.models.CeramicProvider
 import com.example.models.request.ceramic_provider.CeramicProviderRequest
+import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.MyResponse
 import com.example.utils.toDatabaseString
 import io.ktor.http.*

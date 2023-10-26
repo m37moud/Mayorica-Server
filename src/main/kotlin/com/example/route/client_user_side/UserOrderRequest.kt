@@ -10,6 +10,7 @@ import com.example.models.response.AcceptedOrderResponse
 import com.example.models.response.RejectedOrderResponse
 import com.example.route.client_admin_side.LOGIN_REQUEST
 import com.example.utils.Constants
+import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
 import com.example.utils.toDatabaseString
 import io.ktor.http.*
@@ -20,7 +21,6 @@ import io.ktor.server.routing.*
 import mu.KotlinLogging
 import java.time.LocalDateTime
 
-const val USER_CLIENT = "${Constants.ENDPOINT}/user-client"
 const val ORDER_REQUEST = "$USER_CLIENT/order"
 const val NEARLY_LOCATION = "$USER_CLIENT/nearlyLocation"
 const val CREATE_ORDER_REQUEST = "$ORDER_REQUEST/create"

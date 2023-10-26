@@ -5,6 +5,7 @@ data class Product(
     val typeCategoryId: Int,
     val sizeCategoryId: Int,
     val colorCategoryId: Int,
+    val userAdminID: Int,
     val productName: String,
     val image: String,
     val createdAt: String,

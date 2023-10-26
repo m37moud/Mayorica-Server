@@ -2,6 +2,7 @@ package com.example.plugins
 
 import com.example.data.admin_user.UserDataSource
 import com.example.data.ceramic_provider.CeramicProviderDataSource
+import com.example.data.gallery.products.ProductDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
 import com.example.route.client_admin_side.*
@@ -11,6 +12,7 @@ import com.example.route.client_user_side.userOrderRequest
 import com.example.security.hash.HashingService
 import com.example.security.token.TokenConfig
 import com.example.security.token.TokenService
+import com.example.service.storage.StorageService
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
@@ -23,6 +25,8 @@ fun Application.configureRouting(
     orderDataSource: OrderDataSource,
     orderStatusDataSource: OrderStatusDataSource,
     ceramicProvider: CeramicProviderDataSource,
+    productDataSource: ProductDataSource,
+    storageService: StorageService,
     hashingService: HashingService,
     tokenService: TokenService,
     config: TokenConfig
@@ -63,6 +67,12 @@ fun Application.configureRouting(
         )
         providerAdminClient(ceramicProvider = ceramicProvider)
         getNearlyProvider(ceramicProvider = ceramicProvider)
+
+        //product
+        productAdminRoute(
+            productDataSource = productDataSource,
+            storageService = storageService
+        )
         get("/") {
             call.respondText("\uD83D\uDC4B Hello Mayorca Reactive API REST!")
         }

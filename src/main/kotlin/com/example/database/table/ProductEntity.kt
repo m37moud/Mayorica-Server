@@ -7,9 +7,10 @@ import org.ktorm.schema.varchar
 
 object ProductEntity : Table<Nothing>("t_product") {
     val id = int("id").primaryKey()
-    val typeCategoryId = int("typeCategoryId")
-    val sizeCategoryId = int("sizeCategoryId")
-    val colorCategoryId = int("colorCategoryId")
+    val typeCategoryId = int("typeCategory_id")
+    val sizeCategoryId = int("sizeCategory_id")
+    val colorCategoryId = int("colorCategory_id")
+    val userAdminID = int("admin_id")
     val productName = varchar("product_name")
     val image = varchar("image")
     val createdAt = varchar("created_at")

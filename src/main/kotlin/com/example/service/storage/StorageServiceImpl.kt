@@ -55,7 +55,7 @@ class StorageServiceImpl(
         fileName: String,
         fileUrl: String,
         fileBytes: ByteArray
-    ): Boolean {
+    ): String? {
         logger.debug { "Saving file in: $fileName" }
 
         return withContext(Dispatchers.IO) {
@@ -63,7 +63,7 @@ class StorageServiceImpl(
 
             File("${uploadDir}/$fileName").writeBytes(fileBytes)
 
-            true
+            fileUrl
         }
 
     }

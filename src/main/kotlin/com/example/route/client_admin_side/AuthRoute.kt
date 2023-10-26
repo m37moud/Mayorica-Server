@@ -10,6 +10,7 @@ import com.example.security.token.TokenClaim
 import com.example.security.token.TokenConfig
 import com.example.security.token.TokenService
 import com.example.utils.Constants
+import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.Constants.ENDPOINT
 import com.example.utils.MyResponse
 import com.example.utils.toDatabaseString
@@ -23,7 +24,6 @@ import io.ktor.server.routing.*
 import mu.KotlinLogging
 import java.time.LocalDateTime
 
-const val ADMIN_CLIENT = "${ENDPOINT}/admin-client"
 const val USERS = "$ADMIN_CLIENT/users"
 const val REGISTER_REQUEST = "$USERS/register"
 const val LOGIN_REQUEST = "$USERS/login"

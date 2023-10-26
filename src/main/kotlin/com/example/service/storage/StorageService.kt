@@ -7,7 +7,7 @@ interface StorageService {
         fileName: String,
         fileUrl: String,
         fileBytes: ByteArray
-    ): Boolean
+    ): String?
 
     suspend fun getFile(fileName: String): File?
     suspend fun deleteFile(fileName: String): Boolean
