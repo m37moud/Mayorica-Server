@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import java.time.LocalDateTime
 
 class MYSqlUserDataSource(private val db: Database) : UserDataSource {
 
@@ -35,8 +36,8 @@ class MYSqlUserDataSource(private val db: Database) : UserDataSource {
                 set(it.password, newUser.password)
                 set(it.salt, newUser.salt)
                 set(it.role, newUser.role)
-                set(it.created_at, newUser.created_at)
-                set(it.updated_at,newUser.updated_at)
+                set(it.created_at, LocalDateTime.now())
+                set(it.updated_at,LocalDateTime.now())
             }
             result
         }

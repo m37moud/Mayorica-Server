@@ -38,10 +38,10 @@ class StorageServiceImpl(
         // Create upload directory if not exists (or ignore if exists)
         // and clean if dev
         Files.createDirectories(Path.of(uploadDir))
-        if (myConfig.propertyOrNull("ktor.environment")?.getString() == "dev") {
-            logger.debug { "Cleaning storage directory in $uploadDir" }
+//        if (myConfig.propertyOrNull("ktor.environment")?.getString() == "dev") {
+//            logger.debug { "Cleaning storage directory in $uploadDir" }
 //            File(uploadDir).listFiles()?.forEach { it.delete() }
-        }
+//        }
     }
 
     /**

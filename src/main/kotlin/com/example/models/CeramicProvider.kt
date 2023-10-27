@@ -1,6 +1,5 @@
 package com.example.models
 
-import io.ktor.server.auth.*
 import java.text.DecimalFormat
 
 data class CeramicProvider(
@@ -12,8 +11,8 @@ data class CeramicProvider(
     val country: String,
     val governorate: String,
     val address: String,
-    val created_at: String = "",
-    val updated_at: String = ""
+    val createdAt: String = "",
+    val updatedAt: String = ""
 
 ) {
     fun calculationByDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Int {

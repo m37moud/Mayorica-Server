@@ -2,6 +2,7 @@ package com.example.data.order
 
 import com.example.models.UserOrder
 import com.example.models.UserOrderStatus
+import java.time.LocalDateTime
 
 interface OrderDataSource {
     /**
@@ -9,10 +10,10 @@ interface OrderDataSource {
      */
     suspend fun getAllOrder(): List<UserOrder>
     suspend fun getOrderById(id: Int): UserOrder?
-    suspend fun getOrderByDate(createdDate: String): UserOrder?
+    suspend fun getOrderByDate(createdDate: LocalDateTime): UserOrder?
     suspend fun getOrderByName(name: String): UserOrder?
     suspend fun getOrderByOrderNum(orderNumber: String): UserOrder?
-    suspend fun getOrderByNameAndIdNumber(name: String, id_number: String): UserOrder?
+    suspend fun getOrderByNameAndIdNumber(name: String, idNumber: String): UserOrder?
 
     suspend fun updateOrder(userOrder: UserOrder): Int
     suspend fun deleteOrder(orderId: Int): Int

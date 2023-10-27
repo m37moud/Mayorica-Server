@@ -136,8 +136,8 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                 userAdminID = userAdminID,
                 productName = productName,
                 image = image,
-                createdAt = createdAt,
-                updatedAt = updatedAt,
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString(),
                 deleted = deleted
 
             )

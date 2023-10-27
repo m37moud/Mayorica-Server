@@ -1,9 +1,6 @@
 package com.example.database.table
 
-import org.ktorm.schema.Table
-import org.ktorm.schema.datetime
-import org.ktorm.schema.int
-import org.ktorm.schema.varchar
+import org.ktorm.schema.*
 
 object AdminUserEntity : Table<Nothing>("t_admin_users") {
     val id = int("id").primaryKey()
@@ -12,6 +9,6 @@ object AdminUserEntity : Table<Nothing>("t_admin_users") {
     val password = varchar("password")
     val salt = varchar("salt")
     val role = varchar("user_role")
-    val created_at = varchar("created_at")
-    val updated_at = varchar("updated_at")
+    val created_at = datetime("created_at")
+    val updated_at = datetime("updated_at")
 }

@@ -11,6 +11,6 @@ object CeramicProviderEntity :Table<Nothing>("t_ceramic_provider") {
     val country = varchar("country" )
     val governorate = varchar("governorate")
     val address = varchar("address")
-    val created_at = varchar("created_at")
-    val updated_at = varchar("updated_at")
+    val createdAt = datetime("created_at")
+    val updatedAt = datetime("updated_at")
 }

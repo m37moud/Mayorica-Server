@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import java.time.LocalDateTime
 import java.util.*
 import kotlin.Comparator
 
@@ -86,8 +87,8 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 set(it.country, ceramicProvider.country)
                 set(it.governorate, ceramicProvider.governorate)
                 set(it.address, ceramicProvider.address)
-                set(it.created_at, ceramicProvider.created_at)
-                set(it.updated_at, ceramicProvider.updated_at)
+                set(it.createdAt, LocalDateTime.now())
+                set(it.updatedAt, LocalDateTime.now())
 
             }
             result
@@ -104,8 +105,8 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 set(it.country, ceramicProvider.country)
                 set(it.governorate, ceramicProvider.governorate)
                 set(it.address, ceramicProvider.address)
-                set(it.created_at, ceramicProvider.created_at)
-                set(it.updated_at, ceramicProvider.updated_at)
+
+                set(it.updatedAt, LocalDateTime.now())
                 where {
                     it.id eq providerId
                 }
@@ -152,8 +153,8 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
             val country = row[CeramicProviderEntity.country] ?: ""
             val governorate = row[CeramicProviderEntity.governorate] ?: ""
             val address = row[CeramicProviderEntity.address] ?: ""
-            val created_at = row[CeramicProviderEntity.created_at] ?: ""
-            val updated_at = row[CeramicProviderEntity.updated_at] ?: ""
+            val createdAt = row[CeramicProviderEntity.createdAt] ?: ""
+            val updatedAt = row[CeramicProviderEntity.updatedAt] ?: ""
 
             CeramicProvider(
                 id = id,
@@ -163,8 +164,8 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 country = country,
                 governorate = governorate,
                 address = address,
-                created_at = created_at,
-                updated_at = updated_at
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString()
 
             )
         }

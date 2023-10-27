@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import java.time.LocalDateTime
 
 class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
     override suspend fun getAllOrder(): List<UserOrder> {
@@ -37,7 +38,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
         }
     }
 
-    override suspend fun getOrderByDate(createdDate: String): UserOrder? {
+    override suspend fun getOrderByDate(createdDate: LocalDateTime): UserOrder? {
         return withContext(Dispatchers.IO) {
             val userOrder = db.from(UserOrderEntity)
                 .select()
@@ -75,13 +76,14 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
             userOrder
         }
     }
-    override suspend fun getOrderByNameAndIdNumber(name: String, id_number: String): UserOrder? {
+
+    override suspend fun getOrderByNameAndIdNumber(name: String, idNumber: String): UserOrder? {
         return withContext(Dispatchers.IO) {
             val userOrder = db.from(UserOrderEntity)
                 .select()
                 .where {
                     (UserOrderEntity.full_name eq name) and
-                            (UserOrderEntity.id_number eq id_number)
+                            (UserOrderEntity.id_number eq idNumber)
 
                 }.map {
                     rowToUserOrder(it)
@@ -133,7 +135,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 val insertResult = createUserOrder(userOrder)
                 val tempUserOrder = getOrderByNameAndIdNumber(
                     name = userOrder.fullName,
-                    id_number = userOrder.id_number
+                    idNumber = userOrder.id_number
                 )
                 val tempOrderStatus = UserOrderStatus(
                     requestUser_id = tempUserOrder!!.id,
@@ -158,14 +160,13 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 set(it.country, userOrder.country)
                 set(it.governorate, userOrder.governorate)
                 set(it.approve_state, userOrder.approveState)
-                set(it.created_at, userOrder.created_at)
-                set(it.updated_at, userOrder.updated_at)
+                set(it.created_at, LocalDateTime.now())
+                set(it.updated_at, LocalDateTime.now())
             }
             insertResult
         }
 
     }
-
 
 
     suspend fun createOrderStatus(userOrderStatus: UserOrderStatus): Int {
@@ -185,8 +186,8 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
         }
     }
 
-    override suspend fun getOrderByIdNumber(idNumber: String): UserOrder?{
-        return withContext(Dispatchers.IO){
+    override suspend fun getOrderByIdNumber(idNumber: String): UserOrder? {
+        return withContext(Dispatchers.IO) {
             val order = db.from(UserOrderEntity)
                 .select()
                 .where {
@@ -198,8 +199,6 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
         }
 
     }
-
-
 
 
     private fun rowToUserOrder(row: QueryRowSet?): UserOrder? {
@@ -217,8 +216,8 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 row[UserOrderEntity.country] ?: "",
                 row[UserOrderEntity.governorate] ?: "",
                 row[UserOrderEntity.approve_state] ?: 0,
-                row[UserOrderEntity.created_at] ?: "",
-                row[UserOrderEntity.updated_at] ?: "",
+                row[UserOrderEntity.created_at]?.toString() ?: "",
+                row[UserOrderEntity.updated_at]?.toString() ?: "",
             )
         }
     }

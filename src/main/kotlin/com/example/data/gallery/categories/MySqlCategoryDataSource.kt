@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
 
@@ -78,8 +79,8 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
             val result = db.insert(TypeCategoryEntity) {
                 set(it.typeName, typeCategory.typeName)
                 set(it.userAdminID, typeCategory.userAdminID)
-                set(it.createdAt, typeCategory.createdAt)
-                set(it.updatedAt, typeCategory.updatedAt)
+                set(it.createdAt, LocalDateTime.now())
+                set(it.updatedAt, LocalDateTime.now())
             }
             result
         }
@@ -92,8 +93,8 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
             val result = db.update(TypeCategoryEntity) {
                 set(it.typeName, typeCategory.typeName)
                 set(it.userAdminID, typeCategory.userAdminID)
-                set(it.createdAt, typeCategory.createdAt)
-                set(it.updatedAt, typeCategory.updatedAt)
+
+                set(it.updatedAt, LocalDateTime.now())
                 where {
                     it.id eq typeCategory.id
                 }
@@ -194,8 +195,8 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
                 set(it.typeCategoryId, sizeCategory.typeCategoryId)
                 set(it.size, sizeCategory.size)
                 set(it.userAdminID, sizeCategory.userAdminID)
-                set(it.createdAt, sizeCategory.createdAt)
-                set(it.updatedAt, sizeCategory.updatedAt)
+                set(it.createdAt, LocalDateTime.now())
+                set(it.updatedAt, LocalDateTime.now())
             }
             result
         }
@@ -209,8 +210,8 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
                 set(it.typeCategoryId, sizeCategory.typeCategoryId)
                 set(it.size, sizeCategory.size)
                 set(it.userAdminID, sizeCategory.userAdminID)
-                set(it.createdAt, sizeCategory.createdAt)
-                set(it.updatedAt, sizeCategory.updatedAt)
+
+                set(it.updatedAt, LocalDateTime.now())
                 where {
                     it.id eq sizeCategory.id
                 }
@@ -309,8 +310,8 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
                 set(it.sizeCategoryId, colorCategory.sizeCategoryId)
                 set(it.color, colorCategory.color)
                 set(it.userAdminID, colorCategory.userAdminID)
-                set(it.createdAt, colorCategory.createdAt)
-                set(it.updatedAt, colorCategory.updatedAt)
+                set(it.createdAt, LocalDateTime.now())
+                set(it.updatedAt, LocalDateTime.now())
             }
             result
         }
@@ -325,8 +326,8 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
                 set(it.sizeCategoryId, colorCategory.sizeCategoryId)
                 set(it.color, colorCategory.color)
                 set(it.userAdminID, colorCategory.userAdminID)
-                set(it.createdAt, colorCategory.createdAt)
-                set(it.updatedAt, colorCategory.updatedAt)
+
+                set(it.updatedAt, LocalDateTime.now())
                 where {
                     it.id eq colorCategory.id
                 }
@@ -380,8 +381,8 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
                 id = id,
                 typeName = typeName,
                 userAdminID = userAdminID,
-                createdAt = createdAt,
-                updatedAt = updatedAt
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString()
 
             )
         }
@@ -403,8 +404,8 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
                 typeCategoryId = typeCategoryId,
                 size = size,
                 userAdminID = userAdminID,
-                createdAt = createdAt,
-                updatedAt = updatedAt
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString()
 
             )
         }
@@ -428,8 +429,8 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
                 sizeCategoryId = sizeCategoryId,
                 color = color,
                 userAdminID = userAdminID,
-                createdAt = createdAt,
-                updatedAt = updatedAt
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString()
 
             )
         }

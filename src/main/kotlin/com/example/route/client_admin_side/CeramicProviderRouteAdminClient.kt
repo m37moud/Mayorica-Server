@@ -2,7 +2,6 @@ package com.example.route.client_admin_side
 
 import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.mapper.toModelCreate
-import com.example.mapper.toModelUpdate
 import com.example.models.CeramicProvider
 import com.example.models.request.ceramic_provider.CeramicProviderRequest
 import com.example.utils.Constants.ADMIN_CLIENT
@@ -130,8 +129,8 @@ fun Route.providerAdminClient(
                     val updateResult = ceramicProvider.updateCeramicProvider(
                         it,
                         updateProvider.copy(
-                            created_at = temp.created_at,
-                            updated_at = LocalDateTime.now().toDatabaseString()
+                            createdAt = temp.createdAt,
+                            updatedAt = LocalDateTime.now().toDatabaseString()
                         )
                     )
                     if (updateResult > 0) {

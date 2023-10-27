@@ -12,7 +12,7 @@ fun CeramicProviderRequest.toModelCreate() = CeramicProvider(
     country = this.country,
     governorate = this.governorate,
     address = this.address,
-    created_at = LocalDateTime.now().toDatabaseString()
+    createdAt = LocalDateTime.now().toDatabaseString()
 
 
 )
@@ -25,7 +25,7 @@ fun CeramicProviderRequest.toModelUpdate() = CeramicProvider(
     country = this.country,
     governorate = this.governorate,
     address = this.address,
-    updated_at = LocalDateTime.now().toDatabaseString()
+    updatedAt = LocalDateTime.now().toDatabaseString()
 
 
 )
