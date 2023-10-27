@@ -12,6 +12,7 @@ import com.example.route.client_admin_side.LOGIN_REQUEST
 import com.example.utils.Constants
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
+import com.example.utils.generateOrderNumber
 import com.example.utils.toDatabaseString
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -72,9 +73,11 @@ fun Route.userOrderRequest(
                     userOrderRequest.id_number
                 )
             if (checkUserOrder == null) {
+                val orderNum = generateOrderNumber()
                 val userOrder = UserOrder(
                     fullName = userOrderRequest.full_name,
                     id_number = userOrderRequest.id_number,
+                    orderNumber = orderNum,
                     department = userOrderRequest.department,
                     latitude = userOrderRequest.latitude,
                     longitude = userOrderRequest.longitude,
@@ -91,8 +94,8 @@ fun Route.userOrderRequest(
                         HttpStatusCode.OK,
                         MyResponse(
                             success = true,
-                            message = "Order Successfully",
-                            data = null
+                            message = "Order Successfully please save this number",
+                            data = orderNum
                         )
                     )
                     return@post

@@ -11,6 +11,7 @@ interface OrderDataSource {
     suspend fun getOrderById(id: Int): UserOrder?
     suspend fun getOrderByDate(createdDate: String): UserOrder?
     suspend fun getOrderByName(name: String): UserOrder?
+    suspend fun getOrderByOrderNum(orderNumber: String): UserOrder?
     suspend fun getOrderByNameAndIdNumber(name: String, id_number: String): UserOrder?
 
     suspend fun updateOrder(userOrder: UserOrder): Int

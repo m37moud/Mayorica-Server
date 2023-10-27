@@ -79,6 +79,7 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
     override suspend fun addCeramicProvider(ceramicProvider: CeramicProvider): Int {
         return withContext(Dispatchers.IO) {
             val result = db.insert(CeramicProviderEntity) {
+                set(it.userAdminID, ceramicProvider.userAdminID)
                 set(it.name, ceramicProvider.name)
                 set(it.latitude, ceramicProvider.latitude)
                 set(it.longitude, ceramicProvider.longitude)
@@ -97,6 +98,7 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
         return withContext(Dispatchers.IO) {
             val result = db.update(CeramicProviderEntity) {
                 set(it.name, ceramicProvider.name)
+                set(it.userAdminID, ceramicProvider.userAdminID)
                 set(it.latitude, ceramicProvider.latitude)
                 set(it.longitude, ceramicProvider.longitude)
                 set(it.country, ceramicProvider.country)

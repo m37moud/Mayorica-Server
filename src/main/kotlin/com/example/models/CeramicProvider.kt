@@ -5,6 +5,7 @@ import java.text.DecimalFormat
 
 data class CeramicProvider(
     val id: Int = -1,
+    val userAdminID: Int = -1,
     val name: String,
     val latitude: Double,
     val longitude: Double,

@@ -56,6 +56,8 @@ fun Route.productAdminRoute(
             var productName: String? = null
             var deleted = false
             var fileName: String? = null
+            var fileBytes: ByteArray? = null
+            var url: String? = null
             var imageUrl: String? = null
             val principal = call.principal<JWTPrincipal>()
 
@@ -74,7 +76,7 @@ fun Route.productAdminRoute(
             }
             try {
                 val baseUrl =
-                    call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "/$ENDPOINT/image/"
+                    call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "$ENDPOINT/image/"
                 multiPart.forEachPart { part ->
                     when (part) {
                         is PartData.FormItem -> {
@@ -119,27 +121,8 @@ fun Route.productAdminRoute(
                             }
                             fileName = generateSafeFileName(part.originalFileName as String)
                             imageUrl = "$baseUrl$fileName"
-                            val fileBytes = part.streamProvider().readBytes()
-                            val url = "$baseUrl$fileName"
-                            imageUrl = try {
-                                storageService.saveFile(
-                                    fileName = fileName!!,
-                                    fileUrl = url,
-                                    fileBytes = fileBytes
-                                )
-                            } catch (ex: Exception) {
-                                // something went wrong with the image part, delete the file
-                                storageService.deleteFile(fileName = fileName!!)
-                                ex.printStackTrace()
-                                call.respond(
-                                    status = HttpStatusCode.InternalServerError, message = MyResponse(
-                                        success = false,
-                                        message = ex.message ?: "Error happened while uploading .",
-                                        data = null
-                                    )
-                                )
-                                return@forEachPart
-                            }
+                            fileBytes = part.streamProvider().readBytes()
+                            url = "$baseUrl$fileName"
 
 
                         }
@@ -149,64 +132,85 @@ fun Route.productAdminRoute(
                     }
                     part.dispose()
                 }
-                if (!imageUrl.isNullOrEmpty()) {
 
-                    val isProduct = productDataSource.getProductByName(productName!!)
-                    if (isProduct == null) {
+                val isProduct = productDataSource.getProductByName(productName!!)
+                if (isProduct == null) {
+                    imageUrl = try {
+                        storageService.saveFile(
+                            fileName = fileName!!,
+                            fileUrl = url!!,
+                            fileBytes = fileBytes!!
+                        ).also {
+                            if (!imageUrl.isNullOrEmpty()) {
+                                Product(
+                                    typeCategoryId = typeCategoryId!!,
+                                    sizeCategoryId = sizeCategoryId!!,
+                                    colorCategoryId = colorCategoryId!!,
+                                    userAdminID = userAdminId!!,
+                                    productName = productName!!,
+                                    image = imageUrl!!,
+                                    createdAt = LocalDateTime.now().toDatabaseString(),
+                                    updatedAt = "",
+                                    deleted = deleted
+                                ).apply {
 
-                        Product(
-                            typeCategoryId = typeCategoryId!!,
-                            sizeCategoryId = sizeCategoryId!!,
-                            colorCategoryId = colorCategoryId!!,
-                            userAdminID = userAdminId!!,
-                            productName = productName!!,
-                            image = imageUrl!!,
-                            createdAt = LocalDateTime.now().toDatabaseString(),
-                            updatedAt = "",
-                            deleted = deleted
-                        ).apply {
-
-                            val isInserted = productDataSource.createProduct(this)
-                            if (isInserted > 0) {
-                                call.respond(
-                                    status = HttpStatusCode.Created,
-                                    message = MyResponse(
-                                        success = true,
-                                        message = "product inserted successfully",
-                                        data = null
-                                    )
-                                )
-                                return@post
+                                    val isInserted = productDataSource.createProduct(this)
+                                    if (isInserted > 0) {
+                                        call.respond(
+                                            status = HttpStatusCode.Created,
+                                            message = MyResponse(
+                                                success = true,
+                                                message = "product inserted successfully",
+                                                data = this
+                                            )
+                                        )
+                                        return@post
+                                    } else {
+                                        call.respond(
+                                            status = HttpStatusCode.OK,
+                                            message = MyResponse(
+                                                success = false,
+                                                message = "this product inserted before",
+                                                data = null
+                                            )
+                                        )
+                                        return@post
+                                    }
+                                }
                             } else {
+                                storageService.deleteFile(fileName = fileName!!)
                                 call.respond(
                                     status = HttpStatusCode.OK,
                                     message = MyResponse(
                                         success = false,
-                                        message = "this product inserted before",
+                                        message = "some Error happened while uploading .",
                                         data = null
                                     )
                                 )
                                 return@post
                             }
+
                         }
-                    } else {
+                    } catch (ex: Exception) {
+                        // something went wrong with the image part, delete the file
+                        storageService.deleteFile(fileName = fileName!!)
+                        ex.printStackTrace()
                         call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
+                            status = HttpStatusCode.InternalServerError, message = MyResponse(
                                 success = false,
-                                message = "this product is found",
+                                message = ex.message ?: "Error happened while uploading .",
                                 data = null
                             )
                         )
                         return@post
                     }
+
                 } else {
-                    storageService.deleteFile(fileName = fileName!!)
                     call.respond(
                         status = HttpStatusCode.OK,
                         message = MyResponse(
                             success = false,
-                            message = "some Error happened while uploading .",
+                            message = "this product is found",
                             data = null
                         )
                     )

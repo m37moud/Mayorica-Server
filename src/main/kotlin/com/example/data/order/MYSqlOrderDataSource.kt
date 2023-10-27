@@ -63,7 +63,18 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
         }
     }
 
-
+    override suspend fun getOrderByOrderNum(orderNumber: String): UserOrder? {
+        return withContext(Dispatchers.IO) {
+            val userOrder = db.from(UserOrderEntity)
+                .select()
+                .where {
+                    UserOrderEntity.orderNumber eq orderNumber
+                }.map {
+                    rowToUserOrder(it)
+                }.firstOrNull()
+            userOrder
+        }
+    }
     override suspend fun getOrderByNameAndIdNumber(name: String, id_number: String): UserOrder? {
         return withContext(Dispatchers.IO) {
             val userOrder = db.from(UserOrderEntity)
@@ -88,7 +99,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 set(it.country, userOrder.country)
                 set(it.governorate, userOrder.governorate)
                 set(it.approve_state, userOrder.approveState)
-                set(it.created_at, userOrder.created_at)
+//                set(it.created_at, userOrder.created_at)
                 set(it.updated_at, userOrder.updated_at)
                 where {
                     it.id eq userOrder.id
@@ -140,6 +151,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
             val insertResult = db.insert(UserOrderEntity) {
                 set(it.full_name, userOrder.fullName)
                 set(it.id_number, userOrder.id_number)
+                set(it.orderNumber, userOrder.orderNumber)
                 set(it.department, userOrder.department)
                 set(it.latitude, userOrder.latitude)
                 set(it.longitude, userOrder.longitude)
@@ -154,7 +166,9 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
 
     }
 
-     suspend fun createOrderStatus(userOrderStatus: UserOrderStatus): Int {
+
+
+    suspend fun createOrderStatus(userOrderStatus: UserOrderStatus): Int {
         return withContext(Dispatchers.IO) {
             val result = db.insert(UserOrderStatusEntity) {
                 set(it.requestUser_id, userOrderStatus.requestUser_id)
@@ -196,6 +210,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 row[UserOrderEntity.id] ?: -1,
                 row[UserOrderEntity.full_name] ?: "",
                 row[UserOrderEntity.id_number] ?: "",
+                row[UserOrderEntity.orderNumber] ?: "",
                 row[UserOrderEntity.department] ?: "",
                 row[UserOrderEntity.latitude] ?: 0.0,
                 row[UserOrderEntity.longitude] ?: 0.0,

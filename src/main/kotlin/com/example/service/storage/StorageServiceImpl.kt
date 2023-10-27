@@ -21,7 +21,7 @@ class StorageServiceImpl(
     private val myConfig: HoconApplicationConfig
 ) : StorageService {
     private val uploadDir by lazy {
-        myConfig.propertyOrNull("upload.dir")?.getString() ?: "uploads"
+        myConfig.propertyOrNull("storage.uploadDir")?.getString() ?: "uploads11"
     }
 
     init {
@@ -40,7 +40,7 @@ class StorageServiceImpl(
         Files.createDirectories(Path.of(uploadDir))
         if (myConfig.propertyOrNull("ktor.environment")?.getString() == "dev") {
             logger.debug { "Cleaning storage directory in $uploadDir" }
-            File(uploadDir).listFiles()?.forEach { it.delete() }
+//            File(uploadDir).listFiles()?.forEach { it.delete() }
         }
     }
 

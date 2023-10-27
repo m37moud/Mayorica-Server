@@ -13,6 +13,7 @@ import com.example.security.hash.HashingService
 import com.example.security.token.TokenConfig
 import com.example.security.token.TokenService
 import com.example.service.storage.StorageService
+import com.example.utils.Constants.ENDPOINT
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
@@ -77,8 +78,14 @@ fun Application.configureRouting(
             call.respondText("\uD83D\uDC4B Hello Mayorca Reactive API REST!")
         }
         // Static plugin. Try to access `/static/index.html`
-        static("/static") {
+        static("/") {
             resources("static")
+            // the path the client will use to access files: /images
+            static("$ENDPOINT/image"){
+
+                // serve all files in fruit_pictures as static content under /images
+                files("uploads")
+            }
         }
     }
 }

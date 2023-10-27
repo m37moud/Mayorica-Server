@@ -1,12 +1,13 @@
 package com.example.models
 
 import kotlinx.serialization.Serializable
-
+import java.security.SecureRandom
 @Serializable
 data class UserOrder(
     val id: Int = -1,
     val fullName: String,
     val id_number: String,
+    val orderNumber: String,
     val department: String,
     val latitude: Double,
     val longitude: Double,

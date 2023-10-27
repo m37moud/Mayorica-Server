@@ -4,6 +4,7 @@ import com.example.data.admin_user.UserDataSource
 import com.example.models.AdminUser
 import com.example.models.request.auth.AdminRegister
 import com.example.models.request.auth.LoginRequest
+import com.example.models.response.UserAdminResponse
 import com.example.security.hash.HashingService
 import com.example.security.hash.SaltedHash
 import com.example.security.token.TokenClaim
@@ -73,10 +74,10 @@ fun Route.login(
             call.receive<LoginRequest>()
         } catch (e: Exception) {
             call.respond(
-                HttpStatusCode.OK,
+                HttpStatusCode.Conflict,
                 MyResponse(
                     success = false,
-                    message = e.message ?:"Missing Some Fields",
+                    message = e.message ?: "Missing Some Fields",
                     data = null
                 )
             )
@@ -97,7 +98,12 @@ fun Route.login(
                         TokenClaim(
                             name = "userId",
                             value = adminUser.id.toString()
+                        ),
+                        TokenClaim(
+                            name = "userRole",
+                            value = adminUser.role.toString()
                         )
+
                     )
                     call.respond(
                         HttpStatusCode.OK,
@@ -114,7 +120,7 @@ fun Route.login(
                         HttpStatusCode.OK,
                         MyResponse(
                             success = false,
-                            message = "Password Incorrect",
+                            message = "Email or Password Incorrect",
                             data = null
                         )
                     )
@@ -126,7 +132,7 @@ fun Route.login(
                     HttpStatusCode.OK,
                     MyResponse(
                         success = false,
-                        message = "Email is wrong",
+                        message = "you are not registered ",
                         data = null
                     )
                 )
@@ -135,7 +141,7 @@ fun Route.login(
 
         } catch (exc: Exception) {
             call.respond(
-                HttpStatusCode.OK,
+                HttpStatusCode.Conflict,
                 MyResponse(
                     success = false,
                     message = exc.message ?: "Failed Login",
@@ -158,10 +164,10 @@ fun Route.getSecretInfo() {
 
             val principal = call.principal<JWTPrincipal>()
             val userId = try {
-                principal?.getClaim("userId", String::class)
+                principal?.getClaim("userId", String::class)?.toIntOrNull()
             } catch (e: Exception) {
                 call.respond(
-                    HttpStatusCode.OK,
+                    HttpStatusCode.Conflict,
                     MyResponse(
                         success = false,
                         message = e.message ?: "Failed ",
@@ -170,7 +176,30 @@ fun Route.getSecretInfo() {
                 )
                 return@get
             }
-            call.respond(HttpStatusCode.OK, "Your userId is $userId")
+            val userRole = try {
+                principal?.getClaim("userRole", String::class)
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+
+            call.respond(
+                HttpStatusCode.OK, MyResponse(
+                    success = true,
+                    message = "",
+                    data = UserAdminResponse(
+                        id = userId!!,
+                        role = userRole!!
+                    )
+                )
+            )
 
         }
     }
@@ -187,7 +216,7 @@ fun Route.register(
             call.receive<AdminRegister>()
         } catch (e: Exception) {
             call.respond(
-                HttpStatusCode.OK,
+                HttpStatusCode.Conflict,
                 MyResponse(
                     success = false,
                     message = "Missing Some Fields",
@@ -262,7 +291,7 @@ fun Route.register(
 
         } catch (e: Exception) {
             call.respond(
-                HttpStatusCode.OK,
+                HttpStatusCode.Conflict,
                 MyResponse(
                     success = false,
                     message = e.message ?: "Failed Registration",

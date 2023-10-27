@@ -6,6 +6,7 @@ object UserOrderEntity : Table<Nothing>("t_user_request"){
     val id =int("id").primaryKey()
     val full_name = varchar("full_name")
     val id_number= varchar("id_number")
+    val orderNumber= varchar("order_number")
     val department= varchar("department")
     val latitude = double("latitude")
     val longitude = double("longitude")
