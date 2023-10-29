@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class TypeCategory(
     val id: Int = -1,
     val typeName: String,
+    val typeIcon: String,
     val userAdminID: Int,
     val createdAt: String,
     val updatedAt: String

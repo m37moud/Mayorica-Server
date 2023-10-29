@@ -8,7 +8,6 @@ import mu.KotlinLogging
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.LocalDateTime
 import java.util.*
 
 private val logger = KotlinLogging.logger {}
@@ -21,8 +20,13 @@ class StorageServiceImpl(
     private val myConfig: HoconApplicationConfig
 ) : StorageService {
     private val uploadDir by lazy {
-        myConfig.propertyOrNull("storage.uploadDir")?.getString() ?: "uploads11"
+        myConfig.propertyOrNull("storage.uploadDir")?.getString() ?: "uploads"
     }
+
+    private val products by lazy { "$uploadDir/products" }
+    private val categories by lazy { "$uploadDir/categories" }
+    private val categoryIcons by lazy { "$uploadDir/categories/icons" }
+    private val categoryImages by lazy { "$uploadDir/categories/images" }
 
     init {
         logger.debug { " Starting Storage Service in $uploadDir" }
@@ -38,9 +42,15 @@ class StorageServiceImpl(
         // Create upload directory if not exists (or ignore if exists)
         // and clean if dev
         Files.createDirectories(Path.of(uploadDir))
+        Files.createDirectories(Path.of(products))
+        Files.createDirectories(Path.of(categories))
+        Files.createDirectories(Path.of(categoryIcons))
+        Files.createDirectories(Path.of(categoryImages))
 //        if (myConfig.propertyOrNull("ktor.environment")?.getString() == "dev") {
 //            logger.debug { "Cleaning storage directory in $uploadDir" }
 //            File(uploadDir).listFiles()?.forEach { it.delete() }
+//            File("$uploadDir/products").listFiles()?.forEach { it.delete() }
+//            File("$uploadDir/categories").listFiles()?.forEach { it.delete() }
 //        }
     }
 
@@ -51,7 +61,7 @@ class StorageServiceImpl(
      * @param fileBytes ByteArray Bytes of the file
      * @return Result<Map<String, String>, StorageError> Map if Ok, StorageError if not
      */
-    override suspend fun saveFile(
+    override suspend fun saveProductFile(
         fileName: String,
         fileUrl: String,
         fileBytes: ByteArray
@@ -61,7 +71,39 @@ class StorageServiceImpl(
         return withContext(Dispatchers.IO) {
 
 
-            File("${uploadDir}/$fileName").writeBytes(fileBytes)
+            File("${products}/$fileName").writeBytes(fileBytes)
+
+            fileUrl
+        }
+
+    }
+    override suspend fun saveCategoryIcons(
+        fileName: String,
+        fileUrl: String,
+        fileBytes: ByteArray
+    ): String? {
+        logger.debug { "Saving file in: $fileName" }
+
+        return withContext(Dispatchers.IO) {
+
+
+            File("${categoryIcons}/$fileName").writeBytes(fileBytes)
+
+            fileUrl
+        }
+
+    }
+    override suspend fun saveCategoryImages(
+        fileName: String,
+        fileUrl: String,
+        fileBytes: ByteArray
+    ): String? {
+        logger.debug { "Saving file in: $fileName" }
+
+        return withContext(Dispatchers.IO) {
+
+
+            File("${categoryImages}/$fileName").writeBytes(fileBytes)
 
             fileUrl
         }

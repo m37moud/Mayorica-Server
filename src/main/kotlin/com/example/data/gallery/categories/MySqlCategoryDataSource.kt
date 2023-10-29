@@ -78,6 +78,7 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
         return withContext(Dispatchers.IO) {
             val result = db.insert(TypeCategoryEntity) {
                 set(it.typeName, typeCategory.typeName)
+                set(it.typeIcon, typeCategory.typeIcon)
                 set(it.userAdminID, typeCategory.userAdminID)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
@@ -245,7 +246,7 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
         return withContext(Dispatchers.IO) {
             var result = 0
             sizeCategories.forEach {
-                result += createSizeCategory(it)
+                result = createSizeCategory(it)
             }
             result
         }
@@ -361,7 +362,7 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
         return withContext(Dispatchers.IO) {
             var result = 0
             colorCategories.forEach {
-                result += createColorCategory(it)
+                result = createColorCategory(it)
             }
             result
         }
@@ -373,6 +374,7 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
         else {
             val id = row[TypeCategoryEntity.id] ?: -1
             val typeName = row[TypeCategoryEntity.typeName] ?: ""
+            val typeIcon = row[TypeCategoryEntity.typeIcon] ?: ""
             val userAdminID = row[TypeCategoryEntity.userAdminID] ?: -1
             val createdAt = row[TypeCategoryEntity.createdAt] ?: ""
             val updatedAt = row[TypeCategoryEntity.updatedAt] ?: ""
@@ -380,6 +382,7 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
             TypeCategory(
                 id = id,
                 typeName = typeName,
+                typeIcon = typeIcon,
                 userAdminID = userAdminID,
                 createdAt = createdAt.toString(),
                 updatedAt = updatedAt.toString()

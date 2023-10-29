@@ -2,13 +2,16 @@ package com.example.data.gallery.products
 
 import com.example.database.table.ProductEntity
 import com.example.models.Product
+import com.example.route.client_admin_side.TYPE_CATEGORIES
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mu.KotlinLogging
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import org.ktorm.schema.Column
 import java.time.LocalDateTime
 import kotlin.reflect.KProperty1
+private val logger = KotlinLogging.logger {}
 
 class MySqlProductDataSource(private val db: Database) : ProductDataSource {
     override suspend fun getAllProduct(): List<Product> {
@@ -77,14 +80,13 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         sortDirection: Int
     ): List<Product> {
         return withContext(Dispatchers.IO) {
+          logger.debug { "getAllProductByCategories /$sortField $sortDirection" }
 
             val productList = db.from(ProductEntity)
                 .select()
                 .orderBy(
                     if (sortDirection > 0)
-                        sortField.asc()
-                    else
-                        sortField.desc()
+                        sortField.asc() else sortField.desc()
                 )
                 .whereWithConditions {
                     if (categoryType > 0) it += ProductEntity.typeCategoryId eq categoryType
@@ -121,6 +123,8 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         sortDirection: Int
     ): List<Product> {
         return withContext(Dispatchers.IO) {
+            logger.debug { "getAllProductPageableByCategories /$sortField $sortDirection" }
+
             val myLimit = if (perPage > 100) 100 else perPage
             val myOffset = (page * perPage)
             val productList = db.from(ProductEntity)
@@ -162,6 +166,16 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                 .where { ProductEntity.productName eq productName }
                 .map { rowToProduct(it) }
                 .firstOrNull()
+            product
+        }
+    }
+    override suspend fun searchProductByName(productName: String): List<Product?> {
+        return withContext(Dispatchers.IO) {
+            val product = db.from(ProductEntity)
+                .select()
+                .where { ProductEntity.productName like  "%${productName}%" }
+                .map { rowToProduct(it) }
+
             product
         }
     }

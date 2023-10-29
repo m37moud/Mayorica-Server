@@ -6,13 +6,15 @@ import com.example.models.*
 import com.example.models.request.categories.ColorCategoryRequest
 import com.example.models.request.categories.SizeCategoryRequest
 import com.example.models.request.categories.TypeCategoryRequest
+import com.example.service.storage.StorageService
+import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
-import com.example.utils.MyResponse
-import com.example.utils.toDatabaseString
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -39,7 +41,10 @@ const val DELETE_COLOR_CATEGORY = "$COLOR_CATEGORY/delete"
 
 private val logger = KotlinLogging.logger {}
 
-fun Route.categories(categoryDataSource: CategoryDataSource) {
+fun Route.categories(
+    categoryDataSource: CategoryDataSource,
+    storageService: StorageService
+) {
     authenticate {
         /**
          * create new category
@@ -47,20 +52,12 @@ fun Route.categories(categoryDataSource: CategoryDataSource) {
         //post type category //api/v1/admin-client/category/type/create
         post(CREATE_TYPE_CATEGORY) {
             logger.debug { "POST /$CREATE_TYPE_CATEGORY" }
-
-            val typeCategoryRequest = try {
-                call.receive<TypeCategoryRequest>()
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = "Missing Some Fields",
-                        data = null
-                    )
-                )
-                return@post
-            }
+            val multiPart = call.receiveMultipart()
+            var typeCategoryName: String? = null
+            var fileName: String? = null
+            var fileBytes: ByteArray? = null
+            var url: String? = null
+            var imageUrl: String? = null
             val principal = call.principal<JWTPrincipal>()
             val userId = try {
                 principal?.getClaim("userId", String::class)?.toIntOrNull()
@@ -75,28 +72,97 @@ fun Route.categories(categoryDataSource: CategoryDataSource) {
                 )
                 return@post
             }
-
             try {
-                val typeCategory = categoryDataSource.getTypeCategoryByName(typeCategoryRequest.name)
+
+                val baseUrl =
+                    call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "${Constants.ENDPOINT}/image/"
+                multiPart.forEachPart { part ->
+                    when (part) {
+                        is PartData.FormItem -> {
+                            // to read parameters that we sent with the image
+                            when (part.name) {
+                                "typeCategoryName" -> {
+                                    typeCategoryName = part.value
+                                }
+
+
+                            }
+
+                        }
+
+                        is PartData.FileItem -> {
+                            if (!isImageContentType(part.contentType.toString())) {
+                                call.respond(
+                                    message = MyResponse(
+                                        success = false,
+                                        message = "Invalid file format",
+                                        data = null
+                                    ), status = HttpStatusCode.BadRequest
+                                )
+                                part.dispose()
+                                return@forEachPart
+
+                            }
+                            fileName = generateSafeFileName(part.originalFileName as String)
+                            fileBytes = part.streamProvider().readBytes()
+                            url = "${baseUrl}categories/icons/${fileName}"
+
+                        }
+
+                        else -> {}
+
+                    }
+                    part.dispose()
+                }
+
+
+                val typeCategory = categoryDataSource.getTypeCategoryByName(typeCategoryName!!)
                 if (typeCategory == null) {
+                    imageUrl = storageService.saveCategoryIcons(
+                        fileName = fileName!!,
+                        fileUrl = url!!,
+                        fileBytes = fileBytes!!
+                    )
+                    if (!imageUrl.isNullOrEmpty()) {
 
-                    val result = categoryDataSource.createTypeCategory(typeCategoryRequest.toModelCreate(userId!!))
+                        TypeCategory(
+                            typeName = typeCategoryName!!,
+                            typeIcon = imageUrl!!,
+                            userAdminID = userId!!,
+                            createdAt = LocalDateTime.now().toDatabaseString(),
+                            updatedAt = LocalDateTime.now().toDatabaseString()
+                        ).apply {
 
-                    if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = true,
-                                message = "Type Category inserted successfully .",
-                                data = typeCategoryRequest.name
-                            )
-                        )
-                        return@post
+                            val result = categoryDataSource.createTypeCategory(this)
+
+                            if (result > 0) {
+                                call.respond(
+                                    HttpStatusCode.OK, MyResponse(
+                                        success = true,
+                                        message = "Type Category inserted successfully .",
+                                        data = this
+                                    )
+                                )
+                                return@post
+                            } else {
+                                call.respond(
+                                    HttpStatusCode.OK,
+                                    MyResponse(
+                                        success = false,
+                                        message = "Type Category inserted failed .",
+                                        data = null
+                                    )
+                                )
+                                return@post
+                            }
+                        }
                     } else {
+                        storageService.deleteFile(fileName = fileName!!)
                         call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
+                            status = HttpStatusCode.OK,
+                            message = MyResponse(
                                 success = false,
-                                message = "Type Category inserted failed .",
+                                message = "some Error happened while uploading .",
                                 data = null
                             )
                         )

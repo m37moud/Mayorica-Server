@@ -3,6 +3,8 @@ package com.example.route.client_admin_side
 import com.example.data.gallery.products.ProductDataSource
 import com.example.database.table.ProductEntity
 import com.example.models.Product
+import com.example.models.ProductPage
+
 import com.example.service.storage.StorageService
 import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.Constants.ENDPOINT
@@ -20,9 +22,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
-import java.security.MessageDigest
 import java.time.LocalDateTime
-import java.util.*
 
 
 /**
@@ -34,6 +34,7 @@ import java.util.*
  */
 
 const val ALL_PRODUCTS = "$ADMIN_CLIENT/products"
+const val SEARCH_PRODUCTS = "$ALL_PRODUCTS/search"
 const val SINGLE_PRODUCT = "$ADMIN_CLIENT/product"
 const val CREATE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/create"
 const val UPDATE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/update"
@@ -55,6 +56,34 @@ fun Route.productAdminRoute(
                 val type = call.request.queryParameters["type"]?.toIntOrNull() ?: -1
                 val size = call.request.queryParameters["size"]?.toIntOrNull() ?: -1
                 val color = call.request.queryParameters["color"]?.toIntOrNull() ?: -1
+                val sortField = when (call.request.queryParameters["sort_by"] ?: "date") {
+                    "name" -> ProductEntity.productName
+                    "date" -> ProductEntity.createdAt
+                    else -> {
+                        return@get call.respond(
+                            status = HttpStatusCode.BadRequest,
+                            message = MyResponse(
+                                success = false,
+                                message = "invalid parameter for sort_by chose between (name & date)",
+                                data = null
+                            )
+                        )
+                    }
+                }
+                val sortDirection = when (call.request.queryParameters["sort_direction"] ?: "dec") {
+                    "dec" -> -1
+                    "asc" -> 1
+                    else -> {
+                        return@get call.respond(
+                            status = HttpStatusCode.BadRequest,
+                            message = MyResponse(
+                                success = false,
+                                message = "invalid parameter for sort_direction chose between (dec & asc)",
+                                data = null
+                            )
+                        )
+                    }
+                }
 
                 logger.debug { "GET ALL /$ALL_PRODUCTS?page=$page&perPage=$perPage" }
                 val productList = try {
@@ -63,7 +92,9 @@ fun Route.productAdminRoute(
                         page = page, perPage = perPage,
                         categoryType = type,
                         categorySize = size,
-                        categoryColor = color
+                        categoryColor = color,
+                        sortField = sortField,
+                        sortDirection = sortDirection
                     )
                 } catch (exc: Exception) {
                     call.respond(
@@ -81,7 +112,7 @@ fun Route.productAdminRoute(
                         HttpStatusCode.OK, MyResponse(
                             success = true,
                             message = "get all type categories successfully",
-                            data = productList
+                            data = ProductPage(page = page, perPage = perPage, data = productList)
                         )
                     )
 
@@ -99,10 +130,33 @@ fun Route.productAdminRoute(
                 val type = call.request.queryParameters["type"]?.toIntOrNull() ?: -1
                 val size = call.request.queryParameters["size"]?.toIntOrNull() ?: -1
                 val color = call.request.queryParameters["color"]?.toIntOrNull() ?: -1
-                val sortField = when(call.request.queryParameters["sort_by"] ?: "name"){
+                val sortField = when (call.request.queryParameters["sort_by"] ?: "date") {
                     "name" -> ProductEntity.productName
                     "date" -> ProductEntity.createdAt
-                    else->{return@get call.respond(status = HttpStatusCode.BadRequest)}
+                    else -> {
+                        return@get call.respond(
+                            status = HttpStatusCode.BadRequest,
+                            message = MyResponse(
+                                success = false,
+                                message = "invalid parameter for sort_by chose between (name & date)",
+                                data = null
+                            )
+                        )
+                    }
+                }
+                val sortDirection = when (call.request.queryParameters["sort_direction"] ?: "dec") {
+                    "dec" -> -1
+                    "asc" -> 1
+                    else -> {
+                        return@get call.respond(
+                            status = HttpStatusCode.BadRequest,
+                            message = MyResponse(
+                                success = false,
+                                message = "invalid parameter for sort_direction chose between (dec & asc)",
+                                data = null
+                            )
+                        )
+                    }
                 }
                 logger.debug { "GET ALL /$TYPE_CATEGORIES" }
 
@@ -111,7 +165,9 @@ fun Route.productAdminRoute(
                     productDataSource.getAllProductByCategories(
                         categoryType = type,
                         categorySize = size,
-                        categoryColor = color
+                        categoryColor = color,
+                        sortField = sortField,
+                        sortDirection = sortDirection
                     )
                 } catch (exc: Exception) {
                     call.respond(
@@ -147,6 +203,32 @@ fun Route.productAdminRoute(
 
 
         }
+        // get the products --> get /api/v1/user-client/products/search
+        get(SEARCH_PRODUCTS) {
+
+            call.request.queryParameters["product_name"]?.let { name ->
+                logger.debug { "GET ALL /$SEARCH_PRODUCTS?product_name=$name" }
+
+                val productList = productDataSource.searchProductByName(productName = name)
+                if (productList.isNotEmpty()) {
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = MyResponse(success = true, message = "Fetch Product successfully", data = productList)
+                    )
+
+                } else {
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = MyResponse(success = false, message = "Product Not Found", data = null)
+                    )
+                }
+
+            } ?: call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = MyResponse(success = false, message = "Missing Some Fields", data = null)
+            )
+
+        }
         // post the product --> POST /api/v1/admin-client/product/create (token required)
         post(CREATE_SINGLE_PRODUCT) {
             logger.debug { "post /$CREATE_SINGLE_PRODUCT" }
@@ -177,8 +259,7 @@ fun Route.productAdminRoute(
                 return@post
             }
             try {
-                val baseUrl =
-                    call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "$ENDPOINT/image/"
+                val baseUrl = call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "$ENDPOINT/image/"
                 multiPart.forEachPart { part ->
                     when (part) {
                         is PartData.FormItem -> {
@@ -222,9 +303,9 @@ fun Route.productAdminRoute(
 
                             }
                             fileName = generateSafeFileName(part.originalFileName as String)
-                            imageUrl = "$baseUrl$fileName"
+//                            imageUrl = "$baseUrl$fileName"
                             fileBytes = part.streamProvider().readBytes()
-                            url = "$baseUrl$fileName"
+                            url = "${baseUrl}products/${fileName}"
 
 
                         }
@@ -238,7 +319,7 @@ fun Route.productAdminRoute(
                 val isProduct = productDataSource.getProductByName(productName!!)
                 if (isProduct == null) {
                     try {
-                        imageUrl = storageService.saveFile(
+                        imageUrl = storageService.saveProductFile(
                             fileName = fileName!!,
                             fileUrl = url!!,
                             fileBytes = fileBytes!!

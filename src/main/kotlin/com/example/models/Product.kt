@@ -16,3 +16,11 @@ data class Product(
     val deleted: Boolean = false
 
 )
+
+@Serializable
+data class ProductPage(
+    val page: Int,
+    val perPage: Int,
+    val data: List<Product>
+)
+

@@ -11,9 +11,10 @@ import java.time.LocalDateTime
 
 fun TypeCategoryRequest.toModelCreate(userAdminId: Int) = TypeCategory(
     typeName = this.name,
+    typeIcon = this.typeIcon,
     userAdminID = userAdminId,
     createdAt = LocalDateTime.now().toDatabaseString(),
-    updatedAt = ""
+    updatedAt = LocalDateTime.now().toDatabaseString()
 )
 
 fun SizeCategoryRequest.toModelCreate(userAdminId: Int) = SizeCategory(
@@ -35,6 +36,7 @@ fun ColorCategoryRequest.toModelCreate(userAdminId: Int) = ColorCategory(
 
 fun TypeCategoryRequest.toModelUpdate(userAdminId: Int) = TypeCategory(
     typeName = this.name,
+    typeIcon = this.typeIcon,
     userAdminID = userAdminId,
     createdAt = LocalDateTime.now().toDatabaseString(),
     updatedAt = LocalDateTime.now().toDatabaseString(),
@@ -45,7 +47,7 @@ fun SizeCategoryRequest.toModelUpdate(userAdminId: Int) = SizeCategory(
     size = this.size,
     userAdminID = userAdminId,
     createdAt = LocalDateTime.now().toDatabaseString(),
-    updatedAt =LocalDateTime.now().toDatabaseString()
+    updatedAt = LocalDateTime.now().toDatabaseString()
 )
 
 fun ColorCategoryRequest.toModelUpdate(userAdminId: Int) = ColorCategory(
@@ -54,5 +56,5 @@ fun ColorCategoryRequest.toModelUpdate(userAdminId: Int) = ColorCategory(
     color = this.color,
     userAdminID = userAdminId,
     createdAt = LocalDateTime.now().toDatabaseString(),
-    updatedAt =LocalDateTime.now().toDatabaseString()
+    updatedAt = LocalDateTime.now().toDatabaseString()
 )

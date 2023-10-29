@@ -2,6 +2,7 @@ package com.example.plugins
 
 import com.example.data.admin_user.UserDataSource
 import com.example.data.ceramic_provider.CeramicProviderDataSource
+import com.example.data.gallery.categories.CategoryDataSource
 import com.example.data.gallery.products.ProductDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
@@ -27,6 +28,7 @@ fun Application.configureRouting(
     orderStatusDataSource: OrderStatusDataSource,
     ceramicProvider: CeramicProviderDataSource,
     productDataSource: ProductDataSource,
+    categoryDataSource :CategoryDataSource,
     storageService: StorageService,
     hashingService: HashingService,
     tokenService: TokenService,
@@ -74,6 +76,10 @@ fun Application.configureRouting(
             productDataSource = productDataSource,
             storageService = storageService
         )
+        categories(
+            categoryDataSource = categoryDataSource,
+            storageService = storageService
+        )
         get("/") {
             call.respondText("\uD83D\uDC4B Hello Mayorca Reactive API REST!")
         }
@@ -81,10 +87,20 @@ fun Application.configureRouting(
         static("/") {
             resources("static")
             // the path the client will use to access files: /images
-            static("$ENDPOINT/image"){
+            static("$ENDPOINT/image/products") {
 
                 // serve all files in fruit_pictures as static content under /images
-                files("uploads")
+                files("uploads/products")
+            }
+            static("$ENDPOINT/image/categories/icons") {
+
+                // serve all files in fruit_pictures as static content under /images
+                files("uploads/categories/icons")
+            }
+            static("$ENDPOINT/image/categories/images") {
+
+                // serve all files in fruit_pictures as static content under /images
+                files("uploads/categories/images")
             }
         }
     }
