@@ -6,6 +6,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import org.ktorm.schema.Column
+import java.time.LocalDateTime
+import kotlin.reflect.KProperty1
 
 class MySqlProductDataSource(private val db: Database) : ProductDataSource {
     override suspend fun getAllProduct(): List<Product> {
@@ -18,6 +21,83 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
     }
 
+    override suspend fun getAllProductByOrder(sortField: Column<*>, sortDirection: Int): List<Product> {
+        return withContext(Dispatchers.IO) {
+
+
+            val productList = db.from(ProductEntity)
+                .select()
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+
+                .mapNotNull { rowToProduct(it) }
+            productList
+        }
+    }
+
+    override suspend fun getAllProductByCategory(
+        category: String,
+        categoryValue: Int,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<Product> {
+        return withContext(Dispatchers.IO) {
+
+            val productList = db.from(ProductEntity)
+                .select()
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+                .whereWithConditions {
+                    when (category) {
+
+                        "type" -> ProductEntity.typeCategoryId eq categoryValue
+                        "size" -> ProductEntity.sizeCategoryId eq categoryValue
+                        "color" -> ProductEntity.colorCategoryId eq categoryValue
+
+                    }
+                }
+                .mapNotNull { rowToProduct(it) }
+            productList
+        }
+    }
+
+    override suspend fun getAllProductByCategories(
+        categoryType: Int,
+        categorySize: Int,
+        categoryColor: Int,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<Product> {
+        return withContext(Dispatchers.IO) {
+
+            val productList = db.from(ProductEntity)
+                .select()
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+                .whereWithConditions {
+                    if (categoryType > 0) it += ProductEntity.typeCategoryId eq categoryType
+                    if (categorySize > 0) it += ProductEntity.sizeCategoryId eq categorySize
+                    if (categoryColor > 0) it += ProductEntity.colorCategoryId eq categoryColor
+
+                }
+                .mapNotNull { rowToProduct(it) }
+            productList
+        }
+    }
+
+
     override suspend fun getAllProductPageable(page: Int, perPage: Int): List<Product> {
         return withContext(Dispatchers.IO) {
             val myLimit = if (perPage > 100) 100 else perPage
@@ -27,6 +107,38 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                 .limit(myLimit)
                 .offset(myOffset)
                 .orderBy(ProductEntity.createdAt.asc())
+                .mapNotNull { rowToProduct(it) }
+            productList
+        }
+    }
+
+    override suspend fun getAllProductPageableByCategories(
+        page: Int, perPage: Int,
+        categoryType: Int,
+        categorySize: Int,
+        categoryColor: Int,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<Product> {
+        return withContext(Dispatchers.IO) {
+            val myLimit = if (perPage > 100) 100 else perPage
+            val myOffset = (page * perPage)
+            val productList = db.from(ProductEntity)
+                .select()
+                .limit(myLimit)
+                .offset(myOffset)
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+                .whereWithConditions {
+                    if (categoryType > 0) it += ProductEntity.typeCategoryId eq categoryType
+                    if (categorySize > 0) it += ProductEntity.sizeCategoryId eq categorySize
+                    if (categoryColor > 0) it += ProductEntity.colorCategoryId eq categoryColor
+
+                }
                 .mapNotNull { rowToProduct(it) }
             productList
         }
@@ -63,8 +175,8 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                 set(it.userAdminID, product.userAdminID)
                 set(it.productName, product.productName)
                 set(it.image, product.image)
-                set(it.createdAt, product.createdAt)
-                set(it.updatedAt, product.updatedAt)
+                set(it.createdAt, LocalDateTime.now())
+                set(it.updatedAt, LocalDateTime.now())
                 set(it.deleted, product.deleted)
             }
             result
@@ -80,8 +192,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                 set(it.userAdminID, product.userAdminID)
                 set(it.productName, product.productName)
                 set(it.image, product.image)
-//              set(it.createdAt , product.createdAt)
-                set(it.updatedAt, product.updatedAt)
+                set(it.updatedAt, LocalDateTime.now())
                 set(it.deleted, product.deleted)
                 where {
                     it.id eq product.id

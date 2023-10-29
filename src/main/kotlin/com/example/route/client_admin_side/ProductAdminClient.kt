@@ -1,6 +1,7 @@
 package com.example.route.client_admin_side
 
 import com.example.data.gallery.products.ProductDataSource
+import com.example.database.table.ProductEntity
 import com.example.models.Product
 import com.example.service.storage.StorageService
 import com.example.utils.Constants.ADMIN_CLIENT
@@ -45,6 +46,107 @@ fun Route.productAdminRoute(
     storageService: StorageService
 ) {
     authenticate {
+
+        // get the products --> get /api/v1/admin-client/products/ (token required)
+        get(ALL_PRODUCTS) {
+            call.request.queryParameters["page"]?.toIntOrNull()?.let {
+                val page = if (it > 0) it else 0
+                val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
+                val type = call.request.queryParameters["type"]?.toIntOrNull() ?: -1
+                val size = call.request.queryParameters["size"]?.toIntOrNull() ?: -1
+                val color = call.request.queryParameters["color"]?.toIntOrNull() ?: -1
+
+                logger.debug { "GET ALL /$ALL_PRODUCTS?page=$page&perPage=$perPage" }
+                val productList = try {
+//                    productDataSource.getAllProductPageable(page = page, perPage = perPage)
+                    productDataSource.getAllProductPageableByCategories(
+                        page = page, perPage = perPage,
+                        categoryType = type,
+                        categorySize = size,
+                        categoryColor = color
+                    )
+                } catch (exc: Exception) {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = exc.message ?: "Failed ",
+                            data = null
+                        )
+                    )
+                    return@get
+                }
+                if (productList.isNotEmpty()) {
+                    call.respond(
+                        HttpStatusCode.OK, MyResponse(
+                            success = true,
+                            message = "get all type categories successfully",
+                            data = productList
+                        )
+                    )
+
+
+                } else {
+                    call.respond(
+                        HttpStatusCode.NotFound, MyResponse(
+                            success = false,
+                            message = "type categories is empty",
+                            data = null
+                        )
+                    )
+                }
+            } ?: run {
+                val type = call.request.queryParameters["type"]?.toIntOrNull() ?: -1
+                val size = call.request.queryParameters["size"]?.toIntOrNull() ?: -1
+                val color = call.request.queryParameters["color"]?.toIntOrNull() ?: -1
+                val sortField = when(call.request.queryParameters["sort_by"] ?: "name"){
+                    "name" -> ProductEntity.productName
+                    "date" -> ProductEntity.createdAt
+                    else->{return@get call.respond(status = HttpStatusCode.BadRequest)}
+                }
+                logger.debug { "GET ALL /$TYPE_CATEGORIES" }
+
+                val productList = try {
+//                    productDataSource.getAllProduct()
+                    productDataSource.getAllProductByCategories(
+                        categoryType = type,
+                        categorySize = size,
+                        categoryColor = color
+                    )
+                } catch (exc: Exception) {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = exc.message ?: "Failed ",
+                            data = null
+                        )
+                    )
+                    return@get
+                }
+                if (productList.isNotEmpty()) {
+                    call.respond(
+                        HttpStatusCode.OK, MyResponse(
+                            success = true,
+                            message = "get all type categories successfully",
+                            data = productList
+                        )
+                    )
+
+
+                } else {
+                    call.respond(
+                        HttpStatusCode.NotFound, MyResponse(
+                            success = false,
+                            message = "type categories is empty",
+                            data = null
+                        )
+                    )
+                }
+            }
+
+
+        }
         // post the product --> POST /api/v1/admin-client/product/create (token required)
         post(CREATE_SINGLE_PRODUCT) {
             logger.debug { "post /$CREATE_SINGLE_PRODUCT" }
@@ -135,62 +237,61 @@ fun Route.productAdminRoute(
 
                 val isProduct = productDataSource.getProductByName(productName!!)
                 if (isProduct == null) {
-                    imageUrl = try {
-                        storageService.saveFile(
+                    try {
+                        imageUrl = storageService.saveFile(
                             fileName = fileName!!,
                             fileUrl = url!!,
                             fileBytes = fileBytes!!
-                        ).also {
-                            if (!imageUrl.isNullOrEmpty()) {
-                                Product(
-                                    typeCategoryId = typeCategoryId!!,
-                                    sizeCategoryId = sizeCategoryId!!,
-                                    colorCategoryId = colorCategoryId!!,
-                                    userAdminID = userAdminId!!,
-                                    productName = productName!!,
-                                    image = imageUrl!!,
-                                    createdAt = LocalDateTime.now().toDatabaseString(),
-                                    updatedAt = "",
-                                    deleted = deleted
-                                ).apply {
+                        )
+                        if (!imageUrl.isNullOrEmpty()) {
+                            Product(
+                                typeCategoryId = typeCategoryId!!,
+                                sizeCategoryId = sizeCategoryId!!,
+                                colorCategoryId = colorCategoryId!!,
+                                userAdminID = userAdminId!!,
+                                productName = productName!!,
+                                image = imageUrl!!,
+                                createdAt = LocalDateTime.now().toDatabaseString(),
+                                updatedAt = "",
+                                deleted = deleted
+                            ).apply {
 
-                                    val isInserted = productDataSource.createProduct(this)
-                                    if (isInserted > 0) {
-                                        call.respond(
-                                            status = HttpStatusCode.Created,
-                                            message = MyResponse(
-                                                success = true,
-                                                message = "product inserted successfully",
-                                                data = this
-                                            )
+                                val isInserted = productDataSource.createProduct(this)
+                                if (isInserted > 0) {
+                                    call.respond(
+                                        status = HttpStatusCode.Created,
+                                        message = MyResponse(
+                                            success = true,
+                                            message = "product inserted successfully",
+                                            data = this
                                         )
-                                        return@post
-                                    } else {
-                                        call.respond(
-                                            status = HttpStatusCode.OK,
-                                            message = MyResponse(
-                                                success = false,
-                                                message = "this product inserted before",
-                                                data = null
-                                            )
-                                        )
-                                        return@post
-                                    }
-                                }
-                            } else {
-                                storageService.deleteFile(fileName = fileName!!)
-                                call.respond(
-                                    status = HttpStatusCode.OK,
-                                    message = MyResponse(
-                                        success = false,
-                                        message = "some Error happened while uploading .",
-                                        data = null
                                     )
-                                )
-                                return@post
+                                    return@post
+                                } else {
+                                    call.respond(
+                                        status = HttpStatusCode.OK,
+                                        message = MyResponse(
+                                            success = false,
+                                            message = "this product inserted before",
+                                            data = null
+                                        )
+                                    )
+                                    return@post
+                                }
                             }
-
+                        } else {
+                            storageService.deleteFile(fileName = fileName!!)
+                            call.respond(
+                                status = HttpStatusCode.OK,
+                                message = MyResponse(
+                                    success = false,
+                                    message = "some Error happened while uploading .",
+                                    data = null
+                                )
+                            )
+                            return@post
                         }
+
                     } catch (ex: Exception) {
                         // something went wrong with the image part, delete the file
                         storageService.deleteFile(fileName = fileName!!)
@@ -233,6 +334,101 @@ fun Route.productAdminRoute(
 
 
         }
+        // get the product --> get /api/v1/admin-client/product/{id} (token required)
+        get("$SINGLE_PRODUCT/{id}") {
+            logger.debug { "get /$SINGLE_PRODUCT" }
+            call.parameters["id"]?.toIntOrNull()?.let { id ->
+
+                try {
+                    productDataSource.getProductById(id)?.let { product ->
+                        call.respond(
+                            status = HttpStatusCode.OK,
+                            message = MyResponse(
+                                success = true,
+                                message = "get product successfully",
+                                data = product
+                            )
+                        )
+                    } ?: call.respond(
+                        status = HttpStatusCode.OK,
+                        message = MyResponse(
+                            success = false,
+                            message = "Product Not Found",
+                            data = null
+                        )
+                    )
+                } catch (e: Exception) {
+                    logger.error { "Exception /${e.stackTrace}" }
+                    call.respond(
+                        status = HttpStatusCode.Conflict,
+                        message = MyResponse(
+                            success = false,
+                            message = e.message ?: "Failed",
+                            data = null
+                        )
+                    )
+
+                }
+
+            } ?: call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = MyResponse(
+                    success = false,
+                    message = "Missing Parameters",
+                    data = null
+                )
+            )
+        }
+        // delete the product --> delete /api/v1/admin-client/product/delete{id} (token required)
+        delete("$DELETE_SINGLE_PRODUCT/{id}") {
+            logger.debug { "delete /$CREATE_SINGLE_PRODUCT" }
+            call.parameters["id"]?.toIntOrNull()?.let { id ->
+                val result = try {
+                    productDataSource.deleteProduct(productId = id)
+                } catch (e: Exception) {
+                    logger.error { "Exception /${e.stackTrace}" }
+                    call.respond(
+                        status = HttpStatusCode.Conflict,
+                        message = MyResponse(
+                            success = false,
+                            message = e.message ?: "failed",
+                            data = null
+                        )
+                    )
+                    return@delete
+                }
+                if (result > 0) {
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = MyResponse(
+                            success = true,
+                            message = "product deleted successfully",
+                            data = null
+                        )
+                    )
+
+                } else {
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = MyResponse(
+                            success = false,
+                            message = "product deleted failed",
+                            data = null
+                        )
+                    )
+                }
+
+            } ?: call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = MyResponse(
+                    success = false,
+                    message = "Missing parameters",
+                    data = null
+                )
+            )
+
+        }
+
 
     }
 
