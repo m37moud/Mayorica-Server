@@ -2,7 +2,7 @@ package com.example.database
 
 import org.ktorm.database.Database
 
-object Database {
+object DBHelper {
     val db = Database.connect(
 
 

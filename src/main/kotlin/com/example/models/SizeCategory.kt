@@ -7,9 +7,10 @@ data class SizeCategory(
     val id: Int = -1,
     val typeCategoryId: Int,
     val size: String,
+    val sizeImage: String="",
     val userAdminID: Int,
-    val createdAt: String,
-    val updatedAt: String
+    val createdAt: String="",
+    val updatedAt: String=""
 )
 
 /**

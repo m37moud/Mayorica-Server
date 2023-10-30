@@ -6,7 +6,7 @@ import com.example.data.gallery.categories.MySqlCategoryDataSource
 import com.example.data.gallery.products.MySqlProductDataSource
 import com.example.data.order.MYSqlOrderDataSource
 import com.example.data.order.MYSqlOrderStatusDataSource
-import com.example.database.Database
+import com.example.database.DBHelper
 import com.example.plugins.*
 import com.example.security.hash.SHA256HashingService
 import com.example.security.token.JWTTokenService
@@ -25,7 +25,7 @@ fun main() {
 
 fun Application.module() {
     val appConfig = HoconApplicationConfig(ConfigFactory.load())
-    val db = Database.db
+    val db = DBHelper.db
     val userDataSource = MYSqlUserDataSource(db = db)
     val orderDataSource = MYSqlOrderDataSource(db = db)
     val orderStatusDataSource = MYSqlOrderStatusDataSource(db = db)

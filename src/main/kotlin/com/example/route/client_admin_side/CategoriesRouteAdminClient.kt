@@ -118,16 +118,29 @@ fun Route.categories(
 
                 val typeCategory = categoryDataSource.getTypeCategoryByName(typeCategoryName!!)
                 if (typeCategory == null) {
-                    imageUrl = storageService.saveCategoryIcons(
-                        fileName = fileName!!,
-                        fileUrl = url!!,
-                        fileBytes = fileBytes!!
-                    )
+                    imageUrl = try {
+                        storageService.saveCategoryIcons(
+                            fileName = fileName!!,
+                            fileUrl = url!!,
+                            fileBytes = fileBytes!!
+                        )
+                    } catch (e: Exception) {
+                        storageService.deleteCategoryIcons(fileName = fileName!!)
+                        call.respond(
+                            status = HttpStatusCode.InternalServerError,
+                            message = MyResponse(
+                                success = false,
+                                message = e.message ?: "Error happened while uploading Image.",
+                                data = null
+                            )
+                        )
+                        return@post
+                    }
                     if (!imageUrl.isNullOrEmpty()) {
 
                         TypeCategory(
                             typeName = typeCategoryName!!,
-                            typeIcon = imageUrl!!,
+                            typeIcon = imageUrl,
                             userAdminID = userId!!,
                             createdAt = LocalDateTime.now().toDatabaseString(),
                             updatedAt = LocalDateTime.now().toDatabaseString()
@@ -157,7 +170,7 @@ fun Route.categories(
                             }
                         }
                     } else {
-                        storageService.deleteFile(fileName = fileName!!)
+                        storageService.deleteCategoryIcons(fileName = fileName!!)
                         call.respond(
                             status = HttpStatusCode.OK,
                             message = MyResponse(
@@ -196,19 +209,14 @@ fun Route.categories(
         post(CREATE_SIZE_CATEGORY) {
             logger.debug { "POST /$CREATE_SIZE_CATEGORY" }
 
-            val sizeCategoryRequest = try {
-                call.receive<SizeCategoryRequest>()
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = "Missing Some Fields",
-                        data = null
-                    )
-                )
-                return@post
-            }
+            val multiPart = call.receiveMultipart()
+            var typeCategoryId: Int? = null
+            var size: String? = null
+            var fileName: String? = null
+            var fileBytes: ByteArray? = null
+            var url: String? = null
+            var imageUrl: String? = null
+
             val principal = call.principal<JWTPrincipal>()
             val userId = try {
                 principal?.getClaim("userId", String::class)?.toIntOrNull()
@@ -225,30 +233,102 @@ fun Route.categories(
             }
 
             try {
-                val sizeCategory = categoryDataSource.getTypeCategoryByName(sizeCategoryRequest.size)
+                val baseUrl =
+                    call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "${Constants.ENDPOINT}/image/"
+                multiPart.forEachPart { part ->
+                    when (part) {
+                        is PartData.FormItem -> {
+                            // to read parameters that we sent with the image
+                            when (part.name) {
+                                "typeCategoryId" -> {
+                                    typeCategoryId = part.value.toIntOrNull()
+                                }
+
+                                "sizeCategory" -> {
+                                    size = part.value
+                                }
+
+                            }
+
+                        }
+
+                        is PartData.FileItem -> {
+                            if (!isImageContentType(part.contentType.toString())) {
+                                call.respond(
+                                    message = MyResponse(
+                                        success = false,
+                                        message = "Invalid file format",
+                                        data = null
+                                    ), status = HttpStatusCode.BadRequest
+                                )
+                                part.dispose()
+                                return@forEachPart
+
+                            }
+                            fileName = generateSafeFileName(part.originalFileName as String)
+                            fileBytes = part.streamProvider().readBytes()
+                            url = "${baseUrl}categories/images/${fileName}"
+
+                        }
+
+                        else -> {}
+
+                    }
+                    part.dispose()
+                }
+
+
+                val sizeCategory = categoryDataSource.getTypeCategoryByName(size!!)
                 if (sizeCategory == null) {
-
-                    val result = categoryDataSource.createSizeCategory(sizeCategoryRequest.toModelCreate(userId!!))
-
-                    if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = true,
-                                message = "Size Category inserted successfully .",
-                                data = sizeCategoryRequest.size
-                            )
+                    imageUrl = try {
+                        storageService.saveCategoryImages(
+                            fileName = fileName!!,
+                            fileUrl = url!!,
+                            fileBytes = fileBytes!!
                         )
-                        return@post
-                    } else {
+                    } catch (e: Exception) {
+                        storageService.deleteCategoryImages(fileName = fileName!!)
                         call.respond(
-                            HttpStatusCode.OK, MyResponse(
+                            status = HttpStatusCode.InternalServerError,
+                            message = MyResponse(
                                 success = false,
-                                message = "Size Category inserted failed .",
+                                message = e.message ?: "Error happened while uploading Image.",
                                 data = null
                             )
                         )
                         return@post
                     }
+                    SizeCategory(
+                        typeCategoryId = typeCategoryId!!,
+                        size = size!!,
+                        sizeImage = imageUrl!!,
+                        userAdminID = userId!!,
+                        createdAt = LocalDateTime.now().toDatabaseString(),
+                        updatedAt = LocalDateTime.now().toDatabaseString()
+                    ).apply {
+                        val result = categoryDataSource.createSizeCategory(this)
+                        if (result > 0) {
+                            call.respond(
+                                HttpStatusCode.OK, MyResponse(
+                                    success = true,
+                                    message = "Size Category inserted successfully .",
+                                    data = this
+                                )
+                            )
+                            return@post
+                        } else {
+                            call.respond(
+                                HttpStatusCode.OK, MyResponse(
+                                    success = false,
+                                    message = "Size Category inserted failed .",
+                                    data = null
+                                )
+                            )
+                            return@post
+                        }
+                    }
+
+
                 } else {
                     call.respond(
                         HttpStatusCode.OK, MyResponse(
@@ -694,26 +774,65 @@ fun Route.categories(
                 logger.debug { "get /$DELETE_TYPE_CATEGORY/{id}" }
                 val id = call.parameters["id"]?.toIntOrNull()
                 id?.let {
-                    val deleteResult = categoryDataSource.deleteTypeCategory(it)
-                    if (deleteResult > 0) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = "type category deleted successfully .",
-                                data = null
+                    categoryDataSource.getTypeCategoryById(it)?.let { typeCategory ->
+
+                        val isDeletedIcon = try {
+                            storageService.deleteCategoryIcons(fileName = typeCategory.typeIcon.substringAfterLast("/"))
+                        } catch (e: Exception) {
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                MyResponse(
+                                    success = false,
+                                    message = e.message ?: "Failed to delete icon",
+                                    data = null
+                                )
                             )
-                        )
-                    } else {
-                        call.respond(
-                            HttpStatusCode.NotFound,
-                            MyResponse(
-                                success = false,
-                                message = " type category deleted failed .",
-                                data = null
+                            return@delete
+                        }
+                        if (isDeletedIcon) {
+                            val deleteResult = categoryDataSource.deleteTypeCategory(it)
+                            if (deleteResult > 0) {
+                                call.respond(
+                                    HttpStatusCode.OK,
+                                    MyResponse(
+                                        success = true,
+                                        message = "type category deleted successfully .",
+                                        data = null
+                                    )
+                                )
+                            } else {
+                                call.respond(
+                                    HttpStatusCode.NotFound,
+                                    MyResponse(
+                                        success = false,
+                                        message = " type category deleted failed .",
+                                        data = null
+                                    )
+                                )
+                            }
+
+                        } else {
+                            call.respond(
+                                HttpStatusCode.Conflict,
+                                MyResponse(
+                                    success = false,
+                                    message = "Failed to delete icon",
+                                    data = null
+                                )
                             )
+
+                        }
+
+
+                    } ?: call.respond(
+                        HttpStatusCode.NotFound,
+                        MyResponse(
+                            success = false,
+                            message = " type category deleted failed .",
+                            data = null
                         )
-                    }
+                    )
+
 
                 } ?: call.respond(
                     HttpStatusCode.BadRequest,
@@ -742,26 +861,55 @@ fun Route.categories(
                 logger.debug { "get /$DELETE_SIZE_CATEGORY/{id}" }
                 val id = call.parameters["id"]?.toIntOrNull()
                 id?.let {
-                    val deleteResult = categoryDataSource.deleteSizeCategory(it)
-                    if (deleteResult > 0) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = "size category deleted successfully .",
-                                data = null
+                    categoryDataSource.getSizeCategoryById(it)?.let { sizeCategory ->
+                        val isDeleted = try {
+                            storageService.deleteCategoryImages(fileName = sizeCategory.sizeImage.substringAfterLast("/"))
+                        } catch (e: Exception) {
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                MyResponse(
+                                    success = false,
+                                    message = e.message ?: "Failed to delete icon",
+                                    data = null
+                                )
                             )
-                        )
-                    } else {
-                        call.respond(
-                            HttpStatusCode.NotFound,
-                            MyResponse(
-                                success = false,
-                                message = "size category deleted failed .",
-                                data = null
+                            return@delete
+                        }
+                        if (isDeleted) {
+                            val deleteResult = categoryDataSource.deleteSizeCategory(it)
+                            if (deleteResult > 0) {
+                                call.respond(
+                                    HttpStatusCode.OK,
+                                    MyResponse(
+                                        success = true,
+                                        message = "size category deleted successfully .",
+                                        data = null
+                                    )
+                                )
+                            } else {
+                                call.respond(
+                                    HttpStatusCode.NotFound,
+                                    MyResponse(
+                                        success = false,
+                                        message = "size category deleted failed .",
+                                        data = null
+                                    )
+                                )
+                            }
+                        } else {
+                            call.respond(
+                                HttpStatusCode.Conflict,
+                                MyResponse(
+                                    success = false,
+                                    message = "Failed to delete icon",
+                                    data = null
+                                )
                             )
-                        )
+
+
+                        }
                     }
+
 
                 } ?: call.respond(
                     HttpStatusCode.BadRequest,

@@ -319,7 +319,7 @@ fun Route.productAdminRoute(
                 val isProduct = productDataSource.getProductByName(productName!!)
                 if (isProduct == null) {
                     try {
-                        imageUrl = storageService.saveProductFile(
+                        imageUrl = storageService.saveProductImage(
                             fileName = fileName!!,
                             fileUrl = url!!,
                             fileBytes = fileBytes!!
@@ -361,7 +361,7 @@ fun Route.productAdminRoute(
                                 }
                             }
                         } else {
-                            storageService.deleteFile(fileName = fileName!!)
+                            storageService.deleteProductImage(fileName = fileName!!)
                             call.respond(
                                 status = HttpStatusCode.OK,
                                 message = MyResponse(
@@ -375,7 +375,7 @@ fun Route.productAdminRoute(
 
                     } catch (ex: Exception) {
                         // something went wrong with the image part, delete the file
-                        storageService.deleteFile(fileName = fileName!!)
+                        storageService.deleteProductImage(fileName = fileName!!)
                         ex.printStackTrace()
                         call.respond(
                             status = HttpStatusCode.InternalServerError, message = MyResponse(
@@ -401,7 +401,7 @@ fun Route.productAdminRoute(
 
 
             } catch (ex: Exception) {
-                storageService.deleteFile(fileName = fileName!!)
+                storageService.deleteProductImage(fileName = fileName!!)
                 ex.printStackTrace()
                 call.respond(
                     status = HttpStatusCode.InternalServerError, message = MyResponse(

@@ -3,7 +3,7 @@ package com.example.service.storage
 import java.io.File
 
 interface StorageService {
-    suspend fun saveProductFile(
+    suspend fun saveProductImage(
         fileName: String,
         fileUrl: String,
         fileBytes: ByteArray
@@ -21,5 +21,7 @@ interface StorageService {
     ): String?
 
     suspend fun getFile(fileName: String): File?
-    suspend fun deleteFile(fileName: String): Boolean
+    suspend fun deleteProductImage(fileName: String): Boolean
+    suspend fun deleteCategoryIcons(fileName: String): Boolean
+    suspend fun deleteCategoryImages(fileName: String): Boolean
 }

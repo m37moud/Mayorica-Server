@@ -195,6 +195,7 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
             val result = db.insert(SizeCategoryEntity) {
                 set(it.typeCategoryId, sizeCategory.typeCategoryId)
                 set(it.size, sizeCategory.size)
+                set(it.sizeImage, sizeCategory.sizeImage)
                 set(it.userAdminID, sizeCategory.userAdminID)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())

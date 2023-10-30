@@ -61,7 +61,7 @@ class StorageServiceImpl(
      * @param fileBytes ByteArray Bytes of the file
      * @return Result<Map<String, String>, StorageError> Map if Ok, StorageError if not
      */
-    override suspend fun saveProductFile(
+    override suspend fun saveProductImage(
         fileName: String,
         fileUrl: String,
         fileBytes: ByteArray
@@ -131,11 +131,29 @@ class StorageServiceImpl(
      * @param fileName String Name of the file
      * @return Result<String, StorageError> String if Ok, StorageError if not
      */
-    override suspend fun deleteFile(fileName: String): Boolean {
+    override suspend fun deleteProductImage(fileName: String): Boolean {
+        logger.debug { "deleteProductImage: $fileName" }
+
+        return withContext(Dispatchers.IO) {
+            Files.deleteIfExists(Path.of("${products}/$fileName"))
+            true
+        }
+    }
+
+    override suspend fun deleteCategoryIcons(fileName: String): Boolean {
         logger.debug { "Remove file: $fileName" }
 
         return withContext(Dispatchers.IO) {
-            Files.deleteIfExists(Path.of("${uploadDir}/$fileName"))
+            Files.deleteIfExists(Path.of("${categoryIcons}/$fileName"))
+            true
+        }
+    }
+
+    override suspend fun deleteCategoryImages(fileName: String): Boolean {
+        logger.debug { "deleteCategoryImages: $fileName" }
+
+        return withContext(Dispatchers.IO) {
+            Files.deleteIfExists(Path.of("${categoryImages}/$fileName"))
             true
         }
     }
