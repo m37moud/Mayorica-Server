@@ -45,7 +45,6 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
     }
 
 
-
     override suspend fun getTypeCategoryById(categoryTypeId: Int): TypeCategory? {
         logger.debug { "getTypeCategoryById: $categoryTypeId" }
 
@@ -143,6 +142,18 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
         return withContext(Dispatchers.IO) {
             val typeCategoriesList = db.from(SizeCategoryEntity)
                 .select()
+                .mapNotNull { rowToSizeCategory(it) }
+            typeCategoriesList
+        }
+    }
+
+    override suspend fun getAllSizeCategoryByTypeId(typeCategoryId: Int): List<SizeCategory> {
+        logger.debug { "getAllSizeCategory" }
+
+        return withContext(Dispatchers.IO) {
+            val typeCategoriesList = db.from(SizeCategoryEntity)
+                .select()
+                .where { SizeCategoryEntity.typeCategoryId eq typeCategoryId }
                 .mapNotNull { rowToSizeCategory(it) }
             typeCategoriesList
         }
@@ -399,6 +410,7 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
             val id = row[SizeCategoryEntity.id] ?: -1
             val typeCategoryId = row[SizeCategoryEntity.typeCategoryId] ?: -1
             val size = row[SizeCategoryEntity.size] ?: ""
+            val sizeImage = row[SizeCategoryEntity.sizeImage] ?: ""
             val userAdminID = row[SizeCategoryEntity.userAdminID] ?: -1
             val createdAt = row[SizeCategoryEntity.createdAt] ?: ""
             val updatedAt = row[SizeCategoryEntity.updatedAt] ?: ""
@@ -407,6 +419,7 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
                 id = id,
                 typeCategoryId = typeCategoryId,
                 size = size,
+                sizeImage = sizeImage,
                 userAdminID = userAdminID,
                 createdAt = createdAt.toString(),
                 updatedAt = updatedAt.toString()

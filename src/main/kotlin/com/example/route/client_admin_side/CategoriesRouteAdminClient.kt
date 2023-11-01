@@ -856,12 +856,13 @@ fun Route.categoriesAdminRoute(
         //delete size category //api/v1/admin-client/category/size/delete/{id}
         delete("$DELETE_SIZE_CATEGORY/{id}") {
             try {
-                logger.debug { "get /$DELETE_SIZE_CATEGORY/{id}" }
+                logger.debug { "delete /$DELETE_SIZE_CATEGORY/{id}" }
                 val id = call.parameters["id"]?.toIntOrNull()
                 id?.let {
                     categoryDataSource.getSizeCategoryById(it)?.let { sizeCategory ->
                         val isDeleted = try {
-                            storageService.deleteCategoryImages(fileName = sizeCategory.sizeImage.substringAfterLast("/"))
+                            storageService.deleteCategoryImages(
+                                fileName = sizeCategory.sizeImage.substringAfterLast("/"))
                         } catch (e: Exception) {
                             call.respond(
                                 HttpStatusCode.InternalServerError,

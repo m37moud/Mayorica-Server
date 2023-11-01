@@ -27,6 +27,9 @@ class StorageServiceImpl(
     private val categories by lazy { "$uploadDir/categories" }
     private val categoryIcons by lazy { "$uploadDir/categories/icons" }
     private val categoryImages by lazy { "$uploadDir/categories/images" }
+    private val deleteCategoryProducts by lazy { "image/products" }
+    private val deleteCategoryIcons by lazy { "image/categories/icons" }
+    private val deleteCategoryImages by lazy { "image/categories/images" }
 
     init {
         logger.debug { " Starting Storage Service in $uploadDir" }
@@ -135,7 +138,7 @@ class StorageServiceImpl(
         logger.debug { "deleteProductImage: $fileName" }
 
         return withContext(Dispatchers.IO) {
-            Files.deleteIfExists(Path.of("${products}/$fileName"))
+            Files.deleteIfExists(Path.of("${deleteCategoryProducts}/$fileName"))
             true
         }
     }
@@ -144,7 +147,7 @@ class StorageServiceImpl(
         logger.debug { "Remove file: $fileName" }
 
         return withContext(Dispatchers.IO) {
-            Files.deleteIfExists(Path.of("${categoryIcons}/$fileName"))
+            Files.deleteIfExists(Path.of("${deleteCategoryIcons}/$fileName"))
             true
         }
     }
@@ -153,7 +156,7 @@ class StorageServiceImpl(
         logger.debug { "deleteCategoryImages: $fileName" }
 
         return withContext(Dispatchers.IO) {
-            Files.deleteIfExists(Path.of("${categoryImages}/$fileName"))
+            Files.deleteIfExists(Path.of("${deleteCategoryImages}/$fileName"))
             true
         }
     }

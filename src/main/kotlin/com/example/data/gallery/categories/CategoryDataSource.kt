@@ -18,6 +18,7 @@ interface CategoryDataSource {
 
     //size category
     suspend fun getAllSizeCategory(): List<SizeCategory>
+    suspend fun getAllSizeCategoryByTypeId(typeCategoryId: Int): List<SizeCategory>
     suspend fun getAllSizeCategoryPageable(page: Int = 0, perPage: Int = 10): List<SizeCategory>
 
     suspend fun getSizeCategoryById(categorySizeId: Int): SizeCategory?
