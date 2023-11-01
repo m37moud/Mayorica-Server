@@ -7,6 +7,7 @@ import com.example.data.gallery.products.ProductDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
 import com.example.route.client_admin_side.*
+import com.example.route.client_user_side.categoriesUserRoute
 import com.example.route.client_user_side.getNearlyProvider
 import com.example.route.client_user_side.getUserOrderClient
 import com.example.route.client_user_side.userOrderRequest
@@ -76,9 +77,13 @@ fun Application.configureRouting(
             productDataSource = productDataSource,
             storageService = storageService
         )
-        categories(
+        categoriesAdminRoute(
             categoryDataSource = categoryDataSource,
             storageService = storageService
+        )
+        categoriesUserRoute(
+            categoryDataSource = categoryDataSource,
+
         )
         get("/") {
             call.respondText("\uD83D\uDC4B Hello Mayorca Reactive API REST!")

@@ -4,8 +4,6 @@ import com.example.data.gallery.categories.CategoryDataSource
 import com.example.mapper.toModelCreate
 import com.example.models.*
 import com.example.models.request.categories.ColorCategoryRequest
-import com.example.models.request.categories.SizeCategoryRequest
-import com.example.models.request.categories.TypeCategoryRequest
 import com.example.service.storage.StorageService
 import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
@@ -41,7 +39,7 @@ const val DELETE_COLOR_CATEGORY = "$COLOR_CATEGORY/delete"
 
 private val logger = KotlinLogging.logger {}
 
-fun Route.categories(
+fun Route.categoriesAdminRoute(
     categoryDataSource: CategoryDataSource,
     storageService: StorageService
 ) {
