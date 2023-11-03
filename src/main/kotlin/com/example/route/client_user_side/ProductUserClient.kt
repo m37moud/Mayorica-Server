@@ -4,7 +4,6 @@ import com.example.data.gallery.products.ProductDataSource
 import com.example.database.table.ProductEntity
 import com.example.models.ProductPage
 
-import com.example.utils.Constants
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
 import io.ktor.http.*
@@ -58,16 +57,18 @@ fun Route.productUserRoute(productDataSource: ProductDataSource) {
 
             logger.debug { "GET ALL /$ALL_PRODUCTS?page=$page&perPage=$perPage" }
             val productList = try {
-//                    productDataSource.getAllProductPageable(page = page, perPage = perPage)
-                productDataSource.getAllProductPageableByCategories(
-                    page = page, perPage = perPage,
-                    categoryType = type,
-                    categorySize = size,
-                    categoryColor = color,
-                    sortField = sortField,
-                    sortDirection = sortDirection
-                )
+                    productDataSource.getAllProductPageable(page = page, perPage = perPage)
+//                productDataSource.getAllProductPageableByCategories(
+//                    page = page, perPage = perPage,
+//                    categoryType = type,
+//                    categorySize = size,
+//                    categoryColor = color,
+//                    sortField = sortField,
+//                    sortDirection = sortDirection
+//                )
             } catch (exc: Exception) {
+                logger.error { "GET ALL /${exc.message}" }
+
                 call.respond(
                     HttpStatusCode.Conflict,
                     MyResponse(

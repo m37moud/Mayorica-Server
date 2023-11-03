@@ -51,6 +51,8 @@ dependencies {
 
     // ktrom
     implementation("org.ktorm:ktorm-core:3.4.1")
+    implementation("org.ktorm:ktorm-support-mysql:3.4.1")
+//    compile ("org.ktorm:ktorm-support-mysql:3.4.1")
     implementation("mysql:mysql-connector-java:8.0.27")
 
     //salt password

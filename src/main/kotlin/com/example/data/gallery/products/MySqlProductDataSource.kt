@@ -101,6 +101,8 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
 
 
     override suspend fun getAllProductPageable(page: Int, perPage: Int): List<Product> {
+        logger.debug { "getAllProductPageable /$page $perPage" }
+
         return withContext(Dispatchers.IO) {
             val myLimit = if (perPage > 100) 100 else perPage
             val myOffset = (page * perPage)

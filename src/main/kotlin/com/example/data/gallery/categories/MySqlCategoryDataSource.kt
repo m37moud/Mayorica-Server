@@ -153,7 +153,8 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
         return withContext(Dispatchers.IO) {
             val typeCategoriesList = db.from(SizeCategoryEntity)
                 .select()
-                .where { SizeCategoryEntity.typeCategoryId eq typeCategoryId }
+
+                    .where { SizeCategoryEntity.typeCategoryId eq typeCategoryId }
                 .mapNotNull { rowToSizeCategory(it) }
             typeCategoriesList
         }
