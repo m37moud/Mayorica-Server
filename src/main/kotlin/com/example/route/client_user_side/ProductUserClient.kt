@@ -57,15 +57,15 @@ fun Route.productUserRoute(productDataSource: ProductDataSource) {
 
             logger.debug { "GET ALL /$ALL_PRODUCTS?page=$page&perPage=$perPage" }
             val productList = try {
-                    productDataSource.getAllProductPageable(page = page, perPage = perPage)
-//                productDataSource.getAllProductPageableByCategories(
-//                    page = page, perPage = perPage,
-//                    categoryType = type,
-//                    categorySize = size,
-//                    categoryColor = color,
-//                    sortField = sortField,
-//                    sortDirection = sortDirection
-//                )
+//                    productDataSource.getAllProductPageable(page = page, perPage = perPage)
+                productDataSource.getAllProductPageableByCategories(
+                    page = page, perPage = perPage,
+                    categoryType = type,
+                    categorySize = size,
+                    categoryColor = color,
+                    sortField = sortField,
+                    sortDirection = sortDirection
+                )
             } catch (exc: Exception) {
                 logger.error { "GET ALL /${exc.message}" }
 
@@ -83,7 +83,7 @@ fun Route.productUserRoute(productDataSource: ProductDataSource) {
                 call.respond(
                     HttpStatusCode.OK, MyResponse(
                         success = true,
-                        message = "get all type categories successfully",
+                        message = "get all products successfully",
                         data = ProductPage(page = page, perPage = perPage, data = productList)
 
                     )
@@ -94,7 +94,7 @@ fun Route.productUserRoute(productDataSource: ProductDataSource) {
                 call.respond(
                     HttpStatusCode.NotFound, MyResponse(
                         success = false,
-                        message = "type categories is empty",
+                        message = "product is empty",
                         data = null
                     )
                 )
