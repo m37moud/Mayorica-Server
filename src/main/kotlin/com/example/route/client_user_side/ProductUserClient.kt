@@ -13,6 +13,7 @@ import io.ktor.server.routing.*
 import mu.KotlinLogging
 
 const val ALL_PRODUCTS = "${USER_CLIENT}/products"
+const val SINGLE_PRODUCT = "${USER_CLIENT}/product"
 const val SEARCH_PRODUCTS = "${ALL_PRODUCTS}/search"
 private val logger = KotlinLogging.logger {}
 
@@ -176,6 +177,51 @@ fun Route.productUserRoute(productDataSource: ProductDataSource) {
 
 
     }
+    // get the product --> get /api/v1/admin-client/product/{id} (token required)
+    get("$SINGLE_PRODUCT/{id}") {
+        logger.debug { "get /$SINGLE_PRODUCT" }
+        call.parameters["id"]?.toIntOrNull()?.let { id ->
+
+            try {
+                productDataSource.getProductById(id)?.let { product ->
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = MyResponse(
+                            success = true,
+                            message = "get product successfully",
+                            data = product
+                        )
+                    )
+                } ?: call.respond(
+                    status = HttpStatusCode.OK,
+                    message = MyResponse(
+                        success = false,
+                        message = "Product Not Found",
+                        data = null
+                    )
+                )
+            } catch (e: Exception) {
+                logger.error { "Exception /${e.stackTrace}" }
+                call.respond(
+                    status = HttpStatusCode.Conflict,
+                    message = MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed",
+                        data = null
+                    )
+                )
+
+            }
+
+        } ?: call.respond(
+            status = HttpStatusCode.BadRequest,
+            message = MyResponse(
+                success = false,
+                message = "Missing Parameters",
+                data = null
+            )
+        )
+    }
     // get the products --> get /api/v1/user-client/products/search
     get(SEARCH_PRODUCTS) {
         logger.debug { "GET ALL /$SEARCH_PRODUCTS" }
@@ -201,5 +247,6 @@ fun Route.productUserRoute(productDataSource: ProductDataSource) {
         )
 
     }
+
 
 }
