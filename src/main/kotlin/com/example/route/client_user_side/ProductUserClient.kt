@@ -10,7 +10,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import mu.KotlinLogging
+import mu.KotlinLogging 
 
 const val ALL_PRODUCTS = "${USER_CLIENT}/products"
 const val SINGLE_PRODUCT = "${USER_CLIENT}/product"
