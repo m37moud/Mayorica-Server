@@ -33,12 +33,12 @@ import java.time.LocalDateTime
  * MySQL80
  */
 
-const val ALL_PRODUCTS = "$ADMIN_CLIENT/products"
-const val SEARCH_PRODUCTS = "$ALL_PRODUCTS/search"
-const val SINGLE_PRODUCT = "$ADMIN_CLIENT/product"
-const val CREATE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/create"
-const val UPDATE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/update"
-const val DELETE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/delete"
+private const val ALL_PRODUCTS = "$ADMIN_CLIENT/products"
+private const val SEARCH_PRODUCTS = "$ALL_PRODUCTS/search"
+private const val SINGLE_PRODUCT = "$ADMIN_CLIENT/product"
+private const val CREATE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/create"
+private const val UPDATE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/update"
+private const val DELETE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/delete"
 
 private val logger = KotlinLogging.logger {}
 

@@ -373,7 +373,7 @@ fun Route.categoriesAdminRoute(
                 principal?.getClaim("userId", String::class)?.toIntOrNull()
             } catch (e: Exception) {
                 call.respond(
-                    HttpStatusCode.OK,
+                    HttpStatusCode.Conflict,
                     MyResponse(
                         success = false,
                         message = e.message ?: "Failed ",

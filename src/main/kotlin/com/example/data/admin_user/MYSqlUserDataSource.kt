@@ -73,7 +73,7 @@ class MYSqlUserDataSource(private val db: Database) : UserDataSource {
             null
         } else {
             val id = row[AdminUserEntity.id] ?: -1
-            val full_name = row[AdminUserEntity.full_name] ?: ""
+            val fullName = row[AdminUserEntity.full_name] ?: ""
             val username = row[AdminUserEntity.username] ?: ""
             val password = row[AdminUserEntity.password] ?: ""
             val salt = row[AdminUserEntity.salt] ?: ""
@@ -82,7 +82,7 @@ class MYSqlUserDataSource(private val db: Database) : UserDataSource {
             val updatedAt = row[AdminUserEntity.updated_at] ?: ""
             AdminUser(
                 id = id,
-                full_name = full_name,
+                full_name = fullName,
                 username = username,
                 password = password,
                 salt = salt,

@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.data.about_us.MySqlAboutUsDataSource
 import com.example.data.admin_user.MYSqlUserDataSource
 import com.example.data.ceramic_provider.MySqlCeramicProviderDataSource
 import com.example.data.gallery.categories.MySqlCategoryDataSource
@@ -32,6 +33,7 @@ fun Application.module() {
     val ceramicProvider = MySqlCeramicProviderDataSource(db = db)
     val productDataSource = MySqlProductDataSource(db = db)
     val categoryDataSource = MySqlCategoryDataSource(db = db)
+    val aboutUsDataSource = MySqlAboutUsDataSource(db = db)
     val storageService = StorageServiceImpl(appConfig)
     val hashingService = SHA256HashingService()
     val tokenService = JWTTokenService()
@@ -52,8 +54,9 @@ fun Application.module() {
         orderDataSource = orderDataSource,
         orderStatusDataSource = orderStatusDataSource,
         ceramicProvider = ceramicProvider,
-        productDataSource =productDataSource,
+        productDataSource = productDataSource,
         categoryDataSource = categoryDataSource,
+        aboutUsDataSource = aboutUsDataSource,
         storageService = storageService,
         hashingService = hashingService,
         tokenService = tokenService,

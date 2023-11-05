@@ -1,5 +1,6 @@
 package com.example.plugins
 
+import com.example.data.about_us.AboutUsDataSource
 import com.example.data.admin_user.UserDataSource
 import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.data.gallery.categories.CategoryDataSource
@@ -27,6 +28,7 @@ fun Application.configureRouting(
     ceramicProvider: CeramicProviderDataSource,
     productDataSource: ProductDataSource,
     categoryDataSource :CategoryDataSource,
+    aboutUsDataSource: AboutUsDataSource,
     storageService: StorageService,
     hashingService: HashingService,
     tokenService: TokenService,
@@ -85,6 +87,15 @@ fun Application.configureRouting(
             categoryDataSource = categoryDataSource,
 
         )
+
+        aboutUsAdminRoute(
+            aboutUsDataSource = aboutUsDataSource,
+
+            )
+        aboutUsUserRoute(
+            aboutUsDataSource = aboutUsDataSource,
+
+            )
         get("/") {
             call.respondText("\uD83D\uDC4B Hello Mayorca Reactive API REST!")
         }
