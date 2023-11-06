@@ -5,6 +5,7 @@ import com.example.data.admin_user.UserDataSource
 import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.data.gallery.categories.CategoryDataSource
 import com.example.data.gallery.products.ProductDataSource
+import com.example.data.gallery.products.hot_release.HotReleaseDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
 import com.example.route.client_admin_side.*
@@ -27,8 +28,9 @@ fun Application.configureRouting(
     orderStatusDataSource: OrderStatusDataSource,
     ceramicProvider: CeramicProviderDataSource,
     productDataSource: ProductDataSource,
-    categoryDataSource :CategoryDataSource,
+    categoryDataSource: CategoryDataSource,
     aboutUsDataSource: AboutUsDataSource,
+    hotReleaseDataSource: HotReleaseDataSource,
     storageService: StorageService,
     hashingService: HashingService,
     tokenService: TokenService,
@@ -86,8 +88,10 @@ fun Application.configureRouting(
         categoriesUserRoute(
             categoryDataSource = categoryDataSource,
 
-        )
-
+            )
+        /**
+         * about us
+         */
         aboutUsAdminRoute(
             aboutUsDataSource = aboutUsDataSource,
 
@@ -96,6 +100,18 @@ fun Application.configureRouting(
             aboutUsDataSource = aboutUsDataSource,
 
             )
+        /**
+         * hor release app
+         */
+        hotReleaseAdminRoute(
+            hotReleaseDataSource = hotReleaseDataSource
+        )
+        hotReleaseAdminRoute(
+            hotReleaseDataSource = hotReleaseDataSource,
+            productDataSource = productDataSource
+        )
+
+
         get("/") {
             call.respondText("\uD83D\uDC4B Hello Mayorca Reactive API REST!")
         }

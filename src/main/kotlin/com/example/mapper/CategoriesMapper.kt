@@ -26,8 +26,6 @@ fun SizeCategoryRequest.toModelCreate(userAdminId: Int) = SizeCategory(
 )
 
 fun ColorCategoryRequest.toModelCreate(userAdminId: Int) = ColorCategory(
-    typeCategoryId = this.typeCategoryId,
-    sizeCategoryId = this.sizeCategoryId,
     color = this.color,
     userAdminID = userAdminId,
     createdAt = LocalDateTime.now().toDatabaseString(),
@@ -51,8 +49,6 @@ fun SizeCategoryRequest.toModelUpdate(userAdminId: Int) = SizeCategory(
 )
 
 fun ColorCategoryRequest.toModelUpdate(userAdminId: Int) = ColorCategory(
-    typeCategoryId = this.typeCategoryId,
-    sizeCategoryId = this.sizeCategoryId,
     color = this.color,
     userAdminID = userAdminId,
     createdAt = LocalDateTime.now().toDatabaseString(),

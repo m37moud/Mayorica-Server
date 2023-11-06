@@ -320,8 +320,6 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
 
         return withContext(Dispatchers.IO) {
             val result = db.insert(ColorCategoryEntity) {
-                set(it.typeCategoryId, colorCategory.typeCategoryId)
-                set(it.sizeCategoryId, colorCategory.sizeCategoryId)
                 set(it.color, colorCategory.color)
                 set(it.userAdminID, colorCategory.userAdminID)
                 set(it.createdAt, LocalDateTime.now())
@@ -336,11 +334,8 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
 
         return withContext(Dispatchers.IO) {
             val result = db.update(ColorCategoryEntity) {
-                set(it.typeCategoryId, colorCategory.typeCategoryId)
-                set(it.sizeCategoryId, colorCategory.sizeCategoryId)
                 set(it.color, colorCategory.color)
                 set(it.userAdminID, colorCategory.userAdminID)
-
                 set(it.updatedAt, LocalDateTime.now())
                 where {
                     it.id eq colorCategory.id
@@ -434,8 +429,6 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
             null
         else {
             val id = row[ColorCategoryEntity.id] ?: -1
-            val typeCategoryId = row[ColorCategoryEntity.typeCategoryId] ?: -1
-            val sizeCategoryId = row[ColorCategoryEntity.sizeCategoryId] ?: -1
             val color = row[ColorCategoryEntity.color] ?: ""
             val userAdminID = row[ColorCategoryEntity.userAdminID] ?: -1
             val createdAt = row[ColorCategoryEntity.createdAt] ?: ""
@@ -443,8 +436,6 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
 
             ColorCategory(
                 id = id,
-                typeCategoryId = typeCategoryId,
-                sizeCategoryId = sizeCategoryId,
                 color = color,
                 userAdminID = userAdminID,
                 createdAt = createdAt.toString(),
