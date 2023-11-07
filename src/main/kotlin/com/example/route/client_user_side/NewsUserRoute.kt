@@ -1,6 +1,6 @@
 package com.example.route.client_user_side
 
-import com.example.data.videos.youtube.YoutubeDataSource
+import com.example.data.news.NewsDataSource
 import com.example.utils.Constants
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
@@ -10,26 +10,22 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
 
-
-private const val YOUTUBE_LINKS = "${USER_CLIENT}/youtube-links"
-private const val YOUTUBE_LINK = "${USER_CLIENT}/youtube-link"
+private const val NEWS = "${USER_CLIENT}/news"
 
 private val logger = KotlinLogging.logger { }
 
-fun Route.youtubeLinkUserRoute(
-    youtubeDataSource: YoutubeDataSource
-) {
-    //get all -> api/v1/user-client/youtube-links
-    get(YOUTUBE_LINKS) {
-        logger.debug { "get all youtube Links $YOUTUBE_LINKS" }
+fun Route.newsUserRoute(newsDataSource: NewsDataSource) {
+    //get all -> api/v1/user-client/news
+    get(NEWS) {
+        logger.debug { "get all NEWS  ${NEWS}" }
         try {
-            val linkList = youtubeDataSource.getAllEnabledYoutubeVideoLinks()
+            val linkList = newsDataSource.getAllNews()
             if (linkList.isNotEmpty()) {
                 call.respond(
                     status = HttpStatusCode.OK,
                     message = MyResponse(
                         success = true,
-                        message = "get all youtube link successfully",
+                        message = "get all NEWS  successfully",
                         data = null
                     )
                 )
@@ -39,7 +35,7 @@ fun Route.youtubeLinkUserRoute(
                     status = HttpStatusCode.NotFound,
                     message = MyResponse(
                         success = false,
-                        message = "no youtube link is found",
+                        message = "no NEWS is found",
                         data = null
                     )
                 )
@@ -47,7 +43,7 @@ fun Route.youtubeLinkUserRoute(
 
             }
         } catch (e: Exception) {
-            logger.error { "get all youtube Links error ${e.stackTrace}" }
+            logger.error { "get all NEWS error ${e.stackTrace}" }
             call.respond(
                 status = HttpStatusCode.Conflict, message = MyResponse(
                     success = false, message = e.message ?: "failed",

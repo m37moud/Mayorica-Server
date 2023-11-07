@@ -17,6 +17,7 @@ class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
         return withContext(Dispatchers.IO) {
             val result = db.from(AboutUsEntity)
                 .select()
+                .orderBy(AboutUsEntity.createdAt.desc())
                 .map { rowToAboutUs(it) }
                 .firstOrNull()
             result
@@ -30,6 +31,7 @@ class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
                 set(it.governorate, aboutUs.governorate)
                 set(it.address, aboutUs.address)
                 set(it.telephone, aboutUs.telephone)
+                set(it.email, aboutUs.email)
                 set(it.latitude, aboutUs.latitude)
                 set(it.longitude, aboutUs.longitude)
                 set(it.userAdminID, aboutUs.userAdminID)
@@ -47,6 +49,7 @@ class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
                 set(it.governorate, aboutUs.governorate)
                 set(it.address, aboutUs.address)
                 set(it.telephone, aboutUs.telephone)
+                set(it.email, aboutUs.email)
                 set(it.latitude, aboutUs.latitude)
                 set(it.longitude, aboutUs.longitude)
                 set(it.userAdminID, aboutUs.userAdminID)
@@ -77,6 +80,7 @@ class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
             val governorate = row[AboutUsEntity.governorate] ?: ""
             val address = row[AboutUsEntity.address] ?: ""
             val telephone = row[AboutUsEntity.telephone] ?: ""
+            val email = row[AboutUsEntity.email] ?: ""
             val latitude = row[AboutUsEntity.latitude] ?: 0.0
             val longitude = row[AboutUsEntity.latitude] ?: 0.0
             val userAdminID = row[AboutUsEntity.userAdminID] ?: -1
@@ -91,6 +95,7 @@ class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
                 governorate = governorate,
                 address = address,
                 telephone = telephone,
+                email = email,
                 latitude = latitude,
                 longitude = longitude,
                 userAdminID = userAdminID,

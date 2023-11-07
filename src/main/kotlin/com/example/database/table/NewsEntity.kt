@@ -11,7 +11,7 @@ object NewsEntity : Table<Nothing>("t_news"){
     val title = varchar("title")
     val image = varchar("image")
     val newsDescription = varchar("newsDescription")
-    val userAdminID = int("admin_id")
+    val userAdminId = int("admin_id")
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
 }

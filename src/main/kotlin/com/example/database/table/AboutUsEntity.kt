@@ -8,6 +8,7 @@ object AboutUsEntity : Table<Nothing>("t_about_us") {
     val governorate = varchar("governorate")
     val address = varchar("address")
     val telephone = varchar("telephone")
+    val email = varchar("email")
     val latitude = double("latitude")
     val longitude = double("longitude")
     val userAdminID = int("admin_id")

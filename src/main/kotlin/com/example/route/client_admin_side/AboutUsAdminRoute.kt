@@ -67,7 +67,7 @@ fun Route.aboutUsAdminRoute(aboutUsDataSource: AboutUsDataSource) {
                     HttpStatusCode.Conflict,
                     MyResponse(
                         success = false,
-                        message = "Missing Some Fields",
+                        message = e.message ?: "Missing Some Fields",
                         data = null
                     )
                 )
@@ -112,8 +112,8 @@ fun Route.aboutUsAdminRoute(aboutUsDataSource: AboutUsDataSource) {
             }
         }
         //put about us //api/v1/admin-client/about_us/update
-        put("$DELETE_ABOUT_US/{id}") {
-            logger.debug { "POST ABOUT US $ABOUT_US" }
+        put("$UPDATE_ABOUT_US/{id}") {
+            logger.debug { "put ABOUT US $UPDATE_ABOUT_US" }
             call.parameters["id"]?.toIntOrNull()?.let { id ->
                 val aboutUsRequest = try {
                     call.receive<AboutUs>()
@@ -142,22 +142,35 @@ fun Route.aboutUsAdminRoute(aboutUsDataSource: AboutUsDataSource) {
                     )
                     return@put
                 }
-                val result = aboutUsDataSource.updateAboutUs(aboutUsRequest.copy(id = id, userAdminID = userId!!))
-                if (result > 0) {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = true,
-                            message = "About Us Information update successfully .",
-                            data = null
+
+                try {
+                    val result = aboutUsDataSource.updateAboutUs(aboutUsRequest.copy( userAdminID = userId!!))
+                    if (result > 0) {
+                        call.respond(
+                            HttpStatusCode.OK,
+                            MyResponse(
+                                success = true,
+                                message = "About Us Information update successfully .",
+                                data = null
+                            )
                         )
-                    )
-                    return@put
-                } else {
+                        return@put
+                    } else {
+                        call.respond(
+                            HttpStatusCode.OK, MyResponse(
+                                success = false,
+                                message = "About Us Information update failed .",
+                                data = null
+                            )
+                        )
+                        return@put
+                    }
+                } catch (e: Exception) {
                     call.respond(
-                        HttpStatusCode.OK, MyResponse(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
                             success = false,
-                            message = "About Us Information update failed .",
+                            message = e.message ?: "error while update ",
                             data = null
                         )
                     )
@@ -175,27 +188,39 @@ fun Route.aboutUsAdminRoute(aboutUsDataSource: AboutUsDataSource) {
 
         }
         //delete about us //api/v1/admin-client/about_us/delete
-
-        delete(UPDATE_ABOUT_US) {
-            logger.debug { "POST ABOUT US $ABOUT_US" }
+        delete(DELETE_ABOUT_US) {
+            logger.debug { "delete ABOUT US $DELETE_ABOUT_US" }
             call.parameters["id"]?.toIntOrNull()?.let { id ->
 
-                val result = aboutUsDataSource.deleteAboutUs(aboutUsId = id)
-                if (result > 0) {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = true,
-                            message = "About Us Information delete successfully .",
-                            data = null
+                try {
+                    val result = aboutUsDataSource.deleteAboutUs(aboutUsId = id)
+                    if (result > 0) {
+                        call.respond(
+                            HttpStatusCode.OK,
+                            MyResponse(
+                                success = true,
+                                message = "About Us Information delete successfully .",
+                                data = null
+                            )
                         )
-                    )
-                    return@delete
-                } else {
+                        return@delete
+                    } else {
+                        call.respond(
+                            HttpStatusCode.OK, MyResponse(
+                                success = false,
+                                message = "About Us Information delete failed .",
+                                data = null
+                            )
+                        )
+                        return@delete
+                    }
+                } catch (e: Exception) {
+
                     call.respond(
-                        HttpStatusCode.OK, MyResponse(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
                             success = false,
-                            message = "About Us Information delete failed .",
+                            message = e.message ?: "error while delete ",
                             data = null
                         )
                     )

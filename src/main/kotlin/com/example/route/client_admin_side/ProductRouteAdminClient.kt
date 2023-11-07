@@ -259,7 +259,8 @@ fun Route.productAdminRoute(
                 return@post
             }
             try {
-                val baseUrl = call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "$ENDPOINT/image/"
+                val baseUrl =
+                    call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "$ENDPOINT/image/"
                 multiPart.forEachPart { part ->
                     when (part) {
                         is PartData.FormItem -> {
@@ -331,7 +332,7 @@ fun Route.productAdminRoute(
                                 colorCategoryId = colorCategoryId!!,
                                 userAdminID = userAdminId!!,
                                 productName = productName!!,
-                                image = imageUrl!!,
+                                image = imageUrl,
                                 createdAt = LocalDateTime.now().toDatabaseString(),
                                 updatedAt = "",
                                 deleted = deleted
@@ -353,7 +354,7 @@ fun Route.productAdminRoute(
                                         status = HttpStatusCode.OK,
                                         message = MyResponse(
                                             success = false,
-                                            message = "this product inserted before",
+                                            message = "product insert failed",
                                             data = null
                                         )
                                     )
@@ -363,7 +364,7 @@ fun Route.productAdminRoute(
                         } else {
                             storageService.deleteProductImage(fileName = fileName!!)
                             call.respond(
-                                status = HttpStatusCode.OK,
+                                status = HttpStatusCode.Conflict,
                                 message = MyResponse(
                                     success = false,
                                     message = "some Error happened while uploading .",
@@ -460,44 +461,68 @@ fun Route.productAdminRoute(
                 )
             )
         }
-        // delete the product --> delete /api/v1/admin-client/product/delete{id} (token required)
+        // delete the product --> delete /api/v1/admin-client/product/delete/{id} (token required)
         delete("$DELETE_SINGLE_PRODUCT/{id}") {
             logger.debug { "delete /$CREATE_SINGLE_PRODUCT" }
             call.parameters["id"]?.toIntOrNull()?.let { id ->
-                val result = try {
-                    productDataSource.deleteProduct(productId = id)
-                } catch (e: Exception) {
-                    logger.error { "Exception /${e.stackTrace}" }
-                    call.respond(
-                        status = HttpStatusCode.Conflict,
-                        message = MyResponse(
-                            success = false,
-                            message = e.message ?: "failed",
-                            data = null
+                productDataSource.getProductById(productId = id)?.let {
+                    val isDeletedImage = try {
+                        storageService.deleteProductImage(fileName = it.image.substringAfterLast("/"))
+                    } catch (e: Exception) {
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            MyResponse(
+                                success = false,
+                                message = e.message ?: "Failed to delete image",
+                                data = null
+                            )
                         )
-                    )
-                    return@delete
-                }
-                if (result > 0) {
-                    call.respond(
-                        status = HttpStatusCode.OK,
-                        message = MyResponse(
-                            success = true,
-                            message = "product deleted successfully",
-                            data = null
-                        )
-                    )
+                        return@delete
+                    }
+                    if (isDeletedImage) {
+                        val deleteResult =
+                            productDataSource.deleteProduct(productId = id)
+                        if (deleteResult > 0) {
+                            call.respond(
+                                HttpStatusCode.OK,
+                                MyResponse(
+                                    success = true,
+                                    message = "product deleted successfully .",
+                                    data = null
+                                )
+                            )
+                        } else {
+                            call.respond(
+                                HttpStatusCode.NotFound,
+                                MyResponse(
+                                    success = false,
+                                    message = " product deleted failed .",
+                                    data = null
+                                )
+                            )
+                        }
 
-                } else {
-                    call.respond(
-                        status = HttpStatusCode.OK,
-                        message = MyResponse(
-                            success = false,
-                            message = "product deleted failed",
-                            data = null
+                    } else {
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            MyResponse(
+                                success = false,
+                                message = "Failed to delete image",
+                                data = null
+                            )
                         )
+
+                    }
+
+
+                } ?: call.respond(
+                    HttpStatusCode.NotFound,
+                    MyResponse(
+                        success = false,
+                        message = " news deleted failed .",
+                        data = null
                     )
-                }
+                )
 
             } ?: call.respond(
                 status = HttpStatusCode.BadRequest,

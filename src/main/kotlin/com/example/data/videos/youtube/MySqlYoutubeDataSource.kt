@@ -14,6 +14,20 @@ class MySqlYoutubeDataSource(private val db: Database) : YoutubeDataSource {
         return withContext(Dispatchers.IO) {
             val list = db.from(YouTubeLinkEntity)
                 .select()
+                .orderBy(YouTubeLinkEntity.createdAt.desc())
+                .mapNotNull { rowToYoutubeLink(it) }
+            list
+        }
+    }
+
+    override suspend fun getAllEnabledYoutubeVideoLinks(): List<YoutubeLink> {
+        return withContext(Dispatchers.IO) {
+            val list = db.from(YouTubeLinkEntity)
+                .select()
+                .where {
+                    YouTubeLinkEntity.linkEnabled eq true
+                }
+                .orderBy(YouTubeLinkEntity.createdAt.desc())
                 .mapNotNull { rowToYoutubeLink(it) }
             list
         }
@@ -36,6 +50,7 @@ class MySqlYoutubeDataSource(private val db: Database) : YoutubeDataSource {
         return withContext(Dispatchers.IO) {
             val result = db.insert(YouTubeLinkEntity) {
                 set(it.idLink, youtubeLink.idLink)
+                set(it.linkEnabled, youtubeLink.linkEnabled)
                 set(it.userAdminId, youtubeLink.userAdminId)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
@@ -48,6 +63,7 @@ class MySqlYoutubeDataSource(private val db: Database) : YoutubeDataSource {
         return withContext(Dispatchers.IO) {
             val result = db.update(YouTubeLinkEntity) {
                 set(it.idLink, youtubeLink.idLink)
+                set(it.linkEnabled, youtubeLink.linkEnabled)
                 set(it.userAdminId, youtubeLink.userAdminId)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
@@ -77,6 +93,7 @@ class MySqlYoutubeDataSource(private val db: Database) : YoutubeDataSource {
             YoutubeLink(
                 id = row[YouTubeLinkEntity.id] ?: -1,
                 idLink = row[YouTubeLinkEntity.idLink] ?: "",
+                linkEnabled = row[YouTubeLinkEntity.linkEnabled] ?: false,
                 userAdminId = row[YouTubeLinkEntity.userAdminId] ?: -1,
                 createdAt = row[YouTubeLinkEntity.createdAt]?.toDatabaseString() ?: "",
                 updatedAt = row[YouTubeLinkEntity.updatedAt]?.toDatabaseString() ?: ""

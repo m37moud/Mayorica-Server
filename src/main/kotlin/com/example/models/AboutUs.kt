@@ -10,6 +10,7 @@ data class AboutUs(
     val governorate: String,
     val address: String,
     val telephone: String,
+    val email: String,
     val latitude: Double,
     val longitude: Double,
     val userAdminID: Int = -1,
