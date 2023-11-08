@@ -2,6 +2,7 @@ package com.example.data.about_us
 
 import com.example.database.table.AboutUsEntity
 import com.example.database.table.AdminUserEntity
+import com.example.database.table.ContactUsEntity
 import com.example.database.table.ProductEntity
 import com.example.models.AboutUs
 import com.example.utils.toDatabaseString
@@ -13,11 +14,24 @@ import java.time.LocalDateTime
 
 class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
 
-    override suspend fun getAboutUsInfo(): AboutUs? {
+    override suspend fun getAllAboutUsInfo(): List<AboutUs> {
         return withContext(Dispatchers.IO) {
             val result = db.from(AboutUsEntity)
                 .select()
                 .orderBy(AboutUsEntity.createdAt.desc())
+                .mapNotNull { rowToAboutUs(it) }
+            result
+        }
+    }
+
+    override suspend fun getAboutUsInfoById(id: Int): AboutUs? {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(AboutUsEntity)
+                .select()
+                .orderBy(AboutUsEntity.createdAt.desc())
+                .where {
+                    AboutUsEntity.id eq id
+                }
                 .map { rowToAboutUs(it) }
                 .firstOrNull()
             result
@@ -27,13 +41,8 @@ class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
     override suspend fun createAboutUs(aboutUs: AboutUs): Int {
         return withContext(Dispatchers.IO) {
             val result = db.insert(AboutUsEntity) {
-                set(it.country, aboutUs.country)
-                set(it.governorate, aboutUs.governorate)
-                set(it.address, aboutUs.address)
-                set(it.telephone, aboutUs.telephone)
-                set(it.email, aboutUs.email)
-                set(it.latitude, aboutUs.latitude)
-                set(it.longitude, aboutUs.longitude)
+                set(it.title, aboutUs.title)
+                set(it.information, aboutUs.information)
                 set(it.userAdminID, aboutUs.userAdminID)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
@@ -45,13 +54,8 @@ class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
     override suspend fun updateAboutUs(aboutUs: AboutUs): Int {
         return withContext(Dispatchers.IO) {
             val result = db.update(AboutUsEntity) {
-                set(it.country, aboutUs.country)
-                set(it.governorate, aboutUs.governorate)
-                set(it.address, aboutUs.address)
-                set(it.telephone, aboutUs.telephone)
-                set(it.email, aboutUs.email)
-                set(it.latitude, aboutUs.latitude)
-                set(it.longitude, aboutUs.longitude)
+                set(it.title, aboutUs.title)
+                set(it.information, aboutUs.information)
                 set(it.userAdminID, aboutUs.userAdminID)
                 set(it.updatedAt, LocalDateTime.now())
                 where {
@@ -62,27 +66,27 @@ class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
         }
     }
 
-    override suspend fun deleteAboutUs(aboutUsId: Int): Int {
+    override suspend fun deleteAboutUs(id: Int): Int {
         return withContext(Dispatchers.IO) {
-            val result = db.delete(AboutUsEntity) {
-                it.id eq aboutUsId
+            val result = db.delete(AboutUsEntity){
+                it.id eq id
             }
             result
         }
     }
-
+    override suspend fun deleteAllAboutUs(): Int {
+        return withContext(Dispatchers.IO) {
+            val result = db.deleteAll(AboutUsEntity)
+            result
+        }
+    }
     private fun rowToAboutUs(row: QueryRowSet?): AboutUs? {
         return if (row == null) {
             null
         } else {
             val id = row[AboutUsEntity.id] ?: -1
-            val country = row[AboutUsEntity.country] ?: ""
-            val governorate = row[AboutUsEntity.governorate] ?: ""
-            val address = row[AboutUsEntity.address] ?: ""
-            val telephone = row[AboutUsEntity.telephone] ?: ""
-            val email = row[AboutUsEntity.email] ?: ""
-            val latitude = row[AboutUsEntity.latitude] ?: 0.0
-            val longitude = row[AboutUsEntity.latitude] ?: 0.0
+            val title = row[AboutUsEntity.title] ?: ""
+            val information = row[AboutUsEntity.information] ?: ""
             val userAdminID = row[AboutUsEntity.userAdminID] ?: -1
             val createdAt = row[AboutUsEntity.createdAt] ?: LocalDateTime.now()
             val updatedAt = row[AboutUsEntity.updatedAt] ?: LocalDateTime.now()
@@ -91,13 +95,8 @@ class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
 
             AboutUs(
                 id = id,
-                country = country,
-                governorate = governorate,
-                address = address,
-                telephone = telephone,
-                email = email,
-                latitude = latitude,
-                longitude = longitude,
+                title = title,
+                information = information,
                 userAdminID = userAdminID,
                 createdAt = createdAt.toDatabaseString(),
                 updatedAt = updatedAt.toDatabaseString()

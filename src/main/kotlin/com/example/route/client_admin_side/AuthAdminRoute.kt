@@ -10,9 +10,7 @@ import com.example.security.hash.SaltedHash
 import com.example.security.token.TokenClaim
 import com.example.security.token.TokenConfig
 import com.example.security.token.TokenService
-import com.example.utils.Constants
 import com.example.utils.Constants.ADMIN_CLIENT
-import com.example.utils.Constants.ENDPOINT
 import com.example.utils.MyResponse
 import com.example.utils.toDatabaseString
 import io.ktor.http.*

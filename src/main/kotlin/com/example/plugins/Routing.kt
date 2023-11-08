@@ -124,6 +124,11 @@ fun Application.configureRouting(
                 // serve all files in fruit_pictures as static content under /images
                 files("uploads/products")
             }
+            static("$ENDPOINT/image/news") {
+
+                // serve all files in fruit_pictures as static content under /images
+                files("uploads/news")
+            }
             static("$ENDPOINT/image/categories/icons") {
 
                 // serve all files in fruit_pictures as static content under /images
