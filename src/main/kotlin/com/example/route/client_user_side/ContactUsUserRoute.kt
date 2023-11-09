@@ -14,7 +14,7 @@ private const val CONTACT_US = "${Constants.ADMIN_CLIENT}/contact-us"
 
 private val logger = KotlinLogging.logger {  }
 
-fun Route.contactUsRoute(contactUsDataSource: ContactUsDataSource){
+fun Route.contactUsUserRoute(contactUsDataSource: ContactUsDataSource){
     //get about us //api/v1/user-client/contact-us
     get (CONTACT_US){
       logger.debug { "Get Contact US ${CONTACT_US}" }

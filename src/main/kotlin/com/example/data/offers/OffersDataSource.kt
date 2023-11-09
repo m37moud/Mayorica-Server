@@ -6,6 +6,7 @@ interface OffersDataSource {
     suspend fun getAllOffers(): List<Offers>
     suspend fun getAllAvailableOffers(): List<Offers>
     suspend fun getOffersById(id: Int): Offers?
+    suspend fun getOfferByTitle(title: String): Offers?
     suspend fun getHotOffers(): Offers?
 
     suspend fun addOffers(offers: Offers): Int

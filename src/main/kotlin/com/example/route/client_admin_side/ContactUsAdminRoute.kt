@@ -21,7 +21,7 @@ private const val DELETE_CONTACT_US = "$CONTACT_US/delete"
 
 private val logger = KotlinLogging.logger { }
 
-fun Route.contactUsRoute(
+fun Route.contactUsAdminRoute(
     contactUsDataSource: ContactUsDataSource
 ) {
 

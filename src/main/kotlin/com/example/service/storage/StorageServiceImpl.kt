@@ -25,11 +25,17 @@ class StorageServiceImpl(
 
     private val products by lazy { "$uploadDir/products" }
     private val news by lazy { "$uploadDir/news" }
+    private val offers by lazy { "$uploadDir/offers" }
     private val categories by lazy { "$uploadDir/categories" }
     private val categoryIcons by lazy { "$uploadDir/categories/icons" }
     private val categoryImages by lazy { "$uploadDir/categories/images" }
+
+    /**
+     * delete variable
+     */
     private val deleteProducts by lazy { "image/products" }
     private val deleteNews by lazy { "image/news" }
+    private val deleteOffers by lazy { "image/offers" }
     private val deleteCategoryIcons by lazy { "image/categories/icons" }
     private val deleteCategoryImages by lazy { "image/categories/images" }
 
@@ -132,6 +138,22 @@ class StorageServiceImpl(
         }
 
     }
+    override suspend fun saveOfferImage(
+        fileName: String,
+        fileUrl: String,
+        fileBytes: ByteArray
+    ): String? {
+        logger.debug { "Saving file in: $fileName" }
+
+        return withContext(Dispatchers.IO) {
+
+
+            File("${offers}/$fileName").writeBytes(fileBytes)
+
+            fileUrl
+        }
+
+    }
 
     /**
      * Retrieves a file from our storage
@@ -185,6 +207,14 @@ class StorageServiceImpl(
 
         return withContext(Dispatchers.IO) {
             Files.deleteIfExists(Path.of("${deleteNews}/$fileName"))
+            true
+        }
+    }
+    override suspend fun deleteOfferImages(fileName: String): Boolean {
+        logger.debug { "deleteProductImage: $fileName" }
+
+        return withContext(Dispatchers.IO) {
+            Files.deleteIfExists(Path.of("${deleteOffers}/$fileName"))
             true
         }
     }

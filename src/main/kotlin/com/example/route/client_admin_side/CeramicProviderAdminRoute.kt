@@ -107,11 +107,10 @@ fun Route.providerAdminClient(
 
         }
         //put update providers //api/v1/admin-client/provider/update/6
-        // TODO: check again
         put("$UPDATE_PROVIDER/{id}") {
             logger.debug { "put /$UPDATE_PROVIDER/{id}" }
             val id = call.parameters["id"]?.toIntOrNull()
-            id?.let {
+            id?.let { providerId ->
                 val updateProvider = try {
                     call.receive<CeramicProvider>()
                 } catch (exc: Exception) {
@@ -125,17 +124,14 @@ fun Route.providerAdminClient(
                     )
                     return@put
                 }
-                ceramicProvider.getCeramicProviderByID(id)?.let { temp ->
+                ceramicProvider.getCeramicProviderByID(id = providerId)?.let { temp ->
                     val updateResult = ceramicProvider.updateCeramicProvider(
-                        it,
-                        updateProvider.copy(
-                            createdAt = temp.createdAt,
-                            updatedAt = LocalDateTime.now().toDatabaseString()
-                        )
+                        providerId = providerId,
+                        updateProvider
                     )
                     if (updateResult > 0) {
                         call.respond(
-                            HttpStatusCode.BadRequest,
+                            HttpStatusCode.OK,
                             MyResponse(
                                 success = true,
                                 message = "provider update successfully .",
@@ -146,7 +142,7 @@ fun Route.providerAdminClient(
 
                     } else {
                         call.respond(
-                            HttpStatusCode.BadRequest,
+                            HttpStatusCode.OK,
                             MyResponse(
                                 success = false,
                                 message = "no provider found .",
@@ -157,7 +153,7 @@ fun Route.providerAdminClient(
 
                     }
                 } ?: call.respond(
-                    HttpStatusCode.BadRequest,
+                    HttpStatusCode.NotFound,
                     MyResponse(
                         success = false,
                         message = "no provider found .",

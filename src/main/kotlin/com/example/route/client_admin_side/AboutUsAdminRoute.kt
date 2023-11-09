@@ -166,6 +166,7 @@ fun Route.aboutUsAdminRoute(aboutUsDataSource: AboutUsDataSource) {
                     return@post
                 }
             } catch (e: Exception) {
+                logger.error { "Error ${e.message}" }
                 call.respond(
                     HttpStatusCode.Conflict,
                     MyResponse(
@@ -313,40 +314,40 @@ fun Route.aboutUsAdminRoute(aboutUsDataSource: AboutUsDataSource) {
         delete(DELETE_ALL_ABOUT_US) {
             logger.debug { "delete all ABOUT US $DELETE_ALL_ABOUT_US" }
 
-                try {
-                    val result = aboutUsDataSource.deleteAllAboutUs()
-                    if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = "All About Us Information delete successfully .",
-                                data = null
-                            )
-                        )
-                        return@delete
-                    } else {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "All About Us Information delete failed .",
-                                data = null
-                            )
-                        )
-                        return@delete
-                    }
-                } catch (e: Exception) {
-
+            try {
+                val result = aboutUsDataSource.deleteAllAboutUs()
+                if (result > 0) {
                     call.respond(
-                        HttpStatusCode.Conflict,
+                        HttpStatusCode.OK,
                         MyResponse(
+                            success = true,
+                            message = "All About Us Information delete successfully .",
+                            data = null
+                        )
+                    )
+                    return@delete
+                } else {
+                    call.respond(
+                        HttpStatusCode.OK, MyResponse(
                             success = false,
-                            message = e.message ?: "error while delete ",
+                            message = "All About Us Information delete failed .",
                             data = null
                         )
                     )
                     return@delete
                 }
+            } catch (e: Exception) {
+
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "error while delete ",
+                        data = null
+                    )
+                )
+                return@delete
+            }
 
 
         }

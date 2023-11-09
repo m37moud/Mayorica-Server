@@ -16,24 +16,29 @@ private val logger = KotlinLogging.logger {}
 fun Route.aboutUsUserRoute(aboutUsDataSource: AboutUsDataSource) {
 //get about us //api/v1/user-client/about_us
     get(ABOUT_US) {
-       logger.debug { "GET ABOUT US $ABOUT_US" }
+        logger.debug { "GET ABOUT US $ABOUT_US" }
         try {
 
-            aboutUsDataSource.getAboutUsInfo()?.let {
+            val result = aboutUsDataSource.getAllAboutUsInfo()
+            if (result.isNotEmpty()) {
                 call.respond(
-                    status = HttpStatusCode.OK, message = MyResponse(
+                    status = HttpStatusCode.OK,
+                    message = MyResponse(
                         success = true,
                         message = "About Us Information Found",
-                        data = it
+                        data = result
                     )
                 )
-            } ?: call.respond(
-                status = HttpStatusCode.NotFound, message = MyResponse(
-                    success = false,
-                    message = "About Us Information Not Found",
-                    data = null
+            } else {
+                call.respond(
+                    status = HttpStatusCode.NotFound,
+                    message = MyResponse(
+                        success = false,
+                        message = "About Us Information Not Found",
+                        data = null
+                    )
                 )
-            )
+            }
         } catch (exc: Exception) {
             call.respond(
                 HttpStatusCode.Conflict,

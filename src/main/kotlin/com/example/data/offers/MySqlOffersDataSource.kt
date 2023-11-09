@@ -53,6 +53,20 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
         }
 
     }
+    override suspend fun getOfferByTitle(title: String): Offers? {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(OffersEntity)
+                .select()
+                .orderBy(OffersEntity.createdAt.desc())
+                .where {
+                    OffersEntity.title eq title
+                }
+                .map { rowToOffers(it) }
+                .firstOrNull()
+            result
+        }
+
+    }
 
     override suspend fun getHotOffers(): Offers? {
         return withContext(Dispatchers.IO) {

@@ -27,7 +27,7 @@ fun Route.hotReleaseAdminRoute(
             val productList = hotReleaseDataSource.getAllHotReleaseProduct(limit)
             if (productList.isNotEmpty()) {
                 call.respond(
-                    status = HttpStatusCode.Conflict,
+                    status = HttpStatusCode.OK,
                     message = MyResponse(
                         success = true,
                         message = "product fetched successfully from hot release",

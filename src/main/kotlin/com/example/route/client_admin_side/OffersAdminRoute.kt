@@ -1,7 +1,7 @@
 package com.example.route.client_admin_side
 
 import com.example.data.offers.OffersDataSource
-import com.example.models.TypeCategory
+import com.example.models.Offers
 import com.example.service.storage.StorageService
 import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
@@ -121,12 +121,13 @@ fun Route.offersAdminRoute(
                 return@get
             }
         }
-        //post type category //api/v1/admin-client/category/type/create
-        post(CREATE_TYPE_CATEGORY) {
-            logger.debug { "POST /$CREATE_TYPE_CATEGORY" }
+        //post type category //api/v1/admin-client/offer/create
+        post(CREATE_OFFERS) {
+            logger.debug { "POST /$CREATE_OFFERS" }
             val multiPart = call.receiveMultipart()
             var offerTitle: String? = null
             var offerDescription: String? = null
+            var isHotOffer: Boolean? = null
             var fileName: String? = null
             var fileBytes: ByteArray? = null
             var url: String? = null
@@ -160,6 +161,9 @@ fun Route.offersAdminRoute(
                                 "offerDescription" -> {
                                     offerDescription = part.value
                                 }
+                                "isHotOffer" -> {
+                                    isHotOffer = part.value.toBoolean()
+                                }
 
                             }
 
@@ -180,7 +184,7 @@ fun Route.offersAdminRoute(
                             }
                             fileName = generateSafeFileName(part.originalFileName as String)
                             fileBytes = part.streamProvider().readBytes()
-                            url = "${baseUrl}categories/icons/${fileName}"
+                            url = "${baseUrl}offers/${fileName}"
 
                         }
 
@@ -190,17 +194,16 @@ fun Route.offersAdminRoute(
                     part.dispose()
                 }
 
-                // TODO: complete offer post function in offers
-                val typeCategory = offersDataSource.getTypeCategoryByName(typeCategoryName!!)
+                val typeCategory = offersDataSource.getOfferByTitle(offerTitle!!)
                 if (typeCategory == null) {
                     imageUrl = try {
-                        storageService.saveCategoryIcons(
+                        storageService.saveOfferImage(
                             fileName = fileName!!,
                             fileUrl = url!!,
                             fileBytes = fileBytes!!
                         )
                     } catch (e: Exception) {
-                        storageService.deleteCategoryIcons(fileName = fileName!!)
+                        storageService.deleteOfferImages(fileName = fileName!!)
                         call.respond(
                             status = HttpStatusCode.InternalServerError,
                             message = MyResponse(
@@ -213,21 +216,23 @@ fun Route.offersAdminRoute(
                     }
                     if (!imageUrl.isNullOrEmpty()) {
 
-                        TypeCategory(
-                            typeName = typeCategoryName!!,
-                            typeIcon = imageUrl,
+                        Offers(
+                            title = offerTitle!!,
+                            offerDescription = offerDescription!!,
+                            image = imageUrl,
+                            isHotOffer = isHotOffer!!,
                             userAdminID = userId!!,
                             createdAt = LocalDateTime.now().toDatabaseString(),
                             updatedAt = LocalDateTime.now().toDatabaseString()
                         ).apply {
 
-                            val result = categoryDataSource.createTypeCategory(this)
+                            val result = offersDataSource.addOffers(this)
 
                             if (result > 0) {
                                 call.respond(
                                     HttpStatusCode.OK, MyResponse(
                                         success = true,
-                                        message = "Type Category inserted successfully .",
+                                        message = "Offer inserted successfully .",
                                         data = this
                                     )
                                 )
@@ -237,7 +242,7 @@ fun Route.offersAdminRoute(
                                     HttpStatusCode.OK,
                                     MyResponse(
                                         success = false,
-                                        message = "Type Category inserted failed .",
+                                        message = "Offer inserted failed .",
                                         data = null
                                     )
                                 )
@@ -245,7 +250,7 @@ fun Route.offersAdminRoute(
                             }
                         }
                     } else {
-                        storageService.deleteCategoryIcons(fileName = fileName!!)
+                        storageService.deleteOfferImages(fileName = fileName!!)
                         call.respond(
                             status = HttpStatusCode.OK,
                             message = MyResponse(
@@ -258,9 +263,10 @@ fun Route.offersAdminRoute(
                     }
                 } else {
                     call.respond(
-                        HttpStatusCode.OK, MyResponse(
+                        HttpStatusCode.OK,
+                        MyResponse(
                             success = false,
-                            message = "Type Category inserted before .",
+                            message = "Offer inserted before .",
                             data = null
                         )
                     )
@@ -279,6 +285,93 @@ fun Route.offersAdminRoute(
             }
 
 
+        }
+        //delete type category //api/v1/admin-client/offer/delete/{id}
+        delete("$DELETE_OFFERS/{id}") {
+            try {
+                logger.debug { "get /$DELETE_OFFERS/{id}" }
+                val id = call.parameters["id"]?.toIntOrNull()
+                id?.let {offerId->
+                    offersDataSource.getOffersById(offerId)?.let { offer ->
+
+                        val isDeleted = try {
+                            storageService.deleteOfferImages(fileName = offer.image.substringAfterLast("/"))
+                        } catch (e: Exception) {
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                MyResponse(
+                                    success = false,
+                                    message = e.message ?: "Failed to delete icon",
+                                    data = null
+                                )
+                            )
+                            return@delete
+                        }
+                        if (isDeleted) {
+                            val deleteResult = offersDataSource.deleteOffers(offerId)
+                            if (deleteResult > 0) {
+                                call.respond(
+                                    HttpStatusCode.OK,
+                                    MyResponse(
+                                        success = true,
+                                        message = "Offer deleted successfully .",
+                                        data = null
+                                    )
+                                )
+                            } else {
+                                call.respond(
+                                    HttpStatusCode.NotFound,
+                                    MyResponse(
+                                        success = false,
+                                        message = " Offer deleted failed .",
+                                        data = null
+                                    )
+                                )
+                            }
+
+                        } else {
+                            call.respond(
+                                HttpStatusCode.Conflict,
+                                MyResponse(
+                                    success = false,
+                                    message = "Failed to delete image",
+                                    data = null
+                                )
+                            )
+
+                        }
+
+
+                    } ?: call.respond(
+                        HttpStatusCode.NotFound,
+                        MyResponse(
+                            success = false,
+                            message = " Offer deleted failed .",
+                            data = null
+                        )
+                    )
+
+
+                } ?: call.respond(
+                    HttpStatusCode.BadRequest,
+                    MyResponse(
+                        success = false,
+                        message = "Missing parameters .",
+                        data = null
+                    )
+                )
+
+            } catch (exc: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = exc.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@delete
+            }
         }
     }
 

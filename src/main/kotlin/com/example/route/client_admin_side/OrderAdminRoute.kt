@@ -21,7 +21,7 @@ const val ORDER_RESPONSE = "${ADMIN_CLIENT}/orders"
 const val ORDER_STATUE_RESPONSE = "${ADMIN_CLIENT}/statue"
 private val logger = KotlinLogging.logger {}
 
-fun Route.orders(
+fun Route.ordersAdminRoute(
     orderDataSource: OrderDataSource,
     orderStatusDataSource: OrderStatusDataSource,
     userDataSource: UserDataSource

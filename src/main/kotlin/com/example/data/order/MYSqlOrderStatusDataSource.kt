@@ -65,7 +65,12 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
     }
 
     override suspend fun deleteOrderStatus(requestUserId: Int): Int {
-        TODO("Not yet implemented")
+        return withContext(Dispatchers.IO) {
+            val result = db.delete(UserOrderStatusEntity) {
+                it.id eq requestUserId
+            }
+            result
+        }
     }
 
     private fun rowToUserOrderStatus(row: QueryRowSet?): UserOrderStatus? {

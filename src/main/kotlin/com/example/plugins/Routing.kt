@@ -3,11 +3,15 @@ package com.example.plugins
 import com.example.data.about_us.AboutUsDataSource
 import com.example.data.admin_user.UserDataSource
 import com.example.data.ceramic_provider.CeramicProviderDataSource
+import com.example.data.contact_us.ContactUsDataSource
 import com.example.data.gallery.categories.CategoryDataSource
 import com.example.data.gallery.products.ProductDataSource
 import com.example.data.gallery.products.hot_release.HotReleaseDataSource
+import com.example.data.news.NewsDataSource
+import com.example.data.offers.OffersDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
+import com.example.data.videos.youtube.YoutubeDataSource
 import com.example.route.client_admin_side.*
 import com.example.route.client_user_side.*
 import com.example.security.hash.HashingService
@@ -31,6 +35,10 @@ fun Application.configureRouting(
     categoryDataSource: CategoryDataSource,
     aboutUsDataSource: AboutUsDataSource,
     hotReleaseDataSource: HotReleaseDataSource,
+    contactUsDataSource: ContactUsDataSource,
+    newsDataSource: NewsDataSource,
+    offersDataSource: OffersDataSource,
+    youtubeDataSource: YoutubeDataSource,
     storageService: StorageService,
     hashingService: HashingService,
     tokenService: TokenService,
@@ -65,7 +73,7 @@ fun Application.configureRouting(
             orderDataSource = orderDataSource,
             orderStatusDataSource = orderStatusDataSource,
         )
-        orders(
+        ordersAdminRoute(
             orderDataSource = orderDataSource,
             orderStatusDataSource = orderStatusDataSource,
             userDataSource = userDataSource
@@ -111,6 +119,34 @@ fun Application.configureRouting(
             productDataSource = productDataSource
         )
 
+        contactUsAdminRoute(
+            contactUsDataSource = contactUsDataSource
+        )
+        contactUsUserRoute(
+            contactUsDataSource = contactUsDataSource
+        )
+        newsAdminRoute(
+            newsDataSource = newsDataSource,
+            storageService = storageService
+        )
+        newsUserRoute(
+            newsDataSource = newsDataSource,
+        )
+        offersAdminRoute(
+            offersDataSource = offersDataSource,
+            storageService = storageService
+        )
+        offersUserRoute(
+            offersDataSource = offersDataSource,
+        )
+        youtubeLinkAdminRoute(
+            youtubeDataSource=youtubeDataSource
+        )
+        youtubeLinkUserRoute(
+            youtubeDataSource=youtubeDataSource
+        )
+
+
 
         get("/") {
             call.respondText("\uD83D\uDC4B Hello Mayorca Reactive API REST!")
@@ -128,6 +164,11 @@ fun Application.configureRouting(
 
                 // serve all files in fruit_pictures as static content under /images
                 files("uploads/news")
+            }
+            static("$ENDPOINT/image/offers") {
+
+                // serve all files in fruit_pictures as static content under /images
+                files("uploads/offers")
             }
             static("$ENDPOINT/image/categories/icons") {
 

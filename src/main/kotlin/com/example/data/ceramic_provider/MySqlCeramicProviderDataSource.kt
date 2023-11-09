@@ -105,7 +105,6 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 set(it.country, ceramicProvider.country)
                 set(it.governorate, ceramicProvider.governorate)
                 set(it.address, ceramicProvider.address)
-
                 set(it.updatedAt, LocalDateTime.now())
                 where {
                     it.id eq providerId

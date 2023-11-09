@@ -3,11 +3,15 @@ package com.example
 import com.example.data.about_us.MySqlAboutUsDataSource
 import com.example.data.admin_user.MYSqlUserDataSource
 import com.example.data.ceramic_provider.MySqlCeramicProviderDataSource
+import com.example.data.contact_us.MySqlContactUsDataSource
 import com.example.data.gallery.categories.MySqlCategoryDataSource
 import com.example.data.gallery.products.MySqlProductDataSource
 import com.example.data.gallery.products.hot_release.MySqlHotReleaseDataSource
+import com.example.data.news.MySqlNewsDataSource
+import com.example.data.offers.MySqlOffersDataSource
 import com.example.data.order.MYSqlOrderDataSource
 import com.example.data.order.MYSqlOrderStatusDataSource
+import com.example.data.videos.youtube.MySqlYoutubeDataSource
 import com.example.database.DBHelper
 import com.example.plugins.*
 import com.example.security.hash.SHA256HashingService
@@ -36,6 +40,10 @@ fun Application.module() {
     val categoryDataSource = MySqlCategoryDataSource(db = db)
     val aboutUsDataSource = MySqlAboutUsDataSource(db = db)
     val hotReleaseDataSource = MySqlHotReleaseDataSource(db = db)
+    val contactUsDataSource = MySqlContactUsDataSource(db = db)
+    val newsDataSource = MySqlNewsDataSource(db = db)
+    val offersDataSource = MySqlOffersDataSource(db = db)
+    val youtubeDataSource = MySqlYoutubeDataSource(db = db)
     val storageService = StorageServiceImpl(appConfig)
     val hashingService = SHA256HashingService()
     val tokenService = JWTTokenService()
@@ -60,6 +68,10 @@ fun Application.module() {
         categoryDataSource = categoryDataSource,
         aboutUsDataSource = aboutUsDataSource,
         hotReleaseDataSource = hotReleaseDataSource,
+        contactUsDataSource = contactUsDataSource,
+        newsDataSource = newsDataSource,
+        offersDataSource =offersDataSource,
+        youtubeDataSource =youtubeDataSource,
         storageService = storageService,
         hashingService = hashingService,
         tokenService = tokenService,
