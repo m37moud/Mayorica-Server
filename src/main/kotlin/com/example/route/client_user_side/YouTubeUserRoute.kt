@@ -30,13 +30,13 @@ fun Route.youtubeLinkUserRoute(
                     message = MyResponse(
                         success = true,
                         message = "get all youtube link successfully",
-                        data = null
+                        data = linkList
                     )
                 )
 
             } else {
                 call.respond(
-                    status = HttpStatusCode.NotFound,
+                    status = HttpStatusCode.OK,
                     message = MyResponse(
                         success = false,
                         message = "no youtube link is found",

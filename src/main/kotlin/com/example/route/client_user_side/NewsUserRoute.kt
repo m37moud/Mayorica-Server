@@ -32,10 +32,10 @@ fun Route.newsUserRoute(newsDataSource: NewsDataSource) {
 
             } else {
                 call.respond(
-                    status = HttpStatusCode.NotFound,
+                    status = HttpStatusCode.OK,
                     message = MyResponse(
                         success = false,
-                        message = "no NEWS is found",
+                        message = "No NEWS Is Found",
                         data = null
                     )
                 )

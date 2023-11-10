@@ -18,7 +18,7 @@ class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
         return withContext(Dispatchers.IO) {
             val result = db.from(AboutUsEntity)
                 .select()
-                .orderBy(AboutUsEntity.createdAt.desc())
+                .orderBy(AboutUsEntity.createdAt.asc())
                 .mapNotNull { rowToAboutUs(it) }
             result
         }

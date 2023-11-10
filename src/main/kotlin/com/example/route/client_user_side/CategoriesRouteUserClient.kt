@@ -51,7 +51,7 @@ fun Route.categoriesUserRoute(
                     )
                 } else {
                     call.respond(
-                        HttpStatusCode.NotFound, MyResponse(
+                        HttpStatusCode.OK, MyResponse(
                             success = false,
                             message = "type categories is empty",
                             data = null
@@ -73,7 +73,7 @@ fun Route.categoriesUserRoute(
                     )
                 } else {
                     call.respond(
-                        HttpStatusCode.NotFound, MyResponse(
+                        HttpStatusCode.OK, MyResponse(
                             success = false,
                             message = "type categories is empty",
                             data = null
@@ -106,7 +106,8 @@ fun Route.categoriesUserRoute(
                 val sizeCategoriesList = categoryDataSource.getAllSizeCategoryPageable(page, perPage)
                 if (sizeCategoriesList.isNotEmpty()) {
                     call.respond(
-                        HttpStatusCode.OK, MyResponse(
+                        HttpStatusCode.OK,
+                        MyResponse(
                             success = true,
                             message = "get all size categories successfully",
                             data = SizeCategoryPage(page, perPage, sizeCategoriesList)
@@ -114,7 +115,7 @@ fun Route.categoriesUserRoute(
                     )
                 } else {
                     call.respond(
-                        HttpStatusCode.NotFound, MyResponse(
+                        HttpStatusCode.OK, MyResponse(
                             success = false,
                             message = "no size categories is found",
                             data = null
@@ -136,7 +137,7 @@ fun Route.categoriesUserRoute(
                     )
                 } else {
                     call.respond(
-                        HttpStatusCode.NotFound, MyResponse(
+                        HttpStatusCode.OK, MyResponse(
                             success = false,
                             message = "size categories is not found",
                             data = null
@@ -177,7 +178,7 @@ fun Route.categoriesUserRoute(
                     )
                 } else {
                     call.respond(
-                        HttpStatusCode.NotFound, MyResponse(
+                        HttpStatusCode.OK, MyResponse(
                             success = false,
                             message = "no color categories is found",
                             data = null
@@ -199,7 +200,7 @@ fun Route.categoriesUserRoute(
                     )
                 } else {
                     call.respond(
-                        HttpStatusCode.NotFound, MyResponse(
+                        HttpStatusCode.OK, MyResponse(
                             success = false,
                             message = "no color categories is found",
                             data = null
@@ -239,7 +240,7 @@ fun Route.categoriesUserRoute(
                     )
                 } else
                     call.respond(
-                        HttpStatusCode.NotFound,
+                        HttpStatusCode.OK,
                         MyResponse(
                             success = false,
                             message = "no size category found .",

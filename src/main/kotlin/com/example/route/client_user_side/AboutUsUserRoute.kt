@@ -10,7 +10,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
 
-private const val ABOUT_US = "${USER_CLIENT}/about_us"
+private const val ABOUT_US = "${USER_CLIENT}/about-us"
 private val logger = KotlinLogging.logger {}
 
 fun Route.aboutUsUserRoute(aboutUsDataSource: AboutUsDataSource) {
@@ -31,7 +31,7 @@ fun Route.aboutUsUserRoute(aboutUsDataSource: AboutUsDataSource) {
                 )
             } else {
                 call.respond(
-                    status = HttpStatusCode.NotFound,
+                    status = HttpStatusCode.OK,
                     message = MyResponse(
                         success = false,
                         message = "About Us Information Not Found",

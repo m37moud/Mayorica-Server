@@ -17,7 +17,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
 
-private const val ABOUT_US = "$ADMIN_CLIENT/about_us"
+private const val ABOUT_US = "$ADMIN_CLIENT/about-us"
 private const val CREATE_ABOUT_US = "$ABOUT_US/create"
 private const val UPDATE_ABOUT_US = "$ABOUT_US/update"
 private const val DELETE_ABOUT_US = "$ABOUT_US/delete"
@@ -43,7 +43,7 @@ fun Route.aboutUsAdminRoute(aboutUsDataSource: AboutUsDataSource) {
                     )
                 } else {
                     call.respond(
-                        status = HttpStatusCode.NotFound,
+                        status = HttpStatusCode.OK,
                         message = MyResponse(
                             success = false,
                             message = "About Us Information Not Found",
@@ -83,7 +83,7 @@ fun Route.aboutUsAdminRoute(aboutUsDataSource: AboutUsDataSource) {
 
 
                         } ?: call.respond(
-                        status = HttpStatusCode.NotFound,
+                        status = HttpStatusCode.OK,
                         message = MyResponse(
                             success = false,
                             message = "About Us Information Not Found",

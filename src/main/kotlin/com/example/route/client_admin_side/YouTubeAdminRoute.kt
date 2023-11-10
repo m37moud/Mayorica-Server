@@ -40,7 +40,7 @@ fun Route.youtubeLinkAdminRoute(
                         message = MyResponse(
                             success = true,
                             message = "get all youtube link successfully",
-                            data = null
+                            data = linkList
                         )
                     )
 
@@ -80,7 +80,7 @@ fun Route.youtubeLinkAdminRoute(
                             message = MyResponse(
                                 success = true,
                                 message = "get youtube link successfully",
-                                data = null
+                                data = link
                             )
                         )
 
@@ -125,7 +125,7 @@ fun Route.youtubeLinkAdminRoute(
             logger.debug { "post  youtube Link $CREATE_YOUTUBE_LINK" }
 
             val linkRequest = try {
-                call.receive<YoutubeLinkRequest>()
+                call.receive<YoutubeLink>()
             } catch (e: Exception) {
                 call.respond(
                     HttpStatusCode.Conflict,
@@ -154,7 +154,8 @@ fun Route.youtubeLinkAdminRoute(
             }
 
             try {
-                val result = youtubeDataSource.addYoutubeLink(linkRequest.toModel(adminId = adminUserId!!))
+
+                val result = youtubeDataSource.addYoutubeLink(linkRequest.copy(userAdminId = adminUserId!!))
                 if (result > 0) {
                     call.respond(
                         HttpStatusCode.OK,

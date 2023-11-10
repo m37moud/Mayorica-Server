@@ -80,7 +80,8 @@ fun Route.hotReleaseAdminRoute(
                     principal?.getClaim("userId", String::class)?.toIntOrNull()
                 } catch (e: Exception) {
                     call.respond(
-                        status = HttpStatusCode.Conflict, message = MyResponse(
+                        status = HttpStatusCode.Conflict,
+                        message = MyResponse(
                             success = false,
                             message = e.message ?: "Error with authentication",
                             data = null
