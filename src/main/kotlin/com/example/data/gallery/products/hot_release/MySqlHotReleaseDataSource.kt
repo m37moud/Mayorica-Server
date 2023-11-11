@@ -20,11 +20,14 @@ class MySqlHotReleaseDataSource(private val db: Database) : HotReleaseDataSource
                 .innerJoin(ProductEntity, on = HotReleaseProductEntity.productId eq ProductEntity.id)
                 .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)
                 .innerJoin(SizeCategoryEntity, on = ProductEntity.sizeCategoryId eq SizeCategoryEntity.id)
+                .innerJoin(ColorCategoryEntity, on = ProductEntity.colorCategoryId eq ColorCategoryEntity.id)
+
                 .select(
                     ProductEntity.id,
                     ProductEntity.productName,
                     TypeCategoryEntity.typeName,
                     SizeCategoryEntity.size,
+                    ColorCategoryEntity.color,
                     ProductEntity.image,
                     ProductEntity.createdAt,
                     ProductEntity.updatedAt,

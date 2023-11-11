@@ -177,7 +177,7 @@ fun Route.productUserRoute(productDataSource: ProductDataSource) {
 
 
     }
-    // get the product --> get /api/v1/admin-client/product/{id} (token required)
+    // get the product --> get /api/v1/user-client/product/{id} (token required)
     get("$SINGLE_PRODUCT/{id}") {
         logger.debug { "get /$SINGLE_PRODUCT" }
         call.parameters["id"]?.toIntOrNull()?.let { id ->

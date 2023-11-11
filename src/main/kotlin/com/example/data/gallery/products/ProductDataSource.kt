@@ -3,6 +3,7 @@ package com.example.data.gallery.products
 import com.example.database.table.ProductEntity
 import com.example.models.Product
 import com.example.models.TypeCategory
+import com.example.models.response.ProductResponse
 import org.ktorm.schema.Column
 import kotlin.reflect.KProperty1
 
@@ -44,7 +45,7 @@ interface ProductDataSource {
     //    suspend fun getAllProductPageableByType(page: Int = 0, perPage: Int = 10, categoryTypeId: Int): List<Product>
 //    suspend fun getAllProductPageableBySize(page: Int = 0, perPage: Int = 10, categoryTypeId: Int): List<Product>
 //    suspend fun getAllProductPageableByColor(page: Int = 0, perPage: Int = 10, categoryTypeId: Int): List<Product>
-    suspend fun getProductById(productId: Int): Product?
+    suspend fun getProductById(productId: Int): ProductResponse?
     suspend fun getProductByName(productName: String): Product?
     suspend fun searchProductByName(productName: String): List<Product?>
     suspend fun createProduct(product: Product): Int

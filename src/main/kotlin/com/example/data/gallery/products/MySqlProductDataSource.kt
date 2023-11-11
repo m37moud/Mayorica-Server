@@ -1,8 +1,10 @@
 package com.example.data.gallery.products
 
-import com.example.database.table.ProductEntity
+import com.example.database.table.*
 import com.example.models.Product
+import com.example.models.response.ProductResponse
 import com.example.route.client_admin_side.TYPE_CATEGORIES
+import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
@@ -150,12 +152,24 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
     }
 
-    override suspend fun getProductById(productId: Int): Product? {
+    override suspend fun getProductById(productId: Int): ProductResponse? {
         return withContext(Dispatchers.IO) {
             val product = db.from(ProductEntity)
-                .select()
+                .innerJoin(ProductEntity, on = HotReleaseProductEntity.productId eq ProductEntity.id)
+                .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)
+                .innerJoin(SizeCategoryEntity, on = ProductEntity.sizeCategoryId eq SizeCategoryEntity.id)
+
+                .select(
+                    ProductEntity.id,
+                    ProductEntity.productName,
+                    TypeCategoryEntity.typeName,
+                    SizeCategoryEntity.size,
+                    ProductEntity.image,
+                    ProductEntity.createdAt,
+                    ProductEntity.updatedAt,
+                )
                 .where { ProductEntity.id eq productId }
-                .map { rowToProduct(it) }
+                .map { rowToProductResponse(it) }
                 .firstOrNull()
             product
         }
@@ -270,4 +284,32 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
             )
         }
     }
+
+    private fun rowToProductResponse(row: QueryRowSet?): ProductResponse? {
+        return if (row == null) {
+            null
+        } else {
+            val id = row[ProductEntity.id] ?: -1
+            val productName = row[ProductEntity.productName] ?: ""
+            val typeCategory = row[TypeCategoryEntity.typeName] ?: ""
+            val size = row[SizeCategoryEntity.size] ?: ""
+            val color = row[ColorCategoryEntity.color] ?: ""
+            val imageProduct = row[ProductEntity.image] ?: ""
+            val createdAt = row[ProductEntity.createdAt]?.toDatabaseString() ?: ""
+            val updatedAt = row[ProductEntity.updatedAt]?.toDatabaseString() ?: ""
+
+            ProductResponse(
+                id = id,
+                productName = productName,
+                typeCategoryName = typeCategory,
+                sizeCategoryName = size,
+                colorCategoryName = color,
+                image = imageProduct,
+                createdAt = createdAt,
+                updatedAt = updatedAt
+
+            )
+        }
+    }
+
 }
