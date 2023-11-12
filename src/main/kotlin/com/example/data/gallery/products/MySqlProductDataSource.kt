@@ -239,7 +239,18 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
     }
 
-    override suspend fun getProductById(productId: Int): ProductResponse? {
+    override suspend fun getProductById(productId: Int): Product? {
+        return withContext(Dispatchers.IO) {
+            val product = db.from(ProductEntity)
+
+                .select()
+                .where { ProductEntity.id eq productId }
+                .map { rowToProduct(it) }
+                .firstOrNull()
+            product
+        }
+    }
+    override suspend fun getProductResponseById(productId: Int): ProductResponse? {
         return withContext(Dispatchers.IO) {
             val product = db.from(ProductEntity)
                 .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)

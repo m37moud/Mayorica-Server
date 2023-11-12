@@ -16,6 +16,7 @@ import mu.KotlinLogging
 const val ALL_PRODUCTS = "${USER_CLIENT}/products"
 const val ALL_PRODUCTS_RESPONSE = "${USER_CLIENT}/products-response"
 const val SINGLE_PRODUCT = "${USER_CLIENT}/product"
+const val SINGLE_PRODUCT_RESPONSE = "${USER_CLIENT}/product-response"
 const val SEARCH_PRODUCTS = "${ALL_PRODUCTS}/search"
 private val logger = KotlinLogging.logger {}
 
@@ -339,12 +340,12 @@ fun Route.productUserRoute(productDataSource: ProductDataSource) {
 
     }
     // get the product --> get /api/v1/user-client/product/{id} (token required)
-    get("$SINGLE_PRODUCT/{id}") {
-        logger.debug { "get /$SINGLE_PRODUCT" }
+    get("$SINGLE_PRODUCT_RESPONSE/{id}") {
+        logger.debug { "get /$SINGLE_PRODUCT_RESPONSE" }
         call.parameters["id"]?.toIntOrNull()?.let { id ->
 
             try {
-                productDataSource.getProductById(id)?.let { product ->
+                productDataSource.getProductResponseById(id)?.let { product ->
                     call.respond(
                         status = HttpStatusCode.OK,
                         message = MyResponse(

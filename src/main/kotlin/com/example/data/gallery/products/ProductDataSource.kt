@@ -64,7 +64,8 @@ interface ProductDataSource {
     //    suspend fun getAllProductPageableByType(page: Int = 0, perPage: Int = 10, categoryTypeId: Int): List<Product>
 //    suspend fun getAllProductPageableBySize(page: Int = 0, perPage: Int = 10, categoryTypeId: Int): List<Product>
 //    suspend fun getAllProductPageableByColor(page: Int = 0, perPage: Int = 10, categoryTypeId: Int): List<Product>
-    suspend fun getProductById(productId: Int): ProductResponse?
+    suspend fun getProductById(productId: Int): Product?
+    suspend fun getProductResponseById(productId: Int): ProductResponse?
     suspend fun getProductByName(productName: String): Product?
     suspend fun searchProductByName(productName: String): List<Product?>
     suspend fun createProduct(product: Product): Int
