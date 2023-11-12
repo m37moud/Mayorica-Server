@@ -119,7 +119,7 @@ fun Route.productAdminRoute(
 
                 } else {
                     call.respond(
-                        HttpStatusCode.NotFound, MyResponse(
+                        HttpStatusCode.OK, MyResponse(
                             success = false,
                             message = "type categories is empty",
                             data = null
@@ -192,7 +192,7 @@ fun Route.productAdminRoute(
 
                 } else {
                     call.respond(
-                        HttpStatusCode.NotFound, MyResponse(
+                        HttpStatusCode.OK, MyResponse(
                             success = false,
                             message = "type categories is empty",
                             data = null
@@ -493,7 +493,7 @@ fun Route.productAdminRoute(
                             )
                         } else {
                             call.respond(
-                                HttpStatusCode.NotFound,
+                                HttpStatusCode.OK,
                                 MyResponse(
                                     success = false,
                                     message = " product deleted failed .",
@@ -516,7 +516,7 @@ fun Route.productAdminRoute(
 
 
                 } ?: call.respond(
-                    HttpStatusCode.NotFound,
+                    HttpStatusCode.OK,
                     MyResponse(
                         success = false,
                         message = " news deleted failed .",

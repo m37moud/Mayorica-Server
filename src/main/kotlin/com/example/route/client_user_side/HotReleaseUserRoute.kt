@@ -18,7 +18,7 @@ fun Route.hotReleaseAdminRoute(
     hotReleaseDataSource: HotReleaseDataSource,
 ){
 
-    //get request -> api/v1/admin-client/hot_release_products
+    //get request -> api/v1/user-client/hot_release_products
     get(HOT_RELEASE_PRODUCTS) {
         logger.debug { "get $HOT_RELEASE_PRODUCTS" }
         try {

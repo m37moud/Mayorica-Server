@@ -13,6 +13,7 @@ import org.ktorm.dsl.*
 import org.ktorm.schema.Column
 import java.time.LocalDateTime
 import kotlin.reflect.KProperty1
+
 private val logger = KotlinLogging.logger {}
 
 class MySqlProductDataSource(private val db: Database) : ProductDataSource {
@@ -82,7 +83,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         sortDirection: Int
     ): List<Product> {
         return withContext(Dispatchers.IO) {
-          logger.debug { "getAllProductByCategories /$sortField $sortDirection" }
+            logger.debug { "getAllProductByCategories /$sortField $sortDirection" }
 
             val productList = db.from(ProductEntity)
                 .select()
@@ -97,6 +98,46 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
 
                 }
                 .mapNotNull { rowToProduct(it) }
+            productList
+        }
+    }
+
+    override suspend fun getAllProductResponseByCategories(
+        categoryType: Int,
+        categorySize: Int,
+        categoryColor: Int,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<ProductResponse> {
+        return withContext(Dispatchers.IO) {
+            logger.debug { "getAllProductByCategories /$sortField $sortDirection" }
+
+            val productList = db.from(ProductEntity)
+                .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)
+                .innerJoin(SizeCategoryEntity, on = ProductEntity.sizeCategoryId eq SizeCategoryEntity.id)
+                .innerJoin(ColorCategoryEntity, on = ProductEntity.colorCategoryId eq ColorCategoryEntity.id)
+
+                .select(
+                    ProductEntity.id,
+                    ProductEntity.productName,
+                    TypeCategoryEntity.typeName,
+                    SizeCategoryEntity.size,
+                    ColorCategoryEntity.color,
+                    ProductEntity.image,
+                    ProductEntity.createdAt,
+                    ProductEntity.updatedAt,
+                )
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc() else sortField.desc()
+                )
+                .whereWithConditions {
+                    if (categoryType > 0) it += ProductEntity.typeCategoryId eq categoryType
+                    if (categorySize > 0) it += ProductEntity.sizeCategoryId eq categorySize
+                    if (categoryColor > 0) it += ProductEntity.colorCategoryId eq categoryColor
+
+                }
+                .mapNotNull { rowToProductResponse(it) }
             productList
         }
     }
@@ -152,18 +193,65 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
     }
 
+    override suspend fun getAllProductResponsePageableByCategories(
+        page: Int, perPage: Int,
+        categoryType: Int,
+        categorySize: Int,
+        categoryColor: Int,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<ProductResponse> {
+        return withContext(Dispatchers.IO) {
+            logger.debug { "getAllProductPageableByCategories /$sortField $sortDirection" }
+
+            val myLimit = if (perPage > 100) 100 else perPage
+            val myOffset = (page * perPage)
+            val productList = db.from(ProductEntity)
+                .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)
+                .innerJoin(SizeCategoryEntity, on = ProductEntity.sizeCategoryId eq SizeCategoryEntity.id)
+                .innerJoin(ColorCategoryEntity, on = ProductEntity.colorCategoryId eq ColorCategoryEntity.id)
+                .select(
+                    ProductEntity.id,
+                    ProductEntity.productName,
+                    TypeCategoryEntity.typeName,
+                    SizeCategoryEntity.size,
+                    ColorCategoryEntity.color,
+                    ProductEntity.image,
+                    ProductEntity.createdAt,
+                    ProductEntity.updatedAt
+                )
+                .limit(myLimit)
+                .offset(myOffset)
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+                .whereWithConditions {
+                    if (categoryType > 0) it += ProductEntity.typeCategoryId eq categoryType
+                    if (categorySize > 0) it += ProductEntity.sizeCategoryId eq categorySize
+                    if (categoryColor > 0) it += ProductEntity.colorCategoryId eq categoryColor
+
+                }
+                .mapNotNull { rowToProductResponse(it) }
+            productList
+        }
+    }
+
     override suspend fun getProductById(productId: Int): ProductResponse? {
         return withContext(Dispatchers.IO) {
             val product = db.from(ProductEntity)
-                .innerJoin(ProductEntity, on = HotReleaseProductEntity.productId eq ProductEntity.id)
                 .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)
                 .innerJoin(SizeCategoryEntity, on = ProductEntity.sizeCategoryId eq SizeCategoryEntity.id)
+                .innerJoin(ColorCategoryEntity, on = ProductEntity.colorCategoryId eq ColorCategoryEntity.id)
 
                 .select(
                     ProductEntity.id,
                     ProductEntity.productName,
                     TypeCategoryEntity.typeName,
                     SizeCategoryEntity.size,
+                    ColorCategoryEntity.color,
                     ProductEntity.image,
                     ProductEntity.createdAt,
                     ProductEntity.updatedAt,
@@ -185,11 +273,12 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
             product
         }
     }
+
     override suspend fun searchProductByName(productName: String): List<Product?> {
         return withContext(Dispatchers.IO) {
             val product = db.from(ProductEntity)
                 .select()
-                .where { ProductEntity.productName like  "%${productName}%" }
+                .where { ProductEntity.productName like "%${productName}%" }
                 .map { rowToProduct(it) }
 
             product

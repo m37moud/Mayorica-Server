@@ -28,6 +28,13 @@ interface ProductDataSource {
         sortField: Column<*> = ProductEntity.createdAt,
         sortDirection: Int = -1
     ): List<Product>
+    suspend fun getAllProductResponseByCategories(
+        categoryType: Int = -1,
+        categorySize: Int = -1,
+        categoryColor: Int = -1,
+        sortField: Column<*> = ProductEntity.createdAt,
+        sortDirection: Int = -1
+    ): List<ProductResponse>
 
     //    suspend fun getAllProductByType(categoryTypeId: Int = -1): List<Product>
 //    suspend fun getAllProductBySize(categorySizeId: Int): List<Product>
@@ -41,6 +48,18 @@ interface ProductDataSource {
         sortField: Column<*> = ProductEntity.createdAt,
         sortDirection: Int = -1
     ): List<Product>
+
+    /**
+     * return ProductResponse
+     */
+    suspend fun getAllProductResponsePageableByCategories(
+        page: Int = 0, perPage: Int = 10,
+        categoryType: Int = -1,
+        categorySize: Int = -1,
+        categoryColor: Int = -1,
+        sortField: Column<*> = ProductEntity.createdAt,
+        sortDirection: Int = -1
+    ): List<ProductResponse>
 
     //    suspend fun getAllProductPageableByType(page: Int = 0, perPage: Int = 10, categoryTypeId: Int): List<Product>
 //    suspend fun getAllProductPageableBySize(page: Int = 0, perPage: Int = 10, categoryTypeId: Int): List<Product>

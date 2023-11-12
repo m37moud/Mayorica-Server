@@ -12,30 +12,56 @@ import org.ktorm.dsl.*
 import java.time.LocalDateTime
 
 class MySqlHotReleaseDataSource(private val db: Database) : HotReleaseDataSource {
-    override suspend fun getAllHotReleaseProduct(limit: Int): List<ProductResponse> {
+//    override suspend fun getAllHotReleaseProduct(limit: Int): List<ProductResponse> {
+//
+//        return withContext(Dispatchers.IO) {
+//            val myLimit = if (limit > 100) 100 else limit
+//            val hotProduct = db.from(HotReleaseProductEntity)
+//                .innerJoin(ProductEntity, on = HotReleaseProductEntity.productId eq ProductEntity.id)
+//                .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)
+//                .innerJoin(SizeCategoryEntity, on = ProductEntity.sizeCategoryId eq SizeCategoryEntity.id)
+//                .innerJoin(ColorCategoryEntity, on = ProductEntity.colorCategoryId eq ColorCategoryEntity.id)
+//
+//                .select(
+//                    ProductEntity.id,
+//                    ProductEntity.productName,
+//                    TypeCategoryEntity.typeName,
+//                    SizeCategoryEntity.size,
+//                    ColorCategoryEntity.color,
+//                    ProductEntity.image,
+//                    ProductEntity.createdAt,
+//                    ProductEntity.updatedAt,
+//
+//                    )
+//                .limit(myLimit)
+//                .orderBy(HotReleaseProductEntity.createdAt.desc())
+//                .mapNotNull { rowToHotReleaseProductResponse(it) }
+//            hotProduct
+//        }
+//    }
+
+    override suspend fun getAllHotReleaseProduct(limit: Int): List<Product> {
 
         return withContext(Dispatchers.IO) {
             val myLimit = if (limit > 100) 100 else limit
             val hotProduct = db.from(HotReleaseProductEntity)
                 .innerJoin(ProductEntity, on = HotReleaseProductEntity.productId eq ProductEntity.id)
-                .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)
-                .innerJoin(SizeCategoryEntity, on = ProductEntity.sizeCategoryId eq SizeCategoryEntity.id)
-                .innerJoin(ColorCategoryEntity, on = ProductEntity.colorCategoryId eq ColorCategoryEntity.id)
+
 
                 .select(
                     ProductEntity.id,
+                    ProductEntity.typeCategoryId,
+                    ProductEntity.sizeCategoryId,
+                    ProductEntity.colorCategoryId,
                     ProductEntity.productName,
-                    TypeCategoryEntity.typeName,
-                    SizeCategoryEntity.size,
-                    ColorCategoryEntity.color,
                     ProductEntity.image,
                     ProductEntity.createdAt,
                     ProductEntity.updatedAt,
 
                     )
                 .limit(myLimit)
-                .orderBy(HotReleaseProductEntity.createdAt.desc())
-                .mapNotNull { rowToHotReleaseProductResponse(it) }
+                .orderBy(ProductEntity.createdAt.desc())
+                .mapNotNull { rowToProduct(it) }
             hotProduct
         }
     }
@@ -121,5 +147,37 @@ class MySqlHotReleaseDataSource(private val db: Database) : HotReleaseDataSource
             )
         }
     }
+    private fun rowToProduct(row: QueryRowSet?): Product? {
+        return if (row == null)
+            null
+        else {
+            val id = row[ProductEntity.id] ?: -1
+            val typeCategoryId = row[ProductEntity.typeCategoryId] ?: -1
+            val sizeCategoryId = row[ProductEntity.sizeCategoryId] ?: -1
+            val colorCategoryId = row[ProductEntity.colorCategoryId] ?: -1
+            val userAdminID = row[ProductEntity.userAdminID] ?: -1
+            val productName = row[ProductEntity.productName] ?: ""
+            val image = row[ProductEntity.image] ?: ""
+            val createdAt = row[ProductEntity.createdAt] ?: ""
+            val updatedAt = row[ProductEntity.updatedAt] ?: ""
+            val deleted = row[ProductEntity.deleted] ?: false
+
+
+            Product(
+                id = id,
+                typeCategoryId = typeCategoryId,
+                sizeCategoryId = sizeCategoryId,
+                colorCategoryId = colorCategoryId,
+                userAdminID = userAdminID,
+                productName = productName,
+                image = image,
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString(),
+                deleted = deleted
+
+            )
+        }
+    }
+
 
 }
