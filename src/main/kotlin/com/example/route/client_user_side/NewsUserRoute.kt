@@ -17,7 +17,7 @@ private val logger = KotlinLogging.logger { }
 fun Route.newsUserRoute(newsDataSource: NewsDataSource) {
     //get all -> api/v1/user-client/news
     get(NEWS) {
-        logger.debug { "get all NEWS  ${NEWS}" }
+        logger.debug { "get all News  $NEWS" }
         try {
             val linkList = newsDataSource.getAllNews()
             if (linkList.isNotEmpty()) {
@@ -25,7 +25,7 @@ fun Route.newsUserRoute(newsDataSource: NewsDataSource) {
                     status = HttpStatusCode.OK,
                     message = MyResponse(
                         success = true,
-                        message = "get all NEWS  successfully",
+                        message = "get all News  successfully",
                         data = null
                     )
                 )
@@ -35,7 +35,7 @@ fun Route.newsUserRoute(newsDataSource: NewsDataSource) {
                     status = HttpStatusCode.OK,
                     message = MyResponse(
                         success = false,
-                        message = "No NEWS Is Found",
+                        message = "No News Is Found",
                         data = null
                     )
                 )
@@ -43,7 +43,7 @@ fun Route.newsUserRoute(newsDataSource: NewsDataSource) {
 
             }
         } catch (e: Exception) {
-            logger.error { "get all NEWS error ${e.stackTrace}" }
+            logger.error { "get all News error ${e.stackTrace}" }
             call.respond(
                 status = HttpStatusCode.Conflict, message = MyResponse(
                     success = false, message = e.message ?: "failed",
