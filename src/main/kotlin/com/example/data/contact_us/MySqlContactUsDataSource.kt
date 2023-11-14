@@ -31,8 +31,10 @@ class MySqlContactUsDataSource(private val db: Database) : ContactUsDataSource {
                 set(it.address, contactUs.address)
                 set(it.telephone, contactUs.telephone)
                 set(it.email, contactUs.email)
+                set(it.mapLabel, contactUs.mapLabel)
                 set(it.latitude, contactUs.latitude)
                 set(it.longitude, contactUs.longitude)
+                set(it.webLink, contactUs.webLink)
                 set(it.fbLink, contactUs.fbLink)
                 set(it.youtubeLink, contactUs.youtubeLink)
                 set(it.instagramLink, contactUs.instagramLink)
@@ -54,8 +56,10 @@ class MySqlContactUsDataSource(private val db: Database) : ContactUsDataSource {
                 set(it.address, contactUs.address)
                 set(it.telephone, contactUs.telephone)
                 set(it.email, contactUs.email)
+                set(it.mapLabel, contactUs.mapLabel)
                 set(it.latitude, contactUs.latitude)
                 set(it.longitude, contactUs.longitude)
+                set(it.webLink, contactUs.webLink)
                 set(it.fbLink, contactUs.fbLink)
                 set(it.youtubeLink, contactUs.youtubeLink)
                 set(it.instagramLink, contactUs.instagramLink)
@@ -90,8 +94,10 @@ class MySqlContactUsDataSource(private val db: Database) : ContactUsDataSource {
             val address = row[ContactUsEntity.address] ?: ""
             val telephone = row[ContactUsEntity.telephone] ?: ""
             val email = row[ContactUsEntity.email] ?: ""
+            val mapLabel = row[ContactUsEntity.mapLabel] ?: ""
             val latitude = row[ContactUsEntity.latitude] ?: 0.0
             val longitude = row[ContactUsEntity.latitude] ?: 0.0
+            val webLink = row[ContactUsEntity.webLink] ?: ""
             val fbLink = row[ContactUsEntity.fbLink] ?: ""
             val youtubeLink = row[ContactUsEntity.youtubeLink] ?: ""
             val instagramLink = row[ContactUsEntity.instagramLink] ?: ""
@@ -109,8 +115,10 @@ class MySqlContactUsDataSource(private val db: Database) : ContactUsDataSource {
                 address = address,
                 telephone = telephone,
                 email = email,
+                mapLabel = mapLabel,
                 latitude = latitude,
                 longitude = longitude,
+                webLink = webLink,
                 fbLink = fbLink,
                 youtubeLink = youtubeLink,
                 instagramLink = instagramLink,
