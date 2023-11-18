@@ -4,10 +4,12 @@ import com.example.database.table.UserOrderEntity
 import com.example.database.table.UserOrderStatusEntity
 import com.example.models.UserOrder
 import com.example.models.UserOrderStatus
+import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import java.time.LocalDateTime
 
 class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSource {
 
@@ -47,8 +49,8 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
         return withContext(Dispatchers.IO) {
             val result = db.update(UserOrderStatusEntity) {
                 set(it.approve_state, userOrderStatus.approveState)
-                set(it.approveDate, userOrderStatus.approveDate)
-                set(it.approveUpdateDate, userOrderStatus.approveUpdateDate)
+//                set(it.approveDate, userOrderStatus.approveDate)
+                set(it.approveUpdateDate, LocalDateTime.now())
                 set(it.approveByAdminId, userOrderStatus.approveByAdminId)
                 set(it.totalAmount, userOrderStatus.totalAmount)
                 set(it.takenAmount, userOrderStatus.takenAmount)
@@ -81,8 +83,8 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                 row[UserOrderStatusEntity.id] ?: -1,
                 row[UserOrderStatusEntity.requestUser_id] ?: -1,
                 row[UserOrderStatusEntity.approve_state] ?: 0,
-                row[UserOrderStatusEntity.approveDate] ?: "",
-                row[UserOrderStatusEntity.approveUpdateDate] ?: "",
+                row[UserOrderStatusEntity.approveDate]?.toDatabaseString() ?: "",
+                row[UserOrderStatusEntity.approveUpdateDate]?.toDatabaseString() ?: "",
                 row[UserOrderStatusEntity.approveByAdminId] ?: -1,
                 row[UserOrderStatusEntity.totalAmount] ?: 0.0,
                 row[UserOrderStatusEntity.takenAmount] ?: 0.0,

@@ -6,6 +6,7 @@ import com.example.database.table.UserOrderStatusEntity
 import com.example.models.AdminUser
 import com.example.models.UserOrder
 import com.example.models.UserOrderStatus
+import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.ktorm.database.Database
@@ -100,9 +101,9 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 set(it.department, userOrder.department)
                 set(it.country, userOrder.country)
                 set(it.governorate, userOrder.governorate)
+                set(it.address, userOrder.address)
                 set(it.approve_state, userOrder.approveState)
-//                set(it.created_at, userOrder.created_at)
-                set(it.updated_at, userOrder.updated_at)
+                set(it.updated_at, LocalDateTime.now())
                 where {
                     it.id eq userOrder.id
                 }
@@ -159,6 +160,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 set(it.longitude, userOrder.longitude)
                 set(it.country, userOrder.country)
                 set(it.governorate, userOrder.governorate)
+                set(it.address, userOrder.address)
                 set(it.approve_state, userOrder.approveState)
                 set(it.created_at, LocalDateTime.now())
                 set(it.updated_at, LocalDateTime.now())
@@ -174,8 +176,8 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
             val result = db.insert(UserOrderStatusEntity) {
                 set(it.requestUser_id, userOrderStatus.requestUser_id)
                 set(it.approve_state, userOrderStatus.approveState)
-                set(it.approveDate, userOrderStatus.approveDate)
-                set(it.approveUpdateDate, userOrderStatus.approveUpdateDate)
+                set(it.approveDate, LocalDateTime.now())
+                set(it.approveUpdateDate, LocalDateTime.now())
                 set(it.approveByAdminId, userOrderStatus.approveByAdminId)
                 set(it.totalAmount, userOrderStatus.totalAmount)
                 set(it.takenAmount, userOrderStatus.takenAmount)
@@ -215,9 +217,10 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 row[UserOrderEntity.longitude] ?: 0.0,
                 row[UserOrderEntity.country] ?: "",
                 row[UserOrderEntity.governorate] ?: "",
+                row[UserOrderEntity.address] ?: "",
                 row[UserOrderEntity.approve_state] ?: 0,
-                row[UserOrderEntity.created_at]?.toString() ?: "",
-                row[UserOrderEntity.updated_at]?.toString() ?: "",
+                row[UserOrderEntity.created_at]?.toDatabaseString() ?: "",
+                row[UserOrderEntity.updated_at]?.toDatabaseString() ?: "",
             )
         }
     }

@@ -12,6 +12,7 @@ object UserOrderEntity : Table<Nothing>("t_user_request"){
     val longitude = double("longitude")
     val country= varchar("country")
     val governorate= varchar("governorate")
+    val address= varchar("address")
     val approve_state= int("approve_state")
     val created_at = datetime("created_at")
     val updated_at= datetime("updated_at")

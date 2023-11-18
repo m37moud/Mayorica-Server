@@ -79,8 +79,9 @@ fun Route.userOrderRequest(
                     longitude = userOrderRequest.longitude,
                     country = userOrderRequest.country,
                     governorate = userOrderRequest.governorate,
+                    address = userOrderRequest.address,
                     approveState = userOrderRequest.approve_state,
-                    created_at = LocalDateTime.now().toDatabaseString(),
+                    created_at = "",
                     updated_at = ""
                 )
 

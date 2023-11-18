@@ -11,6 +11,7 @@ data class UserOrderRequest(
     val longitude: Double,
     val country: String,
     val governorate: String,
+    val address: String,
     val approve_state: Int = 0,
 
 )

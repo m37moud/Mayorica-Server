@@ -13,6 +13,7 @@ data class UserOrder(
     val longitude: Double,
     val country: String,
     val governorate: String,
+    val address: String,
     /**
      * approve state is state from (0 to 4)
      * 0 -> order initialize
