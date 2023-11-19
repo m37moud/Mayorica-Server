@@ -1,9 +1,7 @@
 package com.example.data.order
 
-import com.example.database.table.AdminUserEntity
 import com.example.database.table.UserOrderEntity
 import com.example.database.table.UserOrderStatusEntity
-import com.example.models.AdminUser
 import com.example.models.UserOrder
 import com.example.models.UserOrderStatus
 import com.example.utils.toDatabaseString
@@ -97,7 +95,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
         return withContext(Dispatchers.IO) {
             val result = db.update(UserOrderEntity) {
                 set(it.full_name, userOrder.fullName)
-                set(it.id_number, userOrder.id_number)
+                set(it.id_number, userOrder.idNumber)
                 set(it.department, userOrder.department)
                 set(it.country, userOrder.country)
                 set(it.governorate, userOrder.governorate)
@@ -136,7 +134,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 val insertResult = createUserOrder(userOrder)
                 val tempUserOrder = getOrderByNameAndIdNumber(
                     name = userOrder.fullName,
-                    idNumber = userOrder.id_number
+                    idNumber = userOrder.idNumber
                 )
                 val tempOrderStatus = UserOrderStatus(
                     requestUser_id = tempUserOrder!!.id,
@@ -153,7 +151,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
         return withContext(Dispatchers.IO) {
             val insertResult = db.insert(UserOrderEntity) {
                 set(it.full_name, userOrder.fullName)
-                set(it.id_number, userOrder.id_number)
+                set(it.id_number, userOrder.idNumber)
                 set(it.orderNumber, userOrder.orderNumber)
                 set(it.department, userOrder.department)
                 set(it.latitude, userOrder.latitude)

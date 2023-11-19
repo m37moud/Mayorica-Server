@@ -4,8 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserOrderRequest(
-    val full_name: String,
-    val id_number: String,
+    val fullName: String,
+    val idNumber: String,
     val department: String,
     val latitude: Double,
     val longitude: Double,
@@ -14,4 +14,4 @@ data class UserOrderRequest(
     val address: String,
     val approve_state: Int = 0,
 
-)
+    )

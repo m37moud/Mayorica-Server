@@ -2,7 +2,7 @@ package com.example.models.response
 
 data class RejectedOrderResponse(
     val fullName: String,
-    val id_number: String,
+    val idNumber: String,
     val department: String,
     val country: String,
     val governorate: String,
@@ -14,7 +14,7 @@ data class RejectedOrderResponse(
      * 3 -> order rejected
      */
     val approveState: Int = 0,
-    val created_at: String,
-    val updated_at: String,
+    val createdAt: String,
+    val updatedAt: String,
     val reason: String
 )
