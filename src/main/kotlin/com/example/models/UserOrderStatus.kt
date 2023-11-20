@@ -20,5 +20,22 @@ data class UserOrderStatus(
     val totalAmount: Double = 0.0,
     val takenAmount: Double = 0.0,
     val availableAmount: Double = 0.0,
-    val note: String = ""
+    val note: String = when (approveState) {
+        0 -> {
+            "your order is created successfully it take from one day to three days to approved"
+        }
+        1 -> {
+            "your order is reviewing it take from one day to three days to approved"
+        }
+        2 -> {
+            "your order is Accepted it take from one day to three days to approved"
+        }
+        3 -> {
+            "your order is Rejected successfully it take from one day to three days to approved"
+        }
+
+        else -> {
+            ""
+        }
+    }
 )

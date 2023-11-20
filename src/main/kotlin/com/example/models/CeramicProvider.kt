@@ -1,7 +1,9 @@
 package com.example.models
 
+import kotlinx.serialization.Serializable
 import java.text.DecimalFormat
 
+@Serializable
 data class CeramicProvider(
     val id: Int = -1,
     val userAdminID: Int = -1,
