@@ -50,12 +50,43 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
         }
     }
 
+
+    override suspend fun getCeramicProviderBySearching(searchValue: String): List<CeramicProvider> {
+        return withContext(Dispatchers.IO) {
+            val providers = db.from(CeramicProviderEntity)
+                .select()
+                .where {
+                    CeramicProviderEntity.name like "%${searchValue}%" or
+                            (CeramicProviderEntity.country like "%${searchValue}%") or
+                            (CeramicProviderEntity.governorate like "%${searchValue}%") or
+                            (CeramicProviderEntity.address like "%${searchValue}%")
+
+                }.mapNotNull {
+                    rowToCeramicProvider(it)
+                }
+            providers
+        }
+    }
+
     override suspend fun getCeramicProviderByCountry(country: String): List<CeramicProvider> {
         return withContext(Dispatchers.IO) {
             val providers = db.from(CeramicProviderEntity)
                 .select()
                 .where {
-                    CeramicProviderEntity.country eq country
+                    CeramicProviderEntity.country like "%${country}%"
+                }.mapNotNull {
+                    rowToCeramicProvider(it)
+                }
+            providers
+        }
+    }
+
+    override suspend fun getCeramicProviderByGovernorate(governorate: String): List<CeramicProvider> {
+        return withContext(Dispatchers.IO) {
+            val providers = db.from(CeramicProviderEntity)
+                .select()
+                .where {
+                    CeramicProviderEntity.country like "%${governorate}%"
                 }.mapNotNull {
                     rowToCeramicProvider(it)
                 }
@@ -132,8 +163,8 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                     rowToCeramicProvider(it)
                 }
             Collections.sort(providers, Comparator<CeramicProvider> { o1, o2 ->
-                val dist1: Int = o1.calculationByDistance(o1.latitude,o1.longitude,latitude,longitude)
-                val dist2: Int = o2.calculationByDistance(o2.latitude,o2.longitude,latitude,longitude)
+                val dist1: Int = o1.calculationByDistance(o1.latitude, o1.longitude, latitude, longitude)
+                val dist2: Int = o2.calculationByDistance(o2.latitude, o2.longitude, latitude, longitude)
                 dist1.compareTo(dist2)
             })
 

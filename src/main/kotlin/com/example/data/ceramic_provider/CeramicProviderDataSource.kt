@@ -7,6 +7,8 @@ interface CeramicProviderDataSource {
     suspend fun getCeramicProviderByID(id: Int): CeramicProvider?
     suspend fun getCeramicProviderByName(providerName: String): CeramicProvider?
     suspend fun getCeramicProviderByCountry(country: String): List<CeramicProvider>
+    suspend fun getCeramicProviderBySearching(searchValue: String): List<CeramicProvider>
+    suspend fun getCeramicProviderByGovernorate(governorate: String): List<CeramicProvider>
     suspend fun getCeramicProviderByGps(lat: Double, log: Double): CeramicProvider?
 
     //CRUD

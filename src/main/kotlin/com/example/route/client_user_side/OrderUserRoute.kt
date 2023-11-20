@@ -17,9 +17,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
 
-const val ORDER_REQUEST = "$USER_CLIENT/order"
-const val NEARLY_LOCATION = "$USER_CLIENT/nearlyLocation"
-const val CREATE_ORDER_REQUEST = "$ORDER_REQUEST/create"
+private const val ORDER_REQUEST = "$USER_CLIENT/order"
+private const val CREATE_ORDER_REQUEST = "$ORDER_REQUEST/create"
 
 private val logger = KotlinLogging.logger {}
 
@@ -184,7 +183,7 @@ fun Route.getUserOrderClient(
                                     HttpStatusCode.OK, MyResponse(
                                         success = true,
                                         message = "get order successful .",
-                                        data = order
+                                        data = tempStatus.copy(approveState = 1)
                                     )
                                 )
                             }
