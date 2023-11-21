@@ -10,6 +10,7 @@ import com.example.utils.toDatabaseString
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import mu.KotlinLogging
@@ -192,9 +193,22 @@ fun Route.providerAdminClient(
 
             try {
                 val provider = ceramicProvider.getCeramicProviderByName(providerRequest.name)
-
+                val principal = call.principal<JWTPrincipal>()
+                val userId = try {
+                    principal?.getClaim("userId", String::class)?.toIntOrNull()
+                } catch (e: Exception) {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = e.message ?: "Failed ",
+                            data = null
+                        )
+                    )
+                    return@post
+                }
                 if (provider == null) {
-                    val result = ceramicProvider.addCeramicProvider(providerRequest.toModelCreate())
+                    val result = ceramicProvider.addCeramicProvider(providerRequest.toModelCreate(userId!!))
                     if (result > 0) {
                         call.respond(
                             HttpStatusCode.OK, MyResponse(
