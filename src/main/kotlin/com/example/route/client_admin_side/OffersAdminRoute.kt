@@ -31,7 +31,7 @@ private val logger = KotlinLogging.logger { }
 
 fun Route.offersAdminRoute(
     offersDataSource: OffersDataSource,
-    storageService :StorageService
+    storageService: StorageService
 ) {
 
     authenticate {
@@ -127,6 +127,7 @@ fun Route.offersAdminRoute(
             val multiPart = call.receiveMultipart()
             var offerTitle: String? = null
             var offerDescription: String? = null
+            var offerEndedAt: String? = null
             var isHotOffer: Boolean? = null
             var fileName: String? = null
             var fileBytes: ByteArray? = null
@@ -158,11 +159,17 @@ fun Route.offersAdminRoute(
                                 "offerTitle" -> {
                                     offerTitle = part.value
                                 }
+
                                 "offerDescription" -> {
                                     offerDescription = part.value
                                 }
+
                                 "isHotOffer" -> {
                                     isHotOffer = part.value.toBoolean()
+                                }
+
+                                "offerEndedAt" -> {
+                                    offerEndedAt = part.value
                                 }
 
                             }
@@ -170,22 +177,26 @@ fun Route.offersAdminRoute(
                         }
 
                         is PartData.FileItem -> {
-                            if (!isImageContentType(part.contentType.toString())) {
-                                call.respond(
-                                    message = MyResponse(
-                                        success = false,
-                                        message = "Invalid file format",
-                                        data = null
-                                    ), status = HttpStatusCode.BadRequest
-                                )
-                                part.dispose()
-                                return@forEachPart
+                            val isValid = part.originalFileName as String
+                            if (isValid.isNotEmpty()) {
+                                if (!isImageContentType(part.contentType.toString())) {
+                                    call.respond(
+                                        message = MyResponse(
+                                            success = false,
+                                            message = "Invalid file format",
+                                            data = null
+                                        ), status = HttpStatusCode.BadRequest
+                                    )
+                                    part.dispose()
+                                    return@forEachPart
 
+                                }
+                                fileName = generateSafeFileName(part.originalFileName as String)
+                                fileBytes = part.streamProvider().readBytes()
+                                url = "${baseUrl}offers/${fileName}"
+                            } else {
+                                fileName = null
                             }
-                            fileName = generateSafeFileName(part.originalFileName as String)
-                            fileBytes = part.streamProvider().readBytes()
-                            url = "${baseUrl}offers/${fileName}"
-
                         }
 
                         else -> {}
@@ -196,32 +207,38 @@ fun Route.offersAdminRoute(
 
                 val typeCategory = offersDataSource.getOfferByTitle(offerTitle!!)
                 if (typeCategory == null) {
-                    imageUrl = try {
-                        storageService.saveOfferImage(
-                            fileName = fileName!!,
-                            fileUrl = url!!,
-                            fileBytes = fileBytes!!
-                        )
-                    } catch (e: Exception) {
-                        storageService.deleteOfferImages(fileName = fileName!!)
-                        call.respond(
-                            status = HttpStatusCode.InternalServerError,
-                            message = MyResponse(
-                                success = false,
-                                message = e.message ?: "Error happened while uploading Image.",
-                                data = null
+
+                    if (!fileName.isNullOrEmpty()) {
+
+                        imageUrl = try {
+
+                            storageService.saveOfferImage(
+                                fileName = fileName!!,
+                                fileUrl = url!!,
+                                fileBytes = fileBytes!!
                             )
-                        )
-                        return@post
+                        } catch (e: Exception) {
+                            storageService.deleteOfferImages(fileName = fileName!!)
+                            call.respond(
+                                status = HttpStatusCode.InternalServerError,
+                                message = MyResponse(
+                                    success = false,
+                                    message = e.message ?: "Error happened while uploading Image.",
+                                    data = null
+                                )
+                            )
+                            return@post
+                        }
                     }
                     Offers(
                         title = offerTitle!!,
                         offerDescription = offerDescription!!,
-                        image = imageUrl ?: "",
+                        image = imageUrl,
                         isHotOffer = isHotOffer!!,
                         userAdminID = userId!!,
                         createdAt = LocalDateTime.now().toDatabaseString(),
-                        updatedAt = LocalDateTime.now().toDatabaseString()
+                        updatedAt = LocalDateTime.now().toDatabaseString(),
+                        endedAt = offerEndedAt!!
                     ).apply {
 
                         val result = offersDataSource.addOffers(this)
@@ -325,11 +342,11 @@ fun Route.offersAdminRoute(
             try {
                 logger.debug { "get /$DELETE_OFFERS/{id}" }
                 val id = call.parameters["id"]?.toIntOrNull()
-                id?.let {offerId->
+                id?.let { offerId ->
                     offersDataSource.getOffersById(offerId)?.let { offer ->
 
                         val isDeleted = try {
-                            storageService.deleteOfferImages(fileName = offer.image.substringAfterLast("/"))
+                            storageService.deleteOfferImages(fileName = offer.image!!.substringAfterLast("/"))
                         } catch (e: Exception) {
                             call.respond(
                                 HttpStatusCode.InternalServerError,

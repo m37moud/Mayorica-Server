@@ -39,6 +39,23 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
 
     }
 
+    override suspend fun getLastAvailableOffer(): Offers? {
+        return withContext(Dispatchers.IO) {
+            val result = db
+                .from(OffersEntity)
+                .select()
+                .orderBy(OffersEntity.createdAt.desc())
+                .where {
+                    OffersEntity.endedAt greaterEq LocalDateTime.now()
+                }
+                .mapNotNull { rowToOffers(it) }
+                .firstOrNull()
+            result
+        }
+
+    }
+
+
     override suspend fun getOffersById(id: Int): Offers? {
         return withContext(Dispatchers.IO) {
             val result = db.from(OffersEntity)
@@ -53,6 +70,7 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
         }
 
     }
+
     override suspend fun getOfferByTitle(title: String): Offers? {
         return withContext(Dispatchers.IO) {
             val result = db.from(OffersEntity)
@@ -94,7 +112,7 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
                 val stringDate = offers.endedAt
-                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss")
+                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 val localDateTime = LocalDateTime.parse(stringDate, formatter)
                 set(it.endedAt, localDateTime)
             }
@@ -129,7 +147,7 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
     override suspend fun deleteOffers(id: Int): Int {
         return withContext(Dispatchers.IO) {
             val result = db.delete(OffersEntity) {
-                    it.id eq id
+                it.id eq id
             }
             result
         }

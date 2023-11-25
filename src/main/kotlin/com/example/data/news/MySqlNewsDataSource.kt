@@ -39,10 +39,10 @@ class MySqlNewsDataSource (private val db :Database) : NewsDataSource {
     override suspend fun addNews(news: News): Int {
         return withContext(Dispatchers.IO) {
             val result = db.insert(NewsEntity) {
-                set(it.title, NewsEntity.title)
-                set(it.image, NewsEntity.image)
-                set(it.newsDescription, NewsEntity.newsDescription)
-                set(it.userAdminId, NewsEntity.userAdminId)
+                set(it.title, news.title)
+                set(it.image, news.image)
+                set(it.newsDescription, news.newsDescription)
+                set(it.userAdminId, news.userAdminId)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
             }

@@ -3,6 +3,7 @@ package com.example.route.client_user_side
 import com.example.data.offers.OffersDataSource
 import com.example.utils.Constants
 import com.example.utils.Constants.ADMIN_CLIENT
+import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -11,9 +12,9 @@ import io.ktor.server.routing.*
 import mu.KotlinLogging
 
 
-const val ALL_OFFERS = "${ADMIN_CLIENT}/offers"
-const val SINGLE_OFFERS = "${ADMIN_CLIENT}/offer"
-
+private const val ALL_OFFERS = "${USER_CLIENT}/offers"
+private const val SINGLE_OFFERS = "${USER_CLIENT}/offer"
+private const val SINGLE_LAST_OFFERS = "${SINGLE_OFFERS}/last"
 
 
 private val logger = KotlinLogging.logger { }
@@ -22,7 +23,7 @@ private val logger = KotlinLogging.logger { }
 fun Route.offersUserRoute(
     offersDataSource: OffersDataSource
 ) {
-    //get all offers //api/v1/admin-client/offers
+    //get all offers //api/v1/user-client/offers
     get(ALL_OFFERS) {
         try {
 
@@ -62,7 +63,7 @@ fun Route.offersUserRoute(
         }
 
     }
-    //get offer //api/v1/admin-client/offer/{id}
+    //get offer //api/v1/user-client/offer/{id}
     get("${SINGLE_OFFERS}/{id}") {
         try {
             logger.debug { "get /${SINGLE_OFFERS}/{id}" }
@@ -106,6 +107,46 @@ fun Route.offersUserRoute(
             )
             return@get
         }
+    }
+
+    //get offer //api/v1/user-client/offer/last
+    get(SINGLE_LAST_OFFERS) {
+        try {
+
+            logger.debug { "GET ALL /${SINGLE_LAST_OFFERS}" }
+
+             offersDataSource.getLastAvailableOffer()?.let {
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = true,
+                        message = "get Last Offer successfully",
+                        data = it
+                    )
+                )
+
+            } ?: call.respond(
+                HttpStatusCode.NotFound,
+                MyResponse(
+                    success = false,
+                    message = "No Available Offers",
+                    data = null
+                )
+            )
+
+
+        } catch (exc: Exception) {
+            call.respond(
+                HttpStatusCode.Conflict,
+                MyResponse(
+                    success = false,
+                    message = exc.message ?: "Transaction Failed ",
+                    data = null
+                )
+            )
+            return@get
+        }
+
     }
 
 }

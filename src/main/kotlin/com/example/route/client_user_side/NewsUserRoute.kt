@@ -26,7 +26,7 @@ fun Route.newsUserRoute(newsDataSource: NewsDataSource) {
                     message = MyResponse(
                         success = true,
                         message = "get all News  successfully",
-                        data = null
+                        data = linkList
                     )
                 )
 

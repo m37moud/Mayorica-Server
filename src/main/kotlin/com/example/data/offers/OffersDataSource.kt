@@ -5,6 +5,7 @@ import com.example.models.Offers
 interface OffersDataSource {
     suspend fun getAllOffers(): List<Offers>
     suspend fun getAllAvailableOffers(): List<Offers>
+    suspend fun getLastAvailableOffer(): Offers?
     suspend fun getOffersById(id: Int): Offers?
     suspend fun getOfferByTitle(title: String): Offers?
     suspend fun getHotOffers(): Offers?

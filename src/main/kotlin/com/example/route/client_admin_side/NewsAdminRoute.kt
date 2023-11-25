@@ -167,9 +167,10 @@ fun Route.newsAdminRoute(
                     }
 
                     is PartData.FileItem -> {
-                        val isValid = part.originalFileName
-
-                        if (isValid != null) {
+                        val isValid = part.originalFileName as String
+                        logger.debug { "isValid $isValid" }
+                        if (isValid.isNotEmpty()) {
+                            logger.debug { "check if empty $isValid" }
 
                             if (!isImageContentType(part.contentType.toString())) {
                                 call.respond(
@@ -202,22 +203,40 @@ fun Route.newsAdminRoute(
             }
 
             try {
-                if (fileName != null) {
+                if (!fileName.isNullOrEmpty()) {
+                    logger.debug { "check if empty fileName $fileName" }
 
-                    imageUrl = storageService.saveProductImage(
-                        fileName = fileName!!,
-                        fileUrl = url!!,
-                        fileBytes = fileBytes!!
-                    )
+                    imageUrl = try {
+                        storageService.saveProductImage(
+                            fileName = fileName!!,
+                            fileUrl = url!!,
+                            fileBytes = fileBytes!!
+                        )
+                    } catch (e: Exception) {
+                        storageService.deleteNewsImages(fileName = fileName!!)
+                        call.respond(
+                            status = HttpStatusCode.InternalServerError,
+                            message = MyResponse(
+                                success = false,
+                                message = e.message ?: "Error happened while uploading Image.",
+                                data = null
+                            )
+                        )
+                        return@post
+                    }
                 }
+                logger.debug { "check if not empty title $title newsDescription $newsDescription userAdminId $userAdminId imageUrl $imageUrl" }
+
+
                 News(
                     title = title!!,
                     newsDescription = newsDescription!!,
                     userAdminId = userAdminId!!,
-                    image = imageUrl ?: "",
+                    image = imageUrl,
 //                    createdAt = LocalDateTime.now().toDatabaseString(),
 //                    updatedAt = "",
                 ).apply {
+                    logger.debug { "check if not empty title $title newsDescription $newsDescription userAdminId $userAdminId imageUrl $imageUrl" }
 
                     val isInserted = newsDataSource.addNews(this)
                     if (isInserted > 0) {

@@ -7,7 +7,7 @@ data class Offers(
     val id: Int = -1,
     val title :String,
     val offerDescription :String,
-    val image :String,
+    val image :String? = null,
     val isHotOffer :Boolean,
     val userAdminID: Int = -1,
     val createdAt: String = "",
