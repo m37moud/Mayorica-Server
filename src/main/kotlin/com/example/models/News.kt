@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class News(
     val id :Int =-1,
     val title :String,
-    val image :String,
+    val image :String? = null,
     val newsDescription :String,
     val userAdminId: Int = -1,
     val createdAt: String = "",

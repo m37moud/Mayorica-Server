@@ -214,53 +214,87 @@ fun Route.offersAdminRoute(
                         )
                         return@post
                     }
-                    if (!imageUrl.isNullOrEmpty()) {
+                    Offers(
+                        title = offerTitle!!,
+                        offerDescription = offerDescription!!,
+                        image = imageUrl ?: "",
+                        isHotOffer = isHotOffer!!,
+                        userAdminID = userId!!,
+                        createdAt = LocalDateTime.now().toDatabaseString(),
+                        updatedAt = LocalDateTime.now().toDatabaseString()
+                    ).apply {
 
-                        Offers(
-                            title = offerTitle!!,
-                            offerDescription = offerDescription!!,
-                            image = imageUrl,
-                            isHotOffer = isHotOffer!!,
-                            userAdminID = userId!!,
-                            createdAt = LocalDateTime.now().toDatabaseString(),
-                            updatedAt = LocalDateTime.now().toDatabaseString()
-                        ).apply {
+                        val result = offersDataSource.addOffers(this)
 
-                            val result = offersDataSource.addOffers(this)
-
-                            if (result > 0) {
-                                call.respond(
-                                    HttpStatusCode.OK, MyResponse(
-                                        success = true,
-                                        message = "Offer inserted successfully .",
-                                        data = this
-                                    )
+                        if (result > 0) {
+                            call.respond(
+                                HttpStatusCode.OK, MyResponse(
+                                    success = true,
+                                    message = "Offer inserted successfully .",
+                                    data = this
                                 )
-                                return@post
-                            } else {
-                                call.respond(
-                                    HttpStatusCode.OK,
-                                    MyResponse(
-                                        success = false,
-                                        message = "Offer inserted failed .",
-                                        data = null
-                                    )
-                                )
-                                return@post
-                            }
-                        }
-                    } else {
-                        storageService.deleteOfferImages(fileName = fileName!!)
-                        call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
-                                success = false,
-                                message = "some Error happened while uploading .",
-                                data = null
                             )
-                        )
-                        return@post
+                            return@post
+                        } else {
+                            call.respond(
+                                HttpStatusCode.OK,
+                                MyResponse(
+                                    success = false,
+                                    message = "Offer inserted failed .",
+                                    data = null
+                                )
+                            )
+                            return@post
+                        }
                     }
+
+//                    if (!imageUrl.isNullOrEmpty()) {
+//
+//                        Offers(
+//                            title = offerTitle!!,
+//                            offerDescription = offerDescription!!,
+//                            image = imageUrl,
+//                            isHotOffer = isHotOffer!!,
+//                            userAdminID = userId!!,
+//                            createdAt = LocalDateTime.now().toDatabaseString(),
+//                            updatedAt = LocalDateTime.now().toDatabaseString()
+//                        ).apply {
+//
+//                            val result = offersDataSource.addOffers(this)
+//
+//                            if (result > 0) {
+//                                call.respond(
+//                                    HttpStatusCode.OK, MyResponse(
+//                                        success = true,
+//                                        message = "Offer inserted successfully .",
+//                                        data = this
+//                                    )
+//                                )
+//                                return@post
+//                            } else {
+//                                call.respond(
+//                                    HttpStatusCode.OK,
+//                                    MyResponse(
+//                                        success = false,
+//                                        message = "Offer inserted failed .",
+//                                        data = null
+//                                    )
+//                                )
+//                                return@post
+//                            }
+//                        }
+//                    } else {
+//                        storageService.deleteOfferImages(fileName = fileName!!)
+//                        call.respond(
+//                            status = HttpStatusCode.OK,
+//                            message = MyResponse(
+//                                success = false,
+//                                message = "some Error happened while uploading .",
+//                                data = null
+//                            )
+//                        )
+//                        return@post
+//                    }
                 } else {
                     call.respond(
                         HttpStatusCode.OK,

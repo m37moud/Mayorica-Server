@@ -167,22 +167,30 @@ fun Route.newsAdminRoute(
                     }
 
                     is PartData.FileItem -> {
-                        if (!isImageContentType(part.contentType.toString())) {
-                            call.respond(
-                                message = MyResponse(
-                                    success = false,
-                                    message = "Invalid file format",
-                                    data = null
-                                ), status = HttpStatusCode.BadRequest
-                            )
-                            part.dispose()
-                            return@forEachPart
+                        val isValid = part.originalFileName
+
+                        if (isValid != null) {
+
+                            if (!isImageContentType(part.contentType.toString())) {
+                                call.respond(
+                                    message = MyResponse(
+                                        success = false,
+                                        message = "Invalid file format",
+                                        data = null
+                                    ), status = HttpStatusCode.BadRequest
+                                )
+                                part.dispose()
+                                return@forEachPart
+
+                            }
+                            fileName = generateSafeFileName(part.originalFileName as String)
+//                            imageUrl = "$baseUrl$fileName"
+                            fileBytes = part.streamProvider().readBytes()
+                            url = "${baseUrl}news/${fileName}"
+                        } else {
+                            fileName = null
 
                         }
-                        fileName = generateSafeFileName(part.originalFileName as String)
-//                            imageUrl = "$baseUrl$fileName"
-                        fileBytes = part.streamProvider().readBytes()
-                        url = "${baseUrl}news/${fileName}"
 
 
                     }
@@ -194,56 +202,92 @@ fun Route.newsAdminRoute(
             }
 
             try {
-                imageUrl = storageService.saveProductImage(
-                    fileName = fileName!!,
-                    fileUrl = url!!,
-                    fileBytes = fileBytes!!
-                )
-                if (!imageUrl.isNullOrEmpty()) {
-                    News(
-                        title = title!!,
-                        newsDescription = newsDescription!!,
-                        userAdminId = userAdminId!!,
-                        image = imageUrl,
-                        createdAt = LocalDateTime.now().toDatabaseString(),
-                        updatedAt = "",
-                    ).apply {
+                if (fileName != null) {
 
-                        val isInserted = newsDataSource.addNews(this)
-                        if (isInserted > 0) {
-                            call.respond(
-                                status = HttpStatusCode.Created,
-                                message = MyResponse(
-                                    success = true,
-                                    message = "news inserted successfully",
-                                    data = this
-                                )
-                            )
-                            return@post
-                        } else {
-                            call.respond(
-                                status = HttpStatusCode.OK,
-                                message = MyResponse(
-                                    success = false,
-                                    message = "news insert failed",
-                                    data = null
-                                )
-                            )
-                            return@post
-                        }
-                    }
-                } else {
-                    storageService.deleteNewsImages(fileName = fileName!!)
-                    call.respond(
-                        status = HttpStatusCode.Conflict,
-                        message = MyResponse(
-                            success = false,
-                            message = "some Error happened while uploading .",
-                            data = null
-                        )
+                    imageUrl = storageService.saveProductImage(
+                        fileName = fileName!!,
+                        fileUrl = url!!,
+                        fileBytes = fileBytes!!
                     )
-                    return@post
                 }
+                News(
+                    title = title!!,
+                    newsDescription = newsDescription!!,
+                    userAdminId = userAdminId!!,
+                    image = imageUrl ?: "",
+//                    createdAt = LocalDateTime.now().toDatabaseString(),
+//                    updatedAt = "",
+                ).apply {
+
+                    val isInserted = newsDataSource.addNews(this)
+                    if (isInserted > 0) {
+                        call.respond(
+                            status = HttpStatusCode.Created,
+                            message = MyResponse(
+                                success = true,
+                                message = "news inserted successfully",
+                                data = this
+                            )
+                        )
+                        return@post
+                    } else {
+                        call.respond(
+                            status = HttpStatusCode.OK,
+                            message = MyResponse(
+                                success = false,
+                                message = "news insert failed",
+                                data = null
+                            )
+                        )
+                        return@post
+                    }
+                }
+//                if (!imageUrl.isNullOrEmpty()) {
+//                    News(
+//                        title = title!!,
+//                        newsDescription = newsDescription!!,
+//                        userAdminId = userAdminId!!,
+//                        image = imageUrl ?: "",
+//                        createdAt = LocalDateTime.now().toDatabaseString(),
+//                        updatedAt = "",
+//                    ).apply {
+//
+//                        val isInserted = newsDataSource.addNews(this)
+//                        if (isInserted > 0) {
+//                            call.respond(
+//                                status = HttpStatusCode.Created,
+//                                message = MyResponse(
+//                                    success = true,
+//                                    message = "news inserted successfully",
+//                                    data = this
+//                                )
+//                            )
+//                            return@post
+//                        } else {
+//                            call.respond(
+//                                status = HttpStatusCode.OK,
+//                                message = MyResponse(
+//                                    success = false,
+//                                    message = "news insert failed",
+//                                    data = null
+//                                )
+//                            )
+//                            return@post
+//                        }
+//                    }
+//
+//                } else {
+//                    storageService.deleteNewsImages(fileName = fileName!!)
+//                    call.respond(
+//                        status = HttpStatusCode.Conflict,
+//                        message = MyResponse(
+//                            success = false,
+//                            message = "some Error happened while uploading .",
+//                            data = null
+//                        )
+//                    )
+//                    return@post
+//                }
 
 
             } catch (ex: Exception) {
@@ -267,9 +311,9 @@ fun Route.newsAdminRoute(
             logger.debug { "delete /$DELETE_NEWS" }
             call.parameters["id"]?.toIntOrNull()?.let { id ->
                 try {
-                   newsDataSource.getNewsById(newsId = id)?.let {
+                    newsDataSource.getNewsById(newsId = id)?.let {
                         val isDeletedImage = try {
-                            storageService.deleteNewsImages(fileName = it.image.substringAfterLast("/"))
+                            storageService.deleteNewsImages(fileName = it.image!!.substringAfterLast("/"))
                         } catch (e: Exception) {
                             call.respond(
                                 HttpStatusCode.InternalServerError,
@@ -315,8 +359,7 @@ fun Route.newsAdminRoute(
 
                         }
 
-                    } ?:
-                    call.respond(
+                    } ?: call.respond(
                         HttpStatusCode.NotFound,
                         MyResponse(
                             success = false,
