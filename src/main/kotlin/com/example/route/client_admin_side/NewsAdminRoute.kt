@@ -205,9 +205,10 @@ fun Route.newsAdminRoute(
             try {
                 if (!fileName.isNullOrEmpty()) {
                     logger.debug { "check if empty fileName $fileName" }
+                    logger.debug { "check if empty url $url" }
 
                     imageUrl = try {
-                        storageService.saveProductImage(
+                        storageService.saveNewsImage(
                             fileName = fileName!!,
                             fileUrl = url!!,
                             fileBytes = fileBytes!!

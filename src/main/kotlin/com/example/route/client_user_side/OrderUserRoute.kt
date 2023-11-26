@@ -12,6 +12,7 @@ import com.example.utils.MyResponse
 import com.example.utils.generateOrderNumber
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -61,7 +62,11 @@ fun Route.userOrderRequest(
         // check if operation connected db successfully
 
         try {
+            //tried this on a webhook, where call = ApplicationCall inside the PipelineContext block
 
+            val clientIP = call.request.origin.remoteAddress.toString()
+
+            logger.debug { "$CREATE_ORDER_REQUEST clientIP = $clientIP" }
             val checkUserOrder =
                 orderDataSource.getOrderByNameAndIdNumber(
                     userOrderRequest.fullName,
@@ -214,15 +219,15 @@ fun Route.getUserOrderClient(
 //                                                )
 //                                            )
 //                                        }
-                                        call.respond(
-                                            HttpStatusCode.OK,
-                                            MyResponse(
-                                                success = true,
-                                                message = "got order successfully .",
-                                                data = tempStatus.copy(approveState = 2)
+                                call.respond(
+                                    HttpStatusCode.OK,
+                                    MyResponse(
+                                        success = true,
+                                        message = "got order successfully .",
+                                        data = tempStatus.copy(approveState = 2)
 
-                                            )
-                                        )
+                                    )
+                                )
 
 //                                    } ?: call.respond(
 //                                    HttpStatusCode.OK,

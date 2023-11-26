@@ -54,6 +54,8 @@ class StorageServiceImpl(
         // and clean if dev
         Files.createDirectories(Path.of(uploadDir))
         Files.createDirectories(Path.of(products))
+        Files.createDirectories(Path.of(news))
+        Files.createDirectories(Path.of(offers))
         Files.createDirectories(Path.of(categories))
         Files.createDirectories(Path.of(categoryIcons))
         Files.createDirectories(Path.of(categoryImages))
