@@ -24,10 +24,11 @@ import io.ktor.server.config.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 
-fun main() {
-    embeddedServer(Netty, port = 8081, host = "0.0.0.0", module = Application::module)
-        .start(wait = true)
-}
+//fun main() {
+//    embeddedServer(Netty, port = 8081, host = "0.0.0.0", module = Application::module)
+//        .start(wait = true)
+//}
+fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
     val appConfig = HoconApplicationConfig(ConfigFactory.load())

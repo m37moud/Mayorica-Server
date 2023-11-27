@@ -1,8 +1,7 @@
-
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
-val commons_codec_version :String by project
+val commons_codec_version: String by project
 // Logger
 val micrologging_version: String by project
 val logbackclassic_version: String by project
@@ -17,7 +16,8 @@ group = "com.example"
 version = "0.0.1"
 
 application {
-    mainClass.set("com.example.ApplicationKt")
+//    mainClass.set("com.example.ApplicationKt")
+    mainClass.set("io.ktor.server.netty.EngineMain")
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
@@ -57,4 +57,9 @@ dependencies {
 
     //salt password
     implementation("commons-codec:commons-codec:$commons_codec_version")
+}
+ktor {
+    fatJar {
+        archiveFileName.set("mayorca-server-api.jar")
+    }
 }
