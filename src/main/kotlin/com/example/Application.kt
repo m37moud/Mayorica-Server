@@ -32,7 +32,14 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
     val appConfig = HoconApplicationConfig(ConfigFactory.load())
-    val db = DBHelper.db
+    val database = DBHelper(
+        database = environment.config.propertyOrNull("database.database")?.getString() ?: "",
+        driver = environment.config.propertyOrNull("database.driver")?.getString()?: "",
+        user = environment.config.propertyOrNull("database.user")?.getString() ?: "",
+        password =environment.config.propertyOrNull("database.password")?.getString() ?: ""
+    )
+
+    val db = database.init()
     val userDataSource = MYSqlUserDataSource(db = db)
     val orderDataSource = MYSqlOrderDataSource(db = db)
     val orderStatusDataSource = MYSqlOrderStatusDataSource(db = db)
@@ -54,7 +61,8 @@ fun Application.module() {
         audience = appConfig.property("jwt.audience").getString(),
         issuer = appConfig.property("jwt.issuer").getString(),
         expireIn = 360L * 60L * 60L * 24L,
-        secret = System.getenv("JWT_SECRET")
+        secret = appConfig.property("jwt.secret").getString()
+//        secret = System.getenv("JWT_SECRET")
     )
 
     configureSerialization()
