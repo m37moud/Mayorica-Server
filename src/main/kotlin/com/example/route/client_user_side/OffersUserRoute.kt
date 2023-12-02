@@ -41,7 +41,7 @@ fun Route.offersUserRoute(
                 )
             } else {
                 call.respond(
-                    HttpStatusCode.NotFound,
+                    HttpStatusCode.OK,
                     MyResponse(
                         success = false,
                         message = "No Available Offers",

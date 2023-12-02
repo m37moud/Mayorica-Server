@@ -25,7 +25,7 @@ RUN gradle buildFatJar --no-daemon
 # We create a new image with the application
 FROM openjdk:17-jdk-slim-buster
 EXPOSE 8080:8080
-EXPOSE 8083:8082
+#EXPOSE 8083:8082
 # Directory to store the application
 RUN mkdir /app
 # Copy the certificate to the container (if it is necessary)
