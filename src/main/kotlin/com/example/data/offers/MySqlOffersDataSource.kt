@@ -101,16 +101,18 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
         }
 
     }
+
     override suspend fun getRandomHotOffers(): Offers? {
         return withContext(Dispatchers.IO) {
             val result = db.from(OffersEntity)
                 .select()
                 .orderBy(OffersEntity.createdAt.desc())
                 .where {
-                    OffersEntity.isHotOffer eq true
+                    (OffersEntity.isHotOffer eq true) and (OffersEntity.endedAt greaterEq LocalDateTime.now())
                 }
                 .map { rowToOffers(it) }
-            result[Random.nextInt(0, result.size-1)]
+
+            result.randomOrNull()//[Random.nextInt(0, result.size - 1)]
         }
 
     }
