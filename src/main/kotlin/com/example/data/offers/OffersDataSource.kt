@@ -9,6 +9,7 @@ interface OffersDataSource {
     suspend fun getOffersById(id: Int): Offers?
     suspend fun getOfferByTitle(title: String): Offers?
     suspend fun getHotOffers(): Offers?
+    suspend fun getRandomHotOffers(): Offers?
 
     suspend fun addOffers(offers: Offers): Int
     suspend fun updateOffers(offers: Offers): Int

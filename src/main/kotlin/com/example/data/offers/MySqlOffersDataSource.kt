@@ -11,6 +11,7 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.random.Random
 
 class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
     override suspend fun getAllOffers(): List<Offers> {
@@ -97,6 +98,19 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
                 .map { rowToOffers(it) }
                 .firstOrNull()
             result
+        }
+
+    }
+    override suspend fun getRandomHotOffers(): Offers? {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(OffersEntity)
+                .select()
+                .orderBy(OffersEntity.createdAt.desc())
+                .where {
+                    OffersEntity.isHotOffer eq true
+                }
+                .map { rowToOffers(it) }
+            result[Random.nextInt(0, result.size-1)]
         }
 
     }

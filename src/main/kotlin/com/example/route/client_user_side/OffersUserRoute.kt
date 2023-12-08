@@ -15,6 +15,7 @@ import mu.KotlinLogging
 private const val ALL_OFFERS = "${USER_CLIENT}/offers"
 private const val SINGLE_OFFERS = "${USER_CLIENT}/offer"
 private const val SINGLE_LAST_OFFERS = "${SINGLE_OFFERS}/last"
+private const val SINGLE_RANDOM_HOT_OFFERS = "${SINGLE_OFFERS}/random"
 
 
 private val logger = KotlinLogging.logger { }
@@ -122,6 +123,46 @@ fun Route.offersUserRoute(
                     MyResponse(
                         success = true,
                         message = "get Last Offer successfully",
+                        data = it
+                    )
+                )
+
+            } ?: call.respond(
+                HttpStatusCode.NotFound,
+                MyResponse(
+                    success = false,
+                    message = "No Available Offers",
+                    data = null
+                )
+            )
+
+
+        } catch (exc: Exception) {
+            call.respond(
+                HttpStatusCode.Conflict,
+                MyResponse(
+                    success = false,
+                    message = exc.message ?: "Transaction Failed ",
+                    data = null
+                )
+            )
+            return@get
+        }
+
+    }
+
+    //get offer //api/v1/user-client/offer/random
+    get(SINGLE_RANDOM_HOT_OFFERS) {
+        try {
+
+            logger.debug { "GET  /${SINGLE_RANDOM_HOT_OFFERS}" }
+
+             offersDataSource.getRandomHotOffers()?.let {
+                call.respond(
+                    HttpStatusCode.OK,
+                    MyResponse(
+                        success = true,
+                        message = "get Random Offer successfully",
                         data = it
                     )
                 )
