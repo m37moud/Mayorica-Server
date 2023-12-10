@@ -25,6 +25,7 @@ import io.ktor.server.http.content.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.io.File
 
 fun Application.configureRouting(
     userDataSource: UserDataSource,
@@ -152,34 +153,40 @@ fun Application.configureRouting(
             call.respondText("\uD83D\uDC4B Hello Mayorca Reactive API REST!")
         }
         // Static plugin. Try to access `/static/index.html`
-        static("/") {
-            resources("static")
-            // the path the client will use to access files: /images
-            static("$ENDPOINT/image/products") {
-
-                // serve all files in fruit_pictures as static content under /images
-                files("uploads/products")
-            }
-            static("$ENDPOINT/image/news") {
-
-                // serve all files in fruit_pictures as static content under /images
-                files("uploads/news")
-            }
-            static("$ENDPOINT/image/offers") {
-
-                // serve all files in fruit_pictures as static content under /images
-                files("uploads/offers")
-            }
-            static("$ENDPOINT/image/categories/icons") {
-
-                // serve all files in fruit_pictures as static content under /images
-                files("uploads/categories/icons")
-            }
-            static("$ENDPOINT/image/categories/images") {
-
-                // serve all files in fruit_pictures as static content under /images
-                files("uploads/categories/images")
-            }
-        }
+        staticFiles("/" , File("static"))
+        staticFiles("/$ENDPOINT/image/products" , File("uploads/products"))
+        staticFiles("/$ENDPOINT/image/news" , File("uploads/news"))
+        staticFiles("/$ENDPOINT/image/offers" , File("uploads/offers"))
+        staticFiles("/$ENDPOINT/image/categories/icons" , File("uploads/categories/icons"))
+        staticFiles("/$ENDPOINT/image/categories/images" , File("uploads/categories/images"))
+//        static("/") {
+//            resources("static")
+//            // the path the client will use to access files: /images
+//            static("$ENDPOINT/image/products") {
+//
+//                // serve all files in fruit_pictures as static content under /images
+//                files("uploads/products")
+//            }
+//            static("$ENDPOINT/image/news") {
+//
+//                // serve all files in fruit_pictures as static content under /images
+//                files("uploads/news")
+//            }
+//            static("$ENDPOINT/image/offers") {
+//
+//                // serve all files in fruit_pictures as static content under /images
+//                files("uploads/offers")
+//            }
+//            static("$ENDPOINT/image/categories/icons") {
+//
+//                // serve all files in fruit_pictures as static content under /images
+//                files("uploads/categories/icons")
+//            }
+//            static("$ENDPOINT/image/categories/images") {
+//
+//                // serve all files in fruit_pictures as static content under /images
+//                files("uploads/categories/images")
+//            }
+//        }
     }
 }
