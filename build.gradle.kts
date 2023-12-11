@@ -86,22 +86,11 @@ kotlin { // Extension for easy setup
     jvmToolchain(17) // Target version of generated JVM bytecode
 }
 
-val buildingJarFileName = "temp-server.jar"
-val startingJarFileName = "server.jar"
-
-val serverUser = "root"
-val serverHost = "YOUR_IP_ADDRESS"
-val serverSshKey = file("keys/id_rsa")
-val deleteLog = true
-val lockFileName = ".serverLock"
-
-val serviceName = "ktor-server"
-val serverFolderName = "app"
 
 
 ktor {
     fatJar {
-        archiveFileName.set("mayorca-server-api.jar")
+        archiveFileName.set(buildingJarFileName)
     }
 //    docker {
 //        jreVersion.set(JavaVersion.VERSION_17)
@@ -124,6 +113,18 @@ ktor {
 //        )
 //    }
 }
+val buildingJarFileName = "temp-mayorca-server-api.jar"
+val startingJarFileName = "mayorca-server-api.jar"
+
+val serverUser = "mahmoud"
+val serverHost = "192.168.1.6"
+val serverSshKey = file("keys/id_rsa")
+val deleteLog = true
+val lockFileName = ".serverLock"
+
+val serviceName = "mayorca"
+val serverFolderName = "mayorcaTestServer"
+
 ant.withGroovyBuilder {
     "taskdef"(
         "name" to "scp",
@@ -138,7 +139,7 @@ ant.withGroovyBuilder {
 }
 
 fun sudoIfNeeded(): String {
-    if (serverUser.trim() == "root") {
+    if (serverUser.trim() == "mahmoud") {
         return ""
     }
     return "sudo "
@@ -158,6 +159,7 @@ fun sshCommand(command: String, knownHosts: File) = ant.withGroovyBuilder {
 task("cleanAndDeploy") {
     dependsOn("clean", "deploy")
 }
+
 
 task("deploy") {
     dependsOn("buildFatJar")
