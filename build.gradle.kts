@@ -31,6 +31,7 @@ repositories {
     mavenCentral()
 }
 
+
 val javaVersion = JavaVersion.VERSION_17
 
 tasks.withType<JavaCompile> {
@@ -86,7 +87,17 @@ kotlin { // Extension for easy setup
     jvmToolchain(17) // Target version of generated JVM bytecode
 }
 
+val buildingJarFileName = "temp-mayorca-server-api.jar"
+val startingJarFileName = "mayorca-server-api.jar"
 
+val serverUser = "mahmoud"
+val serverHost = "192.168.1.6"
+val serverSshKey = file("keys/id_rsa")
+val deleteLog = true
+val lockFileName = ".serverLock"
+
+val serviceName = "mayorca"
+val serverFolderName = "mayorcaTestServer"
 
 ktor {
     fatJar {
@@ -113,17 +124,7 @@ ktor {
 //        )
 //    }
 }
-val buildingJarFileName = "temp-mayorca-server-api.jar"
-val startingJarFileName = "mayorca-server-api.jar"
 
-val serverUser = "mahmoud"
-val serverHost = "192.168.1.6"
-val serverSshKey = file("keys/id_rsa")
-val deleteLog = true
-val lockFileName = ".serverLock"
-
-val serviceName = "mayorca"
-val serverFolderName = "mayorcaTestServer"
 
 ant.withGroovyBuilder {
     "taskdef"(
@@ -139,7 +140,7 @@ ant.withGroovyBuilder {
 }
 
 fun sudoIfNeeded(): String {
-    if (serverUser.trim() == "mahmoud") {
+    if (serverUser.trim() == "root") {
         return ""
     }
     return "sudo "
