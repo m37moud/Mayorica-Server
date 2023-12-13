@@ -76,8 +76,11 @@ dependencies {
 
     //salt password
     implementation("commons-codec:commons-codec:$commons_codec_version")
-
+    // https://github.com/LukasForst/ktor-api-key
+    implementation("dev.forst:ktor-api-key:1.1.0")
+    //.env
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
+    //ssh
     sshAntTask("org.apache.ant:ant-jsch:1.10.13")
 
 }

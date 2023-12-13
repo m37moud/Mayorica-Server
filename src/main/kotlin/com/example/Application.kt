@@ -21,8 +21,6 @@ import com.example.service.storage.StorageServiceImpl
 import com.typesafe.config.ConfigFactory
 import io.ktor.server.application.*
 import io.ktor.server.config.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
 
 //fun main() {
 //    embeddedServer(Netty, port = 8081, host = "0.0.0.0", module = Application::module)
@@ -33,10 +31,11 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 fun Application.module() {
     val appConfig = HoconApplicationConfig(ConfigFactory.load())
     val database = DBHelper(
-        database = environment.config.propertyOrNull("database.database")?.getString() ?: "",
-        driver = environment.config.propertyOrNull("database.driver")?.getString()?: "",
-        user = environment.config.propertyOrNull("database.user")?.getString() ?: "",
-        password =environment.config.propertyOrNull("database.password")?.getString() ?: ""
+        appConfig = appConfig,
+//        database = environment.config.propertyOrNull("database.database")?.getString() ?: "",
+//        driver = environment.config.propertyOrNull("database.driver")?.getString()?: "",
+//        user = environment.config.propertyOrNull("database.user")?.getString() ?: "",
+//        password =environment.config.propertyOrNull("database.password")?.getString() ?: ""
     )
 
     val db = database.init()
@@ -61,13 +60,14 @@ fun Application.module() {
         audience = appConfig.property("jwt.audience").getString(),
         issuer = appConfig.property("jwt.issuer").getString(),
         expireIn = 360L * 60L * 60L * 24L,
-        secret = appConfig.property("jwt.secret").getString()
+        secret = appConfig.property("jwt.secret").getString(),
+        realm = appConfig.property("jwt.realm").getString()
 //        secret = System.getenv("JWT_SECRET")
     )
 
     configureSerialization()
     configureMonitoring()
-    configureSecurity(config = config)
+    configureSecurity(config = config, appConfig = appConfig)
     configureRouting(
         userDataSource = userDataSource,
         orderDataSource = orderDataSource,

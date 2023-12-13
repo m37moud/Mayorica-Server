@@ -208,63 +208,28 @@ fun Route.register(
     hashingService: HashingService,
 ) {
     //base_url/v1/users/register
-    post(REGISTER_REQUEST) {
-        // check body request if  missing some fields
-        val registerRequest = try {
-            call.receive<AdminRegister>()
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = "Missing Some Fields",
-                    data = null
-                )
-            )
-            return@post
-        }
+    authenticate("app") {
 
-        // check if operation connected db successfully
-        try {
-            if (registerRequest.username.isEmpty() || registerRequest.password.isEmpty() || registerRequest.role.isEmpty()) {
+        post(REGISTER_REQUEST) {
+
+            // check body request if  missing some fields
+            val registerRequest = try {
+                call.receive<AdminRegister>()
+            } catch (e: Exception) {
                 call.respond(
-                    HttpStatusCode.OK,
+                    HttpStatusCode.Conflict,
                     MyResponse(
                         success = false,
-                        message = "Failed Registration",
+                        message = "Missing Some Fields",
                         data = null
                     )
                 )
                 return@post
             }
 
-            // check if email exist or note
-            if (userDataSource.getUserByUsername(registerRequest.username) == null) // means not found
-            {
-                val saltedHash = hashingService.createHashingPassword(registerRequest.password)
-                val user = AdminUser(
-                    username = registerRequest.username,
-                    full_name = registerRequest.full_name,
-                    password = saltedHash.hash,
-                    salt = saltedHash.salt,
-                    role = registerRequest.role,
-                    created_at = LocalDateTime.now().toDatabaseString(),
-                    updated_at = ""
-                )
-
-                val result = userDataSource.register(user)
-                // if result >0 it's success else is failed
-                if (result > 0) {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = true,
-                            message = "Registration Successfully",
-                            data = null
-                        )
-                    )
-                    return@post
-                } else {
+            // check if operation connected db successfully
+            try {
+                if (registerRequest.username.isEmpty() || registerRequest.password.isEmpty() || registerRequest.role.isEmpty()) {
                     call.respond(
                         HttpStatusCode.OK,
                         MyResponse(
@@ -275,30 +240,69 @@ fun Route.register(
                     )
                     return@post
                 }
-            } else {
+
+                // check if email exist or note
+                if (userDataSource.getUserByUsername(registerRequest.username) == null) // means not found
+                {
+                    val saltedHash = hashingService.createHashingPassword(registerRequest.password)
+                    val user = AdminUser(
+                        username = registerRequest.username,
+                        full_name = registerRequest.full_name,
+                        password = saltedHash.hash,
+                        salt = saltedHash.salt,
+                        role = registerRequest.role,
+                        created_at = LocalDateTime.now().toDatabaseString(),
+                        updated_at = ""
+                    )
+
+                    val result = userDataSource.register(user)
+                    // if result >0 it's success else is failed
+                    if (result > 0) {
+                        call.respond(
+                            HttpStatusCode.OK,
+                            MyResponse(
+                                success = true,
+                                message = "Registration Successfully",
+                                data = null
+                            )
+                        )
+                        return@post
+                    } else {
+                        call.respond(
+                            HttpStatusCode.OK,
+                            MyResponse(
+                                success = false,
+                                message = "Failed Registration",
+                                data = null
+                            )
+                        )
+                        return@post
+                    }
+                } else {
+                    call.respond(
+                        HttpStatusCode.OK,
+                        MyResponse(
+                            success = false,
+                            message = "User already registration before.",
+                            data = null
+                        )
+                    )
+                    return@post
+                }
+
+            } catch (e: Exception) {
                 call.respond(
-                    HttpStatusCode.OK,
+                    HttpStatusCode.Conflict,
                     MyResponse(
                         success = false,
-                        message = "User already registration before.",
+                        message = e.message ?: "Failed Registration",
                         data = null
                     )
                 )
                 return@post
             }
 
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Failed Registration",
-                    data = null
-                )
-            )
-            return@post
         }
-
     }
 }
 
