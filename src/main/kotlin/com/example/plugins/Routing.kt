@@ -1,7 +1,7 @@
 package com.example.plugins
 
 import com.example.data.about_us.AboutUsDataSource
-import com.example.data.admin_user.UserDataSource
+import com.example.data.administrations.admin_user.UserDataSource
 import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.data.contact_us.ContactUsDataSource
 import com.example.data.gallery.categories.CategoryDataSource

@@ -1,4 +1,4 @@
-package com.example.data.admin_user
+package com.example.data.administrations.admin_user
 
 import com.example.database.table.AdminUserEntity
 import com.example.models.AdminUser

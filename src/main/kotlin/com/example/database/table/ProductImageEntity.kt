@@ -1,6 +1,5 @@
 package com.example.database.table
 
-import com.example.database.table.MobileAppEntity.primaryKey
 import org.ktorm.schema.Table
 import org.ktorm.schema.datetime
 import org.ktorm.schema.int

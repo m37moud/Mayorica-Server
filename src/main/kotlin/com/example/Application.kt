@@ -1,7 +1,7 @@
 package com.example
 
 import com.example.data.about_us.MySqlAboutUsDataSource
-import com.example.data.admin_user.MYSqlUserDataSource
+import com.example.data.administrations.admin_user.MYSqlUserDataSource
 import com.example.data.ceramic_provider.MySqlCeramicProviderDataSource
 import com.example.data.contact_us.MySqlContactUsDataSource
 import com.example.data.gallery.categories.MySqlCategoryDataSource
@@ -32,10 +32,6 @@ fun Application.module() {
     val appConfig = HoconApplicationConfig(ConfigFactory.load())
     val database = DBHelper(
         appConfig = appConfig,
-//        database = environment.config.propertyOrNull("database.database")?.getString() ?: "",
-//        driver = environment.config.propertyOrNull("database.driver")?.getString()?: "",
-//        user = environment.config.propertyOrNull("database.user")?.getString() ?: "",
-//        password =environment.config.propertyOrNull("database.password")?.getString() ?: ""
     )
 
     val db = database.init()

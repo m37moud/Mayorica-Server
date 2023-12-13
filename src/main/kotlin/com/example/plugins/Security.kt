@@ -15,25 +15,31 @@ data class AuthPrincipal(val isValid: Boolean) : Principal
 
 fun Application.configureSecurity(config: TokenConfig,appConfig: HoconApplicationConfig) {
     // Please read the jwt property from the config file if you are using EngineMain
-    val jwtAudience = "jwt-audience"
-    val jwtDomain = "https://jwt-provider-domain/"
-    val jwtRealm = "ktor sample app"
-    val jwtSecret = "secret"
-    authentication {
+//    val jwtAudience = "jwt-audience"
+//    val jwtDomain = "https://jwt-provider-domain/"
+//    val jwtRealm = "ktor sample app"
+//    val jwtSecret = "secret"
+    install(Authentication) {
         configureAppAuthority(appConfig)
+        adminClientAuth(config)
 
-        jwt {
-            realm = config.realm
-            verifier(
-                JWT
-                    .require(Algorithm.HMAC256(config.secret))
-                    .withAudience(config.audience)
-                    .withIssuer(config.issuer)
-                    .build()
-            )
-            validate { credential ->
-                if (credential.payload.audience.contains(config.audience)) JWTPrincipal(credential.payload) else null
-            }
-        }
     }
+
+//    authentication {
+//        configureAppAuthority(appConfig)
+//
+//        jwt {
+//            realm = config.realm
+//            verifier(
+//                JWT
+//                    .require(Algorithm.HMAC256(config.secret))
+//                    .withAudience(config.audience)
+//                    .withIssuer(config.issuer)
+//                    .build()
+//            )
+//            validate { credential ->
+//                if (credential.payload.audience.contains(config.audience)) JWTPrincipal(credential.payload) else null
+//            }
+//        }
+//    }
 }

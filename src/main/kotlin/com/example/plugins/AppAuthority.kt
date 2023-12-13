@@ -16,9 +16,10 @@ fun AuthenticationConfig.configureAppAuthority(config: HoconApplicationConfig) {
     val appApiKey = config.propertyOrNull("ktor.appAuth.apiKey")?.getString() ?: ""
 
     apiKey("app") {
-        challenge {
-            throw AuthenticationException()
-        }
+//        challenge {
+//
+//            throw AuthenticationException()
+//        }
 
         validate { keyFromHeader ->
             if (keyFromHeader == appApiKey)

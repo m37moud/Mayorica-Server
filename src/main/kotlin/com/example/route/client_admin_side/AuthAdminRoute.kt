@@ -1,6 +1,6 @@
 package com.example.route.client_admin_side
 
-import com.example.data.admin_user.UserDataSource
+import com.example.data.administrations.admin_user.UserDataSource
 import com.example.models.AdminUser
 import com.example.models.request.auth.AdminRegister
 import com.example.models.request.auth.LoginRequest
@@ -23,10 +23,10 @@ import io.ktor.server.routing.*
 import mu.KotlinLogging
 import java.time.LocalDateTime
 
-const val USERS = "$ADMIN_CLIENT/users"
-const val REGISTER_REQUEST = "$USERS/register"
-const val LOGIN_REQUEST = "$USERS/login"
-const val ME_REQUEST = "$USERS/me"
+private const val USERS = "$ADMIN_CLIENT/users"
+private const val REGISTER_REQUEST = "$USERS/register"
+private const val LOGIN_REQUEST = "$USERS/login"
+private const val ME_REQUEST = "$USERS/me"
 
 private val logger = KotlinLogging.logger {}
 
@@ -155,59 +155,61 @@ fun Route.login(
 
 fun Route.getSecretInfo() {
 
-    authenticate {
-        // Get the user info --> GET /api/v1/users/me (with token)
-        get(ME_REQUEST) {
-            logger.debug { "get /$ME_REQUEST" }
 
-            val principal = call.principal<JWTPrincipal>()
-            val userId = try {
-                principal?.getClaim("userId", String::class)?.toIntOrNull()
-            } catch (e: Exception) {
+        authenticate {
+            // Get the user info --> GET /api/v1/users/me (with token)
+            get(ME_REQUEST) {
+                logger.debug { "get /$ME_REQUEST" }
+
+                val principal = call.principal<JWTPrincipal>()
+                val userId = try {
+                    principal?.getClaim("userId", String::class)?.toIntOrNull()
+                } catch (e: Exception) {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = e.message ?: "Failed ",
+                            data = null
+                        )
+                    )
+                    return@get
+                }
+                val userRole = try {
+                    principal?.getClaim("userRole", String::class)
+                } catch (e: Exception) {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = e.message ?: "Failed ",
+                            data = null
+                        )
+                    )
+                    return@get
+                }
+
                 call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Failed ",
-                        data = null
+                    HttpStatusCode.OK, MyResponse(
+                        success = true,
+                        message = "",
+                        data = UserAdminResponse(
+                            id = userId!!,
+                            role = userRole!!
+                        )
                     )
                 )
-                return@get
-            }
-            val userRole = try {
-                principal?.getClaim("userRole", String::class)
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Failed ",
-                        data = null
-                    )
-                )
-                return@get
-            }
 
-            call.respond(
-                HttpStatusCode.OK, MyResponse(
-                    success = true,
-                    message = "",
-                    data = UserAdminResponse(
-                        id = userId!!,
-                        role = userRole!!
-                    )
-                )
-            )
-
+            }
         }
-    }
+
 }
 
 fun Route.register(
     userDataSource: UserDataSource,
     hashingService: HashingService,
 ) {
-    //base_url/v1/users/register
+    //base_url/api/v1/admin-client/users/register
     authenticate("app") {
 
         post(REGISTER_REQUEST) {

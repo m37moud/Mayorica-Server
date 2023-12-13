@@ -1,11 +1,11 @@
 package com.example.database.table
 
-import com.example.database.table.UserOrderEntity.primaryKey
 import org.ktorm.schema.*
 
 object MobileAppEntity : Table<Nothing>("t_mobile_app") {
     val id = int("id").primaryKey()
     val packageName = varchar("packageName")
+    val apiKey = varchar("apiKey")
     val currentVersion = double("current_version")
     val forceUpdate = boolean("force_update")
     val updateMessage= varchar("update_message")
