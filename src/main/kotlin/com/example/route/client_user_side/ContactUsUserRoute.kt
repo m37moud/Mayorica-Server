@@ -8,6 +8,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 
 private const val CONTACT_US = "${USER_CLIENT}/contact-us"
@@ -16,8 +17,10 @@ private const val CONTACT_US = "${USER_CLIENT}/contact-us"
 private val logger = KotlinLogging.logger { }
 
 fun Route.contactUsUserRoute(
-    contactUsDataSource: ContactUsDataSource
+//    contactUsDataSource: ContactUsDataSource
+
 ) {
+    val contactUsDataSource: ContactUsDataSource by inject()
     //get about us //api/v1/user-client/contact-us
     get(CONTACT_US) {
         logger.debug { "Get Contact US $CONTACT_US" }

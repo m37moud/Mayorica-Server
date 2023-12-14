@@ -1,5 +1,6 @@
 package com.example.route.client_user_side
 
+import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.data.gallery.products.ProductDataSource
 import com.example.database.table.ProductEntity
 import com.example.models.ProductPage
@@ -12,6 +13,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 const val ALL_PRODUCTS = "${USER_CLIENT}/products"
 const val ALL_PRODUCTS_RESPONSE = "${USER_CLIENT}/products-response"
@@ -21,7 +23,11 @@ const val SEARCH_PRODUCTS = "${ALL_PRODUCTS}/search"
 private val logger = KotlinLogging.logger {}
 
 
-fun Route.productUserRoute(productDataSource: ProductDataSource) {
+fun Route.productUserRoute(
+//    productDataSource: ProductDataSource
+) {
+    val productDataSource: ProductDataSource by inject()
+
     // get the products --> get /api/v1/user-client/products
     get(ALL_PRODUCTS) {
         call.request.queryParameters["page"]?.toIntOrNull()?.let {

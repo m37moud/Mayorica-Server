@@ -7,12 +7,13 @@ import com.example.models.Offers
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
-
+@Singleton
 class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
     override suspend fun getAllOffers(): List<Offers> {
         return withContext(Dispatchers.IO) {

@@ -5,6 +5,7 @@ import io.ktor.server.config.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
+import org.koin.core.annotation.Singleton
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -16,6 +17,7 @@ private val logger = KotlinLogging.logger {}
  * Storage Service to manage our files
  * @property myConfig AppConfig Configuration of our service
  */
+@Singleton
 class StorageServiceImpl(
     private val myConfig: HoconApplicationConfig
 ) : StorageService {

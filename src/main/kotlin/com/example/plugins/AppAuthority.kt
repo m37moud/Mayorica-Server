@@ -1,5 +1,6 @@
 package com.example.plugins
 
+import com.example.security.token.TokenService
 import com.example.utils.AuthenticationException
 import io.ktor.server.auth.*
 import io.ktor.server.config.*
@@ -11,9 +12,12 @@ import dev.forst.ktor.apikey.apiKey
  * I got for my [UserWithApp]. This API key is also saved in the Ktor
  * app config file.
  */
-fun AuthenticationConfig.configureAppAuthority(config: HoconApplicationConfig) {
+fun AuthenticationConfig.configureAppAuthority(
+        jwtService: TokenService
+) {
 
-    val appApiKey = config.propertyOrNull("ktor.appAuth.apiKey")?.getString() ?: ""
+
+//    val appApiKey = config.propertyOrNull("ktor.appAuth.apiKey")?.getString() ?: ""
 
     apiKey("app") {
 //        challenge {
@@ -22,7 +26,7 @@ fun AuthenticationConfig.configureAppAuthority(config: HoconApplicationConfig) {
 //        }
 
         validate { keyFromHeader ->
-            if (keyFromHeader == appApiKey)
+            if (keyFromHeader == jwtService.appApiKey)
                 AuthPrincipal(true)
             else
                 null

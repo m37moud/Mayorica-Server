@@ -5,10 +5,11 @@ import com.example.models.YoutubeLink
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
-
+@Singleton
 class MySqlYoutubeDataSource(private val db: Database) : YoutubeDataSource {
     override suspend fun getAllYoutubeVideoLinks(): List<YoutubeLink> {
         return withContext(Dispatchers.IO) {

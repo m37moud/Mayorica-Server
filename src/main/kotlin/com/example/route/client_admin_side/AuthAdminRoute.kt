@@ -1,6 +1,7 @@
 package com.example.route.client_admin_side
 
 import com.example.data.administrations.admin_user.UserDataSource
+import com.example.data.offers.OffersDataSource
 import com.example.models.AdminUser
 import com.example.models.request.auth.AdminRegister
 import com.example.models.request.auth.LoginRequest
@@ -21,6 +22,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 private const val USERS = "$ADMIN_CLIENT/users"
@@ -31,9 +33,11 @@ private const val ME_REQUEST = "$USERS/me"
 private val logger = KotlinLogging.logger {}
 
 fun Route.adminUsers(
-    userDataSource: UserDataSource,
+//    userDataSource: UserDataSource,
 
     ) {
+    val userDataSource: UserDataSource by inject()
+
     get(USERS) {
         logger.debug { "get /$USERS" }
         val users = userDataSource.getAllUser()
@@ -59,11 +63,15 @@ fun Route.adminUsers(
 }
 
 fun Route.login(
-    userDataSource: UserDataSource,
-    hashingService: HashingService,
-    tokenService: TokenService,
-    config: TokenConfig
+//    userDataSource: UserDataSource,
+//    hashingService: HashingService,
+//    tokenService: TokenService,
+//    config: TokenConfig
 ) {
+    val userDataSource: UserDataSource by inject()
+    val hashingService: HashingService by inject()
+    val tokenService: TokenService by inject()
+
     // Login a user --> POST /api/v1/admin-client/users/login
     post(LOGIN_REQUEST) {
         logger.debug { "POST /$LOGIN_REQUEST" }
@@ -92,7 +100,7 @@ fun Route.login(
                 )
                 if (isValidPassword) {
                     val token = tokenService.generateToken(
-                        config = config,
+//                        config = config,
                         TokenClaim(
                             name = "userId",
                             value = adminUser.id.toString()

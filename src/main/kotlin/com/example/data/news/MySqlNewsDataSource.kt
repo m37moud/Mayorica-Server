@@ -8,10 +8,11 @@ import com.example.models.News
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
-
+@Singleton
 class MySqlNewsDataSource (private val db :Database) : NewsDataSource {
     override suspend fun getAllNews() :List<News> {
         return withContext(Dispatchers.IO) {

@@ -7,6 +7,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 
 
 private const val PROVIDERS = "${USER_CLIENT}/providers"
@@ -15,7 +16,11 @@ private const val PROVIDERS_GOVERNORATE = "${PROVIDERS}/governorate"
 private const val PROVIDERS_SEARCH = "${PROVIDERS}/search"
 
 
-fun Route.getNearlyProvider(ceramicProvider: CeramicProviderDataSource) {
+fun Route.getNearlyProvider(
+//    ceramicProvider: CeramicProviderDataSource
+) {
+    val ceramicProvider: CeramicProviderDataSource by inject()
+
     get(PROVIDERS) {
         try {
             val providers = ceramicProvider.getAllCeramicProvider()

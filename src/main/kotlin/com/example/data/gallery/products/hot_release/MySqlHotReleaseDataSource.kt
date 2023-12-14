@@ -7,10 +7,11 @@ import com.example.models.response.ProductResponse
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
-
+@Singleton
 class MySqlHotReleaseDataSource(private val db: Database) : HotReleaseDataSource {
 //    override suspend fun getAllHotReleaseProduct(limit: Int): List<ProductResponse> {
 //

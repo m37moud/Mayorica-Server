@@ -12,12 +12,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
 
+@Singleton
 class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
     override suspend fun getAllTypeCategory(): List<TypeCategory> {
         logger.debug { "getAllTypeCategory" }

@@ -12,6 +12,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 private const val CATEGORIES = "${USER_CLIENT}/categories"
 private const val TYPE_CATEGORIES = "${CATEGORIES}/type"
@@ -24,9 +25,9 @@ private const val SIZE_CATEGORY = "${CATEGORY}/size"
 private val logger = KotlinLogging.logger {}
 
 fun Route.categoriesUserRoute(
-    categoryDataSource: CategoryDataSource,
+//    categoryDataSource: CategoryDataSource,
 ) {
-
+val categoryDataSource: CategoryDataSource by inject()
     /**
      * get all categories
      */

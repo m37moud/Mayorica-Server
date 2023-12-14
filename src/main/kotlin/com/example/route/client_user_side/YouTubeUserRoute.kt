@@ -1,5 +1,6 @@
 package com.example.route.client_user_side
 
+import com.example.data.offers.OffersDataSource
 import com.example.data.videos.youtube.YoutubeDataSource
 import com.example.utils.Constants
 import com.example.utils.Constants.USER_CLIENT
@@ -9,6 +10,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 
 private const val YOUTUBE_LINKS = "${USER_CLIENT}/youtube-links"
@@ -17,8 +19,10 @@ private const val YOUTUBE_LINK = "${USER_CLIENT}/youtube-link"
 private val logger = KotlinLogging.logger { }
 
 fun Route.youtubeLinkUserRoute(
-    youtubeDataSource: YoutubeDataSource
+//    youtubeDataSource: YoutubeDataSource
 ) {
+    val youtubeDataSource: YoutubeDataSource by inject()
+
     //get all -> api/v1/user-client/youtube-links
     get(YOUTUBE_LINKS) {
         logger.debug { "get all youtube Links $YOUTUBE_LINKS" }

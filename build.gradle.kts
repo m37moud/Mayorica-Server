@@ -5,11 +5,16 @@ val commons_codec_version: String by project
 // Logger
 val micrologging_version: String by project
 val logbackclassic_version: String by project
+// Koin
+val koin_ktor_version: String by project
+val koin_ksp_version: String by project
 
 plugins {
     kotlin("jvm") version "1.9.10"
     id("io.ktor.plugin") version "2.3.5"
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
+    // KSP for Koin Annotations
+    id("com.google.devtools.ksp") version "1.9.10-1.0.13"
 }
 
 group = "com.example"
@@ -29,6 +34,7 @@ application {
 
 repositories {
     mavenCentral()
+    maven("https://jitpack.io") // For Swagger UI
 }
 
 
@@ -74,6 +80,7 @@ dependencies {
 //    compile ("org.ktorm:ktorm-support-mysql:3.4.1")
     implementation("mysql:mysql-connector-java:8.0.27")
 
+
     //salt password
     implementation("commons-codec:commons-codec:$commons_codec_version")
     // https://github.com/LukasForst/ktor-api-key
@@ -82,6 +89,12 @@ dependencies {
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
     //ssh
     sshAntTask("org.apache.ant:ant-jsch:1.10.13")
+    // Koin for Dependency Injection
+    implementation("io.insert-koin:koin-ktor:$koin_ktor_version") // Koit for Ktor
+    implementation("io.insert-koin:koin-logger-slf4j:$koin_ktor_version") // Koin Logger
+    implementation("io.insert-koin:koin-annotations:$koin_ksp_version") // Koin Annotations for KSP
+    ksp("io.insert-koin:koin-ksp-compiler:$koin_ksp_version") // Koin KSP Compiler for KSP
+
 
 }
 // Java 17

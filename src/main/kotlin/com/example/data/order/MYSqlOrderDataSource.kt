@@ -7,10 +7,12 @@ import com.example.models.UserOrderStatus
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
 
+@Singleton
 class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
     override suspend fun getAllOrder(): List<UserOrder> {
         return withContext(Dispatchers.IO) {

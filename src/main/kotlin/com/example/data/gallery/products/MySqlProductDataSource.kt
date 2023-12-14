@@ -8,6 +8,7 @@ import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import org.ktorm.schema.Column
@@ -15,7 +16,7 @@ import java.time.LocalDateTime
 import kotlin.reflect.KProperty1
 
 private val logger = KotlinLogging.logger {}
-
+@Singleton
 class MySqlProductDataSource(private val db: Database) : ProductDataSource {
     override suspend fun getAllProduct(): List<Product> {
         return withContext(Dispatchers.IO) {

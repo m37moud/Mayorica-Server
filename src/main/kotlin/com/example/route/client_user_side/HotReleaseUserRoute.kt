@@ -8,15 +8,17 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 
 private const val HOT_RELEASE_PRODUCTS = "${USER_CLIENT}/hot_release_products"
 
 private val logger = KotlinLogging.logger {}
 
-fun Route.hotReleaseAdminRoute(
-    hotReleaseDataSource: HotReleaseDataSource,
+fun Route.hotReleaseUserRoute(
+//    hotReleaseDataSource: HotReleaseDataSource,
 ){
+    val hotReleaseDataSource: HotReleaseDataSource by inject()
 
     //get request -> api/v1/user-client/hot_release_products
     get(HOT_RELEASE_PRODUCTS) {

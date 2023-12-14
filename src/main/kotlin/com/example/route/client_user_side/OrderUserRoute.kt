@@ -17,6 +17,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 private const val ORDER_REQUEST = "$USER_CLIENT/order"
 private const val CREATE_ORDER_REQUEST = "$ORDER_REQUEST/create"
@@ -39,9 +40,11 @@ private val logger = KotlinLogging.logger {}
 }
  */
 fun Route.userOrderRequest(
-    orderDataSource: OrderDataSource,
-    orderStatusDataSource: OrderStatusDataSource
+//    orderDataSource: OrderDataSource,
+//    orderStatusDataSource: OrderStatusDataSource
 ) {
+    val orderDataSource: OrderDataSource by inject()
+
     // create a user order --> POST/api/v1/user-client/order-request/create
     post(CREATE_ORDER_REQUEST) {
         logger.debug { "POST /$CREATE_ORDER_REQUEST" }
@@ -144,9 +147,12 @@ fun Route.userOrderRequest(
 }
 
 fun Route.getUserOrderClient(
-    orderDataSource: OrderDataSource,
-    orderStatusDataSource: OrderStatusDataSource
+//    orderDataSource: OrderDataSource,
+//    orderStatusDataSource: OrderStatusDataSource
 ) {
+    val orderDataSource: OrderDataSource by inject()
+    val orderStatusDataSource: OrderStatusDataSource by inject()
+
     //api/v1/user-client/order/{order_num}
     get("$ORDER_REQUEST/{order_num}") {
         logger.debug { "GET /$ORDER_REQUEST" }

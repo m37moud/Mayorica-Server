@@ -6,11 +6,12 @@ import com.example.models.AppsModel
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
-
-class MySqlMobileAppDataSource (private val db: Database) : AppsDataSource {
+@Singleton
+class MySqlMobileAppDataSource(private val db: Database) : AppsDataSource {
     /**
      * create app
      * @param app AppsModel app
@@ -31,6 +32,7 @@ class MySqlMobileAppDataSource (private val db: Database) : AppsDataSource {
         }
         result
     }
+
     /**
      * delete app
      * @param app AppsModel app
@@ -45,6 +47,7 @@ class MySqlMobileAppDataSource (private val db: Database) : AppsDataSource {
             result
         }
     }
+
     /**
      * update app
      * @param app AppsModel app
@@ -68,13 +71,27 @@ class MySqlMobileAppDataSource (private val db: Database) : AppsDataSource {
     override suspend fun getAppInfo(app: AppsModel): AppsModel? = withContext(Dispatchers.IO) {
         val result = db.from(AdminAppEntity)
             .select()
-            .map { rowToContactUs(it) }
+            .map { rowToAppsModel(it) }
             .firstOrNull()
         result
 
     }
 
-    private fun rowToContactUs(row: QueryRowSet?): AppsModel? {
+    override suspend fun getUserWithApp(apiKey: String): AppsModel? = withContext(Dispatchers.IO) {
+        val result = db.from(AdminAppEntity)
+            .select()
+            .where {
+                AdminAppEntity.apiKey eq apiKey
+
+            }
+            .map { rowToAppsModel(it) }
+            .firstOrNull()
+        result
+
+    }
+
+
+    private fun rowToAppsModel(row: QueryRowSet?): AppsModel? {
         return if (row == null) {
             null
         } else {

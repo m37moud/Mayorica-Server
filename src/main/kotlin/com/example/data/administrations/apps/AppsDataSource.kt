@@ -7,5 +7,6 @@ interface AppsDataSource {
     suspend fun appDelete(app : AppsModel) : Int
     suspend fun appUpdate(app : AppsModel) : Int
     suspend fun getAppInfo(app : AppsModel) : AppsModel?
+    suspend fun getUserWithApp(apiKey: String):AppsModel?
 
 }

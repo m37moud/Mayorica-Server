@@ -2,6 +2,7 @@ package com.example
 
 import com.example.data.about_us.MySqlAboutUsDataSource
 import com.example.data.administrations.admin_user.MYSqlUserDataSource
+import com.example.data.administrations.apps.MySqlMobileAppDataSource
 import com.example.data.ceramic_provider.MySqlCeramicProviderDataSource
 import com.example.data.contact_us.MySqlContactUsDataSource
 import com.example.data.gallery.categories.MySqlCategoryDataSource
@@ -29,27 +30,29 @@ import io.ktor.server.config.*
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
+    configureKoin() // Configure the Koin plugin to inject dependencies
     val appConfig = HoconApplicationConfig(ConfigFactory.load())
-    val database = DBHelper(
-        appConfig = appConfig,
-    )
+//    val database = DBHelper(
+//        appConfig = appConfig,
+//    )
 
-    val db = database.init()
-    val userDataSource = MYSqlUserDataSource(db = db)
-    val orderDataSource = MYSqlOrderDataSource(db = db)
-    val orderStatusDataSource = MYSqlOrderStatusDataSource(db = db)
-    val ceramicProvider = MySqlCeramicProviderDataSource(db = db)
-    val productDataSource = MySqlProductDataSource(db = db)
-    val categoryDataSource = MySqlCategoryDataSource(db = db)
-    val aboutUsDataSource = MySqlAboutUsDataSource(db = db)
-    val hotReleaseDataSource = MySqlHotReleaseDataSource(db = db)
-    val contactUsDataSource = MySqlContactUsDataSource(db = db)
-    val newsDataSource = MySqlNewsDataSource(db = db)
-    val offersDataSource = MySqlOffersDataSource(db = db)
-    val youtubeDataSource = MySqlYoutubeDataSource(db = db)
-    val storageService = StorageServiceImpl(appConfig)
-    val hashingService = SHA256HashingService()
-    val tokenService = JWTTokenService()
+//    val db = database.init()
+//    val userDataSource = MYSqlUserDataSource(db = db)
+//    val orderDataSource = MYSqlOrderDataSource(db = db)
+//    val orderStatusDataSource = MYSqlOrderStatusDataSource(db = db)
+//    val ceramicProvider = MySqlCeramicProviderDataSource(db = db)
+//    val productDataSource = MySqlProductDataSource(db = db)
+//    val categoryDataSource = MySqlCategoryDataSource(db = db)
+//    val aboutUsDataSource = MySqlAboutUsDataSource(db = db)
+//    val hotReleaseDataSource = MySqlHotReleaseDataSource(db = db)
+//    val contactUsDataSource = MySqlContactUsDataSource(db = db)
+//    val newsDataSource = MySqlNewsDataSource(db = db)
+//    val offersDataSource = MySqlOffersDataSource(db = db)
+//    val youtubeDataSource = MySqlYoutubeDataSource(db = db)
+//    val mobileApp = MySqlMobileAppDataSource(db = db)
+//    val storageService = StorageServiceImpl(appConfig)
+//    val hashingService = SHA256HashingService()
+//    val tokenService = JWTTokenService()
 
 
     val config = TokenConfig(
@@ -63,7 +66,7 @@ fun Application.module() {
 
     configureSerialization()
     configureMonitoring()
-    configureSecurity(config = config, appConfig = appConfig)
+    configureSecurity(config = config, appConfig = appConfig, app = mobileApp)
     configureRouting(
         userDataSource = userDataSource,
         orderDataSource = orderDataSource,
@@ -75,8 +78,8 @@ fun Application.module() {
         hotReleaseDataSource = hotReleaseDataSource,
         contactUsDataSource = contactUsDataSource,
         newsDataSource = newsDataSource,
-        offersDataSource =offersDataSource,
-        youtubeDataSource =youtubeDataSource,
+        offersDataSource = offersDataSource,
+        youtubeDataSource = youtubeDataSource,
         storageService = storageService,
         hashingService = hashingService,
         tokenService = tokenService,

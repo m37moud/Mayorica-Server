@@ -7,10 +7,11 @@ import com.example.models.ContactUs
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
-
+@Singleton
 class MySqlContactUsDataSource(private val db: Database) : ContactUsDataSource {
     override suspend fun getContactUsInfo(): ContactUs? {
         return withContext(Dispatchers.IO) {

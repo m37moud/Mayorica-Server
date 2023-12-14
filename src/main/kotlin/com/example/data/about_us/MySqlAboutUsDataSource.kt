@@ -8,10 +8,11 @@ import com.example.models.AboutUs
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
-
+@Singleton
 class MySqlAboutUsDataSource(private val db: Database) : AboutUsDataSource {
 
     override suspend fun getAllAboutUsInfo(): List<AboutUs> {

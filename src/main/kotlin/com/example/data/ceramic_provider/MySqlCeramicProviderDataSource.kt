@@ -4,12 +4,14 @@ import com.example.database.table.CeramicProviderEntity
 import com.example.models.CeramicProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.Comparator
 
+@Singleton
 class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProviderDataSource {
 
 

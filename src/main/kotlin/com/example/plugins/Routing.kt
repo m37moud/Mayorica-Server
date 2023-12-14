@@ -51,101 +51,122 @@ fun Application.configureRouting(
         }
     }
     routing {
-        adminUsers(
+        configureDashboardClient(
             userDataSource = userDataSource,
-
-            )
-        login(
-            userDataSource = userDataSource,
+            orderDataSource = orderDataSource,
+            orderStatusDataSource = orderStatusDataSource,
+            ceramicProvider = ceramicProvider,
+            productDataSource = productDataSource,
+            categoryDataSource = categoryDataSource,
+            aboutUsDataSource = aboutUsDataSource,
+            hotReleaseDataSource = hotReleaseDataSource,
+            newsDataSource = newsDataSource,
+            contactUsDataSource = contactUsDataSource,
+            offersDataSource = offersDataSource,
+            youtubeDataSource=youtubeDataSource,
+            storageService = storageService,
             hashingService = hashingService,
             tokenService = tokenService,
-            config = config
+            config = config,
         )
-        getSecretInfo()
-        register(
-            userDataSource = userDataSource,
-            hashingService = hashingService
-        )
-        userOrderRequest(
-            orderDataSource = orderDataSource,
-            orderStatusDataSource = orderStatusDataSource
-        )
-        getUserOrderClient(
-            orderDataSource = orderDataSource,
-            orderStatusDataSource = orderStatusDataSource,
-        )
-        ordersAdminRoute(
-            orderDataSource = orderDataSource,
-            orderStatusDataSource = orderStatusDataSource,
-            userDataSource = userDataSource
-        )
-        providerAdminClient(ceramicProvider = ceramicProvider)
-        getNearlyProvider(ceramicProvider = ceramicProvider)
+        configureMobileClient()
+
+//        adminUsers(
+//            userDataSource = userDataSource,
+//
+//            )
+//        login(
+//            userDataSource = userDataSource,
+//            hashingService = hashingService,
+//            tokenService = tokenService,
+//            config = config
+//        )
+//        getSecretInfo()
+//        register(
+//            userDataSource = userDataSource,
+//            hashingService = hashingService
+//        )
+//        userOrderRequest(
+//            orderDataSource = orderDataSource,
+//            orderStatusDataSource = orderStatusDataSource
+//        )
+//        getUserOrderClient(
+//            orderDataSource = orderDataSource,
+//            orderStatusDataSource = orderStatusDataSource,
+//        )
+//        ordersAdminRoute(
+//            orderDataSource = orderDataSource,
+//            orderStatusDataSource = orderStatusDataSource,
+//            userDataSource = userDataSource
+//        )
+//        providerAdminClient(ceramicProvider = ceramicProvider)
+//        getNearlyProvider(ceramicProvider = ceramicProvider)
 
         //product
-        productAdminRoute(
-            productDataSource = productDataSource,
-            storageService = storageService
-        )
-        productUserRoute(
-            productDataSource = productDataSource,
-        )
-        categoriesAdminRoute(
-            categoryDataSource = categoryDataSource,
-            storageService = storageService
-        )
-        categoriesUserRoute(
-            categoryDataSource = categoryDataSource,
+//        productAdminRoute(
+//            productDataSource = productDataSource,
+//            storageService = storageService
+//        )
+//        productUserRoute(
+//            productDataSource = productDataSource,
+//        )
+//        categoriesAdminRoute(
+//            categoryDataSource = categoryDataSource,
+//            storageService = storageService
+//        )
+//        categoriesUserRoute(
+//            categoryDataSource = categoryDataSource,
+//
+//            )
+//        /**
+//         * about us
+//         */
+//        aboutUsAdminRoute(
+//            aboutUsDataSource = aboutUsDataSource,
+//
+//            )
+//        aboutUsUserRoute(
+//            aboutUsDataSource = aboutUsDataSource,
+//
+//            )
+//        /**
+//         * hot release app
+//         */
 
-            )
-        /**
-         * about us
-         */
-        aboutUsAdminRoute(
-            aboutUsDataSource = aboutUsDataSource,
+//        hotReleaseUserRoute(
+//            hotReleaseDataSource = hotReleaseDataSource
+//        )
+//        hotReleaseAdminRoute(
+//            hotReleaseDataSource = hotReleaseDataSource,
+//            productDataSource = productDataSource
+//        )
 
-            )
-        aboutUsUserRoute(
-            aboutUsDataSource = aboutUsDataSource,
-
-            )
-        /**
-         * hor release app
-         */
-        hotReleaseAdminRoute(
-            hotReleaseDataSource = hotReleaseDataSource
-        )
-        hotReleaseAdminRoute(
-            hotReleaseDataSource = hotReleaseDataSource,
-            productDataSource = productDataSource
-        )
-
-        contactUsAdminRoute(
-            contactUsDataSource = contactUsDataSource
-        )
-        contactUsUserRoute(
-            contactUsDataSource = contactUsDataSource
-        )
-        newsAdminRoute(
-            newsDataSource = newsDataSource,
-            storageService = storageService
-        )
-        newsUserRoute(
-            newsDataSource = newsDataSource,
-        )
-        offersAdminRoute(
-            offersDataSource = offersDataSource,
-            storageService = storageService
-        )
-        offersUserRoute(
-            offersDataSource = offersDataSource,
-        )
-        youtubeLinkAdminRoute(
-            youtubeDataSource=youtubeDataSource
-        )
-        youtubeLinkUserRoute(
-            youtubeDataSource=youtubeDataSource
-        )
+//        contactUsAdminRoute(
+//            contactUsDataSource = contactUsDataSource
+//        )
+//        contactUsUserRoute(
+//            contactUsDataSource = contactUsDataSource
+//        )
+//        newsAdminRoute(
+//            newsDataSource = newsDataSource,
+//            storageService = storageService
+//        )
+//        newsUserRoute(
+//            newsDataSource = newsDataSource,
+//        )
+//        offersAdminRoute(
+//            offersDataSource = offersDataSource,
+//            storageService = storageService
+//        )
+//        offersUserRoute(
+//            offersDataSource = offersDataSource,
+//        )
+//        youtubeLinkAdminRoute(
+//            youtubeDataSource=youtubeDataSource
+//        )
+//        youtubeLinkUserRoute(
+//            youtubeDataSource=youtubeDataSource
+//        )
 
 
 

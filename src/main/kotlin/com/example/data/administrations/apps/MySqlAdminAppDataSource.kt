@@ -33,6 +33,7 @@ class MySqlAdminAppDataSource(private val db: Database) : AppsDataSource {
         }
         result
     }
+
     /**
      * delete app
      * @param app AppsModel app
@@ -41,12 +42,13 @@ class MySqlAdminAppDataSource(private val db: Database) : AppsDataSource {
 
     override suspend fun appDelete(app: AppsModel): Int {
         return withContext(Dispatchers.IO) {
-            val result = db.delete(ContactUsEntity) {
+            val result = db.delete(AdminAppEntity) {
                 it.id eq app.id
             }
             result
         }
     }
+
     /**
      * update app
      * @param app AppsModel app
@@ -70,13 +72,26 @@ class MySqlAdminAppDataSource(private val db: Database) : AppsDataSource {
     override suspend fun getAppInfo(app: AppsModel): AppsModel? = withContext(Dispatchers.IO) {
         val result = db.from(AdminAppEntity)
             .select()
-            .map { rowToContactUs(it) }
+            .map { rowToAppsModel(it) }
             .firstOrNull()
         result
 
     }
 
-    private fun rowToContactUs(row: QueryRowSet?): AppsModel? {
+    override suspend fun getUserWithApp(apiKey: String): AppsModel? = withContext(Dispatchers.IO) {
+        val result = db.from(AdminAppEntity)
+            .select()
+            .where {
+                AdminAppEntity.apiKey eq apiKey
+
+            }
+            .map { rowToAppsModel(it) }
+            .firstOrNull()
+        result
+
+    }
+
+    private fun rowToAppsModel(row: QueryRowSet?): AppsModel? {
         return if (row == null) {
             null
         } else {

@@ -1,5 +1,6 @@
 package com.example.route.client_user_side
 
+import com.example.data.news.NewsDataSource
 import com.example.data.offers.OffersDataSource
 import com.example.utils.Constants
 import com.example.utils.Constants.ADMIN_CLIENT
@@ -10,6 +11,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 
 private const val ALL_OFFERS = "${USER_CLIENT}/offers"
@@ -23,8 +25,10 @@ private val logger = KotlinLogging.logger { }
 
 
 fun Route.offersUserRoute(
-    offersDataSource: OffersDataSource
+//    offersDataSource: OffersDataSource
 ) {
+    val offersDataSource: OffersDataSource by inject()
+
     //get all offers //api/v1/user-client/offers
     get(ALL_OFFERS) {
         try {

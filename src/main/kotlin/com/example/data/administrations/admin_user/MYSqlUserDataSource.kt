@@ -5,11 +5,16 @@ import com.example.models.AdminUser
 import com.example.models.Role
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Single
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
 
-class MYSqlUserDataSource(private val db: Database) : UserDataSource {
+@Singleton
+class MYSqlUserDataSource(
+    private val db: Database
+) : UserDataSource {
 
     /**
      * Find user by username

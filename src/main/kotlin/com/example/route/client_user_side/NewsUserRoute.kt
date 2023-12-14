@@ -9,12 +9,16 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 private const val NEWS = "${USER_CLIENT}/news"
 
 private val logger = KotlinLogging.logger { }
 
-fun Route.newsUserRoute(newsDataSource: NewsDataSource) {
+fun Route.newsUserRoute(
+//    newsDataSource: NewsDataSource
+) {
+    val newsDataSource: NewsDataSource by inject()
     //get all -> api/v1/user-client/news
     get(NEWS) {
         logger.debug { "get all News  $NEWS" }
