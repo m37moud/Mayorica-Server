@@ -1,15 +1,10 @@
 package com.example.plugins
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
-import com.example.data.administrations.apps.AppsDataSource
+import com.example.data.administrations.apps.admin.AppsAdminDataSource
 import com.example.models.response.AppResponse
-import com.example.security.token.TokenConfig
 import com.example.security.token.TokenService
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.config.*
 import org.koin.ktor.ext.inject
 
 
@@ -24,7 +19,7 @@ fun Application.configureSecurity(
 ) {
     // Inject the token service
     val jwtService: TokenService by inject()
-    val app: AppsDataSource by inject()
+    val app: AppsAdminDataSource by inject()
 
     // Please read the jwt property from the config file if you are using EngineMain
     install(Authentication) {

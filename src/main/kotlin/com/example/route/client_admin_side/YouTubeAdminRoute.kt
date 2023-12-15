@@ -166,7 +166,7 @@ fun Route.youtubeLinkAdminRoute(
                         MyResponse(
                             success = true,
                             message = "Youtube Link Information inserted successfully .",
-                            data = null
+                            data = linkRequest
                         )
                     )
                     return@post

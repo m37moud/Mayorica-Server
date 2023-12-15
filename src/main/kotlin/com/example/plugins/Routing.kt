@@ -12,6 +12,7 @@ import com.example.data.offers.OffersDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
 import com.example.data.videos.youtube.YoutubeDataSource
+import com.example.route.auth_route.registerAdmin
 import com.example.route.client_admin_side.*
 import com.example.route.client_user_side.*
 import com.example.security.hash.HashingService
@@ -51,6 +52,8 @@ fun Application.configureRouting(
         }
     }
     routing {
+        registerAdmin()
+        appsAdminRoute()
         configureDashboardClient(
 //            userDataSource = userDataSource,
 //            orderDataSource = orderDataSource,

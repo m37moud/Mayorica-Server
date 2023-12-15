@@ -1,9 +1,9 @@
-package com.example.data.administrations.apps
+package com.example.data.administrations.apps.user
 
+import com.example.data.administrations.apps.admin.AppsAdminDataSource
 import com.example.database.table.AdminAppEntity
 import com.example.database.table.ContactUsEntity
 import com.example.models.AppsModel
-import com.example.models.ContactUs
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,9 +11,9 @@ import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
-@Singleton
-class MySqlAdminAppDataSource(private val db: Database) : AppsDataSource {
 
+@Singleton
+class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
     /**
      * create app
      * @param app AppsModel app
@@ -41,10 +41,10 @@ class MySqlAdminAppDataSource(private val db: Database) : AppsDataSource {
      * @return Int  if inserted more than 1, 0 otherwise
      */
 
-    override suspend fun appDelete(app: AppsModel): Int {
+    override suspend fun appDelete(appId: Int): Int {
         return withContext(Dispatchers.IO) {
-            val result = db.delete(AdminAppEntity) {
-                it.id eq app.id
+            val result = db.delete(ContactUsEntity) {
+                it.id eq appId
             }
             result
         }
@@ -70,9 +70,12 @@ class MySqlAdminAppDataSource(private val db: Database) : AppsDataSource {
         result
     }
 
-    override suspend fun getAppInfo(app: AppsModel): AppsModel? = withContext(Dispatchers.IO) {
+    override suspend fun getAppInfo(appId : Int): AppsModel? = withContext(Dispatchers.IO) {
         val result = db.from(AdminAppEntity)
             .select()
+            .where {
+                AdminAppEntity.id eq appId
+            }
             .map { rowToAppsModel(it) }
             .firstOrNull()
         result
@@ -91,6 +94,7 @@ class MySqlAdminAppDataSource(private val db: Database) : AppsDataSource {
         result
 
     }
+
 
     private fun rowToAppsModel(row: QueryRowSet?): AppsModel? {
         return if (row == null) {
@@ -128,6 +132,5 @@ class MySqlAdminAppDataSource(private val db: Database) : AppsDataSource {
 
         }
     }
-
 
 }

@@ -12,6 +12,7 @@ import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
 import com.example.data.videos.youtube.YoutubeDataSource
 import com.example.route.client_user_side.*
+import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 
 fun Route.configureMobileClient(
@@ -30,7 +31,9 @@ fun Route.configureMobileClient(
 
     ) {
 
+authenticate ("mobile"){
 
+}
     userOrderRequest(
 //        orderDataSource = orderDataSource,
 //        orderStatusDataSource = orderStatusDataSource

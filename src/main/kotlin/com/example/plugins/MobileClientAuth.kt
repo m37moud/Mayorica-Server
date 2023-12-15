@@ -1,11 +1,11 @@
 package com.example.plugins
 
-import com.example.data.administrations.apps.AppsDataSource
+import com.example.data.administrations.apps.admin.AppsAdminDataSource
 import com.example.models.response.toResponse
 import dev.forst.ktor.apikey.apiKey
 import io.ktor.server.auth.*
 
-fun AuthenticationConfig.configureMobileAuthority(app: AppsDataSource) {
+fun AuthenticationConfig.configureMobileAuthority(app: AppsAdminDataSource) {
     apiKey("mobile") {
         validate { keyFromHeader ->
 

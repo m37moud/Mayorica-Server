@@ -39,8 +39,8 @@ fun Route.authenticationRoutes(
     val hashingService: HashingService by inject()
     val tokenService: TokenService by inject()
 
-    //register
-    authenticate("app") {
+    //register new user
+    authenticate {
 
         post(REGISTER_REQUEST) {
 

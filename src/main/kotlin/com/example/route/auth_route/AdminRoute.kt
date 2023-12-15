@@ -13,16 +13,16 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 
 private const val REGISTER = "${Constants.ADMIN_CLIENT}/register"
 private const val REGISTER_ADMIN_REQUEST = "$REGISTER/admin"
-fun Route.registerAdmin(
-    userDataSource: UserDataSource,
-    hashingService: HashingService,
-){
+fun Route.registerAdmin(){
 
+    val userDataSource: UserDataSource by inject()
+    val hashingService: HashingService by inject()
     //base_url/api/v1/admin-client/register/admin
     authenticate("app") {
         post(REGISTER_ADMIN_REQUEST) {

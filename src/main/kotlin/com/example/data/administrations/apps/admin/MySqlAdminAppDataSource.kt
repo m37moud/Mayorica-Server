@@ -1,7 +1,6 @@
-package com.example.data.administrations.apps
+package com.example.data.administrations.apps.admin
 
 import com.example.database.table.AdminAppEntity
-import com.example.database.table.ContactUsEntity
 import com.example.models.AppsModel
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +10,8 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
 @Singleton
-class MySqlMobileAppDataSource(private val db: Database) : AppsDataSource {
+class MySqlAdminAppDataSource(private val db: Database) : AppsAdminDataSource {
+
     /**
      * create app
      * @param app AppsModel app
@@ -39,10 +39,10 @@ class MySqlMobileAppDataSource(private val db: Database) : AppsDataSource {
      * @return Int  if inserted more than 1, 0 otherwise
      */
 
-    override suspend fun appDelete(app: AppsModel): Int {
+    override suspend fun appDelete(appId : Int): Int {
         return withContext(Dispatchers.IO) {
-            val result = db.delete(ContactUsEntity) {
-                it.id eq app.id
+            val result = db.delete(AdminAppEntity) {
+                it.id eq appId
             }
             result
         }
@@ -68,9 +68,12 @@ class MySqlMobileAppDataSource(private val db: Database) : AppsDataSource {
         result
     }
 
-    override suspend fun getAppInfo(app: AppsModel): AppsModel? = withContext(Dispatchers.IO) {
+    override suspend fun getAppInfo(appId : Int): AppsModel? = withContext(Dispatchers.IO) {
         val result = db.from(AdminAppEntity)
             .select()
+            .where {
+                AdminAppEntity.id eq appId
+            }
             .map { rowToAppsModel(it) }
             .firstOrNull()
         result
@@ -89,7 +92,6 @@ class MySqlMobileAppDataSource(private val db: Database) : AppsDataSource {
         result
 
     }
-
 
     private fun rowToAppsModel(row: QueryRowSet?): AppsModel? {
         return if (row == null) {
@@ -127,5 +129,6 @@ class MySqlMobileAppDataSource(private val db: Database) : AppsDataSource {
 
         }
     }
+
 
 }
