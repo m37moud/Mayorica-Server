@@ -18,8 +18,8 @@ data class AppPrincipal(val mobileApp: AppResponse) : Principal
 data class AuthPrincipal(val isValid: Boolean) : Principal
 
 fun Application.configureSecurity(
-    config: TokenConfig,
-    appConfig: HoconApplicationConfig,
+//    config: TokenConfig,
+//    appConfig: HoconApplicationConfig,
 //    app: AppsDataSource
 ) {
     // Inject the token service

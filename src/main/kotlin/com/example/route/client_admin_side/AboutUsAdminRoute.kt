@@ -5,6 +5,7 @@ import com.example.models.AboutUs
 import com.example.models.request.AboutUsRequest
 import com.example.models.request.categories.ColorCategoryRequest
 import com.example.models.request.toModel
+import com.example.service.storage.StorageService
 import com.example.utils.Constants
 import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.MyResponse
@@ -16,6 +17,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 private const val ABOUT_US = "$ADMIN_CLIENT/about-us"
 private const val CREATE_ABOUT_US = "$ABOUT_US/create"
@@ -24,7 +26,11 @@ private const val DELETE_ABOUT_US = "$ABOUT_US/delete"
 private const val DELETE_ALL_ABOUT_US = "$ABOUT_US/delete-all"
 private val logger = KotlinLogging.logger {}
 
-fun Route.aboutUsAdminRoute(aboutUsDataSource: AboutUsDataSource) {
+fun Route.aboutUsAdminRoute(
+//    aboutUsDataSource: AboutUsDataSource
+) {
+    val aboutUsDataSource: AboutUsDataSource by inject()
+
     authenticate {
         //get about us //api/v1/admin-client/about_us
         get(ABOUT_US) {

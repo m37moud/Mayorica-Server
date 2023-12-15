@@ -7,10 +7,11 @@ import com.example.models.ContactUs
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
-
+@Singleton
 class MySqlAdminAppDataSource(private val db: Database) : AppsDataSource {
 
     /**

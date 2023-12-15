@@ -7,6 +7,7 @@ interface TokenService {
     val realm :String
      val issuer :String
      val expiresIn :Long
+     val refreshIn :Long
      val secret :String
     val appApiKey :String
     fun generateToken(

@@ -1,5 +1,6 @@
 package com.example.route.client_admin_side
 
+import com.example.data.contact_us.ContactUsDataSource
 import com.example.data.news.NewsDataSource
 import com.example.models.News
 import com.example.service.storage.StorageService
@@ -15,6 +16,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 private const val NEWS = "${ADMIN_CLIENT}/news"
@@ -25,10 +27,13 @@ private const val DELETE_NEWS = "$NEWS/delete"
 private val logger = KotlinLogging.logger { }
 
 fun Route.newsAdminRoute(
-    newsDataSource: NewsDataSource,
-    storageService: StorageService
+//    newsDataSource: NewsDataSource,
+//    storageService: StorageService
 
 ) {
+    val newsDataSource: NewsDataSource by inject()
+    val storageService: StorageService by inject()
+
 
     authenticate {
         //get all -> api/v1/admin-client/news

@@ -1,6 +1,7 @@
 package com.example.route.client_admin_side
 
 import com.example.data.contact_us.ContactUsDataSource
+import com.example.data.gallery.products.hot_release.HotReleaseDataSource
 import com.example.models.AboutUs
 import com.example.models.ContactUs
 import com.example.utils.Constants.ADMIN_CLIENT
@@ -13,6 +14,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 private const val CONTACT_US = "$ADMIN_CLIENT/contact-us"
 private const val CREATE_CONTACT_US = "$CONTACT_US/create"
@@ -22,8 +24,9 @@ private const val DELETE_CONTACT_US = "$CONTACT_US/delete"
 private val logger = KotlinLogging.logger { }
 
 fun Route.contactUsAdminRoute(
-    contactUsDataSource: ContactUsDataSource
+//    contactUsDataSource: ContactUsDataSource
 ) {
+    val contactUsDataSource: ContactUsDataSource by inject()
 
     authenticate {
         //get contact us //api/v1/admin-client/contact-us

@@ -4,5 +4,5 @@ import org.koin.core.annotation.Module
 
 
 @Module(includes = [ApiModule::class])
-@ComponentScan("com.example.mayorca-server")
+@ComponentScan("com.example")//com.example.mayorica-server
 class AppModule

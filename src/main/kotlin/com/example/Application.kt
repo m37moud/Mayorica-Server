@@ -27,7 +27,13 @@ import io.ktor.server.config.*
 //    embeddedServer(Netty, port = 8081, host = "0.0.0.0", module = Application::module)
 //        .start(wait = true)
 //}
-fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
+
+/**
+ * Configure our application with the plugins
+ */
+@Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.
+fun main(args: Array<String>): Unit =
+    io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.module() {
     configureKoin() // Configure the Koin plugin to inject dependencies
@@ -58,7 +64,8 @@ fun Application.module() {
     val config = TokenConfig(
         audience = appConfig.property("jwt.audience").getString(),
         issuer = appConfig.property("jwt.issuer").getString(),
-        expireIn = 360L * 60L * 60L * 24L,
+        expireIn = 360L * 24L * 60L * 60L,
+        refreshIn = 360L * 24L * 60L * 60L,
         secret = appConfig.property("jwt.secret").getString(),
         realm = appConfig.property("jwt.realm").getString()
 //        secret = System.getenv("JWT_SECRET")
@@ -66,23 +73,25 @@ fun Application.module() {
 
     configureSerialization()
     configureMonitoring()
-    configureSecurity(config = config, appConfig = appConfig, app = mobileApp)
+    configureSecurity(
+//        config = config, appConfig = appConfig, app = mobileApp
+    )
     configureRouting(
-        userDataSource = userDataSource,
-        orderDataSource = orderDataSource,
-        orderStatusDataSource = orderStatusDataSource,
-        ceramicProvider = ceramicProvider,
-        productDataSource = productDataSource,
-        categoryDataSource = categoryDataSource,
-        aboutUsDataSource = aboutUsDataSource,
-        hotReleaseDataSource = hotReleaseDataSource,
-        contactUsDataSource = contactUsDataSource,
-        newsDataSource = newsDataSource,
-        offersDataSource = offersDataSource,
-        youtubeDataSource = youtubeDataSource,
-        storageService = storageService,
-        hashingService = hashingService,
-        tokenService = tokenService,
-        config = config
+//        userDataSource = userDataSource,
+//        orderDataSource = orderDataSource,
+//        orderStatusDataSource = orderStatusDataSource,
+//        ceramicProvider = ceramicProvider,
+//        productDataSource = productDataSource,
+//        categoryDataSource = categoryDataSource,
+//        aboutUsDataSource = aboutUsDataSource,
+//        hotReleaseDataSource = hotReleaseDataSource,
+//        contactUsDataSource = contactUsDataSource,
+//        newsDataSource = newsDataSource,
+//        offersDataSource = offersDataSource,
+//        youtubeDataSource = youtubeDataSource,
+//        storageService = storageService,
+//        hashingService = hashingService,
+//        tokenService = tokenService,
+//        config = config
     )
 }

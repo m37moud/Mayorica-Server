@@ -15,6 +15,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 const val ORDER_RESPONSE = "${ADMIN_CLIENT}/orders"
@@ -22,10 +23,16 @@ const val ORDER_STATUE_RESPONSE = "${ADMIN_CLIENT}/statue"
 private val logger = KotlinLogging.logger {}
 
 fun Route.ordersAdminRoute(
-    orderDataSource: OrderDataSource,
-    orderStatusDataSource: OrderStatusDataSource,
-    userDataSource: UserDataSource
+//    orderDataSource: OrderDataSource,
+//    orderStatusDataSource: OrderStatusDataSource,
+//    userDataSource: UserDataSource
 ) {
+    val orderDataSource: OrderDataSource by inject()
+    val orderStatusDataSource: OrderStatusDataSource by inject()
+    val userDataSource: UserDataSource by inject()
+
+
+
     authenticate {
         // Get the orders info --> GET /api/v1/admin-client/orders (with token)
         route(ORDER_RESPONSE) {

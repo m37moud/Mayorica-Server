@@ -1,6 +1,7 @@
 package com.example.route.client_admin_side
 
 import com.example.data.ceramic_provider.CeramicProviderDataSource
+import com.example.data.order.OrderDataSource
 import com.example.mapper.toModelCreate
 import com.example.models.CeramicProvider
 import com.example.models.request.ceramic_provider.CeramicProviderRequest
@@ -15,6 +16,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import mu.KotlinLogging
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 // get all providers
@@ -29,8 +31,10 @@ private val logger = KotlinLogging.logger {}
 
 
 fun Route.providerAdminClient(
-    ceramicProvider: CeramicProviderDataSource
+//    ceramicProvider: CeramicProviderDataSource
 ) {
+    val ceramicProvider: CeramicProviderDataSource by inject()
+
     authenticate {
         //get all providers //api/v1/admin-client/providers
         get(PROVIDERS) {

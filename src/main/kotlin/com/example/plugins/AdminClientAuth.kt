@@ -10,7 +10,7 @@ import org.koin.ktor.ext.inject
 
 fun AuthenticationConfig.adminClientAuth(
     jwtService: TokenService
-){
+) {
 
     jwt {
         jwtService.verifyJWT()
@@ -23,7 +23,10 @@ fun AuthenticationConfig.adminClientAuth(
 //                .build()
 //        )
         validate { credential ->
-            if (credential.payload.audience.contains(jwtService.audience)) JWTPrincipal(credential.payload) else null
+            if (credential.payload.audience.contains(jwtService.audience))
+                JWTPrincipal(credential.payload)
+            else
+                null
         }
     }
 

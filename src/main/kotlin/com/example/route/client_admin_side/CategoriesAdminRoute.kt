@@ -1,6 +1,7 @@
 package com.example.route.client_admin_side
 
 import com.example.data.gallery.categories.CategoryDataSource
+import com.example.data.gallery.products.ProductDataSource
 import com.example.mapper.toModelCreate
 import com.example.models.*
 import com.example.models.request.categories.ColorCategoryRequest
@@ -17,6 +18,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 const val CATEGORIES = "$ADMIN_CLIENT/categories"
@@ -40,9 +42,12 @@ const val DELETE_COLOR_CATEGORY = "$COLOR_CATEGORY/delete"
 private val logger = KotlinLogging.logger {}
 
 fun Route.categoriesAdminRoute(
-    categoryDataSource: CategoryDataSource,
-    storageService: StorageService
+//    categoryDataSource: CategoryDataSource,
+//    storageService: StorageService
 ) {
+    val categoryDataSource: CategoryDataSource by inject()
+    val storageService: StorageService by inject()
+
     authenticate {
         /**
          * create new category

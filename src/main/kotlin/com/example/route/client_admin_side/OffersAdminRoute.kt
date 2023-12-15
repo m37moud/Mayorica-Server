@@ -1,5 +1,6 @@
 package com.example.route.client_admin_side
 
+import com.example.data.news.NewsDataSource
 import com.example.data.offers.OffersDataSource
 import com.example.models.Offers
 import com.example.service.storage.StorageService
@@ -15,6 +16,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 
@@ -30,9 +32,11 @@ private val logger = KotlinLogging.logger { }
 
 
 fun Route.offersAdminRoute(
-    offersDataSource: OffersDataSource,
-    storageService: StorageService
+//    offersDataSource: OffersDataSource,
+//    storageService: StorageService
 ) {
+    val offersDataSource: OffersDataSource by inject()
+    val storageService: StorageService by inject()
 
     authenticate {
         //get all offers //api/v1/admin-client/offers

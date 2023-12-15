@@ -1,5 +1,6 @@
 package com.example.route.client_admin_side
 
+import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.data.gallery.products.ProductDataSource
 import com.example.database.table.ProductEntity
 import com.example.models.Product
@@ -22,6 +23,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 
@@ -43,9 +45,12 @@ private const val DELETE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/delete"
 private val logger = KotlinLogging.logger {}
 
 fun Route.productAdminRoute(
-    productDataSource: ProductDataSource,
-    storageService: StorageService
+//    productDataSource: ProductDataSource,
+//    storageService: StorageService
 ) {
+    val productDataSource: ProductDataSource by inject()
+    val storageService: StorageService by inject()
+
     authenticate {
 
         // get the products --> get /api/v1/admin-client/products/ (token required)

@@ -4,6 +4,7 @@ import com.example.data.videos.youtube.YoutubeDataSource
 import com.example.mapper.toModel
 import com.example.models.YoutubeLink
 import com.example.models.request.YoutubeLinkRequest
+import com.example.service.storage.StorageService
 import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.MyResponse
 import io.ktor.http.*
@@ -14,6 +15,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 
 private const val YOUTUBE_LINKS = "$ADMIN_CLIENT/youtube-links"
@@ -25,8 +27,10 @@ private const val DELETE_YOUTUBE_LINK = "$YOUTUBE_LINK/delete"
 private val logger = KotlinLogging.logger { }
 
 fun Route.youtubeLinkAdminRoute(
-    youtubeDataSource: YoutubeDataSource
+//    youtubeDataSource: YoutubeDataSource
 ) {
+    val youtubeDataSource: YoutubeDataSource by inject()
+
     authenticate {
 
         //get all -> api/v1/admin-client/youtube-links

@@ -99,9 +99,9 @@ dependencies {
 }
 // Java 17
 // https://kotlinlang.org/docs/get-started-with-jvm-gradle-project.html#explore-the-build-script
-//kotlin { // Extension for easy setup
-//    jvmToolchain(17) // Target version of generated JVM bytecode
-//}
+kotlin { // Extension for easy setup
+    jvmToolchain(17) // Target version of generated JVM bytecode
+}
 
 val buildingJarFileName = "temp-mayorca-server-api.jar"
 val startingJarFileName = "mayorca-server-api.jar"

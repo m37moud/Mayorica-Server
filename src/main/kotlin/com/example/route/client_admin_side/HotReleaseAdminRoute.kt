@@ -1,5 +1,6 @@
 package com.example.route.client_admin_side
 
+import com.example.data.about_us.AboutUsDataSource
 import com.example.data.gallery.products.ProductDataSource
 import com.example.data.gallery.products.hot_release.HotReleaseDataSource
 import com.example.database.table.HotReleaseProductEntity
@@ -15,6 +16,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 private const val HOT_RELEASE_PRODUCTS = "${ADMIN_CLIENT}/hot_release_products"
 private const val HOT_RELEASE_PRODUCT = "${ADMIN_CLIENT}/hot_release"
@@ -24,9 +26,12 @@ private const val DELETE_HOT_RELEASE_PRODUCT = "${HOT_RELEASE_PRODUCT}/delete"
 private val logger = KotlinLogging.logger {}
 
 fun Route.hotReleaseAdminRoute(
-    hotReleaseDataSource: HotReleaseDataSource,
-    productDataSource: ProductDataSource
+//    hotReleaseDataSource: HotReleaseDataSource,
+//    productDataSource: ProductDataSource
 ) {
+    val hotReleaseDataSource: HotReleaseDataSource by inject()
+    val productDataSource: ProductDataSource by inject()
+
     authenticate {
         //get request -> api/v1/admin-client/hot_release_products
         get(HOT_RELEASE_PRODUCTS) {

@@ -20,80 +20,85 @@ import com.example.service.storage.StorageService
 import io.ktor.server.routing.*
 
 fun Route.configureDashboardClient(
-    userDataSource: UserDataSource,
-    orderDataSource: OrderDataSource,
-    orderStatusDataSource: OrderStatusDataSource,
-    ceramicProvider: CeramicProviderDataSource,
-    productDataSource: ProductDataSource,
-    categoryDataSource: CategoryDataSource,
-    aboutUsDataSource: AboutUsDataSource,
-    hotReleaseDataSource: HotReleaseDataSource,
-    contactUsDataSource: ContactUsDataSource,
-    newsDataSource: NewsDataSource,
-    offersDataSource: OffersDataSource,
-    youtubeDataSource: YoutubeDataSource,
-    storageService: StorageService,
-    hashingService: HashingService,
-    tokenService: TokenService,
-    config: TokenConfig
+//    userDataSource: UserDataSource,
+//    orderDataSource: OrderDataSource,
+//    orderStatusDataSource: OrderStatusDataSource,
+//    ceramicProvider: CeramicProviderDataSource,
+//    productDataSource: ProductDataSource,
+//    categoryDataSource: CategoryDataSource,
+//    aboutUsDataSource: AboutUsDataSource,
+//    hotReleaseDataSource: HotReleaseDataSource,
+//    contactUsDataSource: ContactUsDataSource,
+//    newsDataSource: NewsDataSource,
+//    offersDataSource: OffersDataSource,
+//    youtubeDataSource: YoutubeDataSource,
+//    storageService: StorageService,
+//    hashingService: HashingService,
+//    tokenService: TokenService,
+//    config: TokenConfig
 
 ) {
-    adminUsers(
-        userDataSource = userDataSource,
-
-        )
-    login(
-        userDataSource = userDataSource,
-        hashingService = hashingService,
-        tokenService = tokenService,
-        config = config
+    authenticationRoutes(
+//        config
     )
-    getSecretInfo()
-    register(
-        userDataSource = userDataSource,
-        hashingService = hashingService
-    )
+//    adminUsers(
+////        userDataSource = userDataSource,
+//
+//        )
+//    login(
+////        userDataSource = userDataSource,
+////        hashingService = hashingService,
+////        tokenService = tokenService,
+////        config = config
+//    )
+//    getSecretInfo()
+//    register(
+////        userDataSource = userDataSource,
+////        hashingService = hashingService
+//    )
 
     ordersAdminRoute(
-        orderDataSource = orderDataSource,
-        orderStatusDataSource = orderStatusDataSource,
-        userDataSource = userDataSource
+//        orderDataSource = orderDataSource,
+//        orderStatusDataSource = orderStatusDataSource,
+//        userDataSource = userDataSource
     )
-    providerAdminClient(ceramicProvider = ceramicProvider)
+    providerAdminClient(
+//        ceramicProvider = ceramicProvider
+    )
     productAdminRoute(
-        productDataSource = productDataSource,
-        storageService = storageService
+//        productDataSource = productDataSource,
+//        storageService = storageService
     )
     categoriesAdminRoute(
-        categoryDataSource = categoryDataSource,
-        storageService = storageService
+//        categoryDataSource = categoryDataSource,
+//        storageService = storageService
     )
     /**
      * about us
      */
     aboutUsAdminRoute(
-        aboutUsDataSource = aboutUsDataSource,
+//        aboutUsDataSource = aboutUsDataSource,
 
         )
     /**
      * hot release app
      */
     hotReleaseAdminRoute(
-        hotReleaseDataSource = hotReleaseDataSource,
-        productDataSource = productDataSource
+//        hotReleaseDataSource = hotReleaseDataSource,
+//        productDataSource = productDataSource
     )
     contactUsAdminRoute(
-        contactUsDataSource = contactUsDataSource
+//        contactUsDataSource = contactUsDataSource
     )
     newsAdminRoute(
-        newsDataSource = newsDataSource,
-        storageService = storageService
+//        newsDataSource = newsDataSource,
+//        storageService = storageService
     )
     offersAdminRoute(
-        offersDataSource = offersDataSource,
-        storageService = storageService
+//        offersDataSource = offersDataSource,
+//        storageService = storageService
     )
     youtubeLinkAdminRoute(
-        youtubeDataSource=youtubeDataSource
+//        youtubeDataSource=youtubeDataSource
     )
 }

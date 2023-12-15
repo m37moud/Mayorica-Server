@@ -28,22 +28,22 @@ import io.ktor.server.routing.*
 import java.io.File
 
 fun Application.configureRouting(
-    userDataSource: UserDataSource,
-    orderDataSource: OrderDataSource,
-    orderStatusDataSource: OrderStatusDataSource,
-    ceramicProvider: CeramicProviderDataSource,
-    productDataSource: ProductDataSource,
-    categoryDataSource: CategoryDataSource,
-    aboutUsDataSource: AboutUsDataSource,
-    hotReleaseDataSource: HotReleaseDataSource,
-    contactUsDataSource: ContactUsDataSource,
-    newsDataSource: NewsDataSource,
-    offersDataSource: OffersDataSource,
-    youtubeDataSource: YoutubeDataSource,
-    storageService: StorageService,
-    hashingService: HashingService,
-    tokenService: TokenService,
-    config: TokenConfig
+//    userDataSource: UserDataSource,
+//    orderDataSource: OrderDataSource,
+//    orderStatusDataSource: OrderStatusDataSource,
+//    ceramicProvider: CeramicProviderDataSource,
+//    productDataSource: ProductDataSource,
+//    categoryDataSource: CategoryDataSource,
+//    aboutUsDataSource: AboutUsDataSource,
+//    hotReleaseDataSource: HotReleaseDataSource,
+//    contactUsDataSource: ContactUsDataSource,
+//    newsDataSource: NewsDataSource,
+//    offersDataSource: OffersDataSource,
+//    youtubeDataSource: YoutubeDataSource,
+//    storageService: StorageService,
+//    hashingService: HashingService,
+//    tokenService: TokenService,
+//    config: TokenConfig
 ) {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
@@ -52,22 +52,22 @@ fun Application.configureRouting(
     }
     routing {
         configureDashboardClient(
-            userDataSource = userDataSource,
-            orderDataSource = orderDataSource,
-            orderStatusDataSource = orderStatusDataSource,
-            ceramicProvider = ceramicProvider,
-            productDataSource = productDataSource,
-            categoryDataSource = categoryDataSource,
-            aboutUsDataSource = aboutUsDataSource,
-            hotReleaseDataSource = hotReleaseDataSource,
-            newsDataSource = newsDataSource,
-            contactUsDataSource = contactUsDataSource,
-            offersDataSource = offersDataSource,
-            youtubeDataSource=youtubeDataSource,
-            storageService = storageService,
-            hashingService = hashingService,
-            tokenService = tokenService,
-            config = config,
+//            userDataSource = userDataSource,
+//            orderDataSource = orderDataSource,
+//            orderStatusDataSource = orderStatusDataSource,
+//            ceramicProvider = ceramicProvider,
+//            productDataSource = productDataSource,
+//            categoryDataSource = categoryDataSource,
+//            aboutUsDataSource = aboutUsDataSource,
+//            hotReleaseDataSource = hotReleaseDataSource,
+//            newsDataSource = newsDataSource,
+//            contactUsDataSource = contactUsDataSource,
+//            offersDataSource = offersDataSource,
+//            youtubeDataSource=youtubeDataSource,
+//            storageService = storageService,
+//            hashingService = hashingService,
+//            tokenService = tokenService,
+//            config = config,
         )
         configureMobileClient()
 
