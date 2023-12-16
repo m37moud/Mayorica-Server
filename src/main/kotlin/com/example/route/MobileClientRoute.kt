@@ -1,7 +1,6 @@
-package com.example.plugins
+package com.example.route
 
 import com.example.data.about_us.AboutUsDataSource
-import com.example.data.administrations.admin_user.UserDataSource
 import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.data.contact_us.ContactUsDataSource
 import com.example.data.gallery.categories.CategoryDataSource
@@ -12,15 +11,11 @@ import com.example.data.offers.OffersDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
 import com.example.data.videos.youtube.YoutubeDataSource
-import com.example.route.client_admin_side.*
-import com.example.security.hash.HashingService
-import com.example.security.token.TokenConfig
-import com.example.security.token.TokenService
-import com.example.service.storage.StorageService
+import com.example.route.client_user_side.*
+import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 
-fun Route.configureDashboardClient(
-//    userDataSource: UserDataSource,
+fun Route.configureMobileClient(
 //    orderDataSource: OrderDataSource,
 //    orderStatusDataSource: OrderStatusDataSource,
 //    ceramicProvider: CeramicProviderDataSource,
@@ -32,73 +27,57 @@ fun Route.configureDashboardClient(
 //    newsDataSource: NewsDataSource,
 //    offersDataSource: OffersDataSource,
 //    youtubeDataSource: YoutubeDataSource,
-//    storageService: StorageService,
-//    hashingService: HashingService,
-//    tokenService: TokenService,
-//    config: TokenConfig
 
-) {
-    authenticationRoutes(
-//        config
+
+    ) {
+
+authenticate ("mobile"){
+    userOrderRequest(
+//        orderDataSource = orderDataSource,
+//        orderStatusDataSource = orderStatusDataSource
     )
-//    adminUsers(
-////        userDataSource = userDataSource,
-//
-//        )
-//    login(
-////        userDataSource = userDataSource,
-////        hashingService = hashingService,
-////        tokenService = tokenService,
-////        config = config
-//    )
-//    getSecretInfo()
-//    register(
-////        userDataSource = userDataSource,
-////        hashingService = hashingService
-//    )
-
-    ordersAdminRoute(
+    getUserOrderClient(
 //        orderDataSource = orderDataSource,
 //        orderStatusDataSource = orderStatusDataSource,
-//        userDataSource = userDataSource
     )
-    providerAdminClient(
+    getNearlyProvider(
 //        ceramicProvider = ceramicProvider
     )
-    productAdminRoute(
+    productUserRoute(
 //        productDataSource = productDataSource,
-//        storageService = storageService
     )
-    categoriesAdminRoute(
+    categoriesUserRoute(
 //        categoryDataSource = categoryDataSource,
-//        storageService = storageService
+
     )
     /**
      * about us
      */
-    aboutUsAdminRoute(
+    aboutUsUserRoute(
 //        aboutUsDataSource = aboutUsDataSource,
 
-        )
+    )
+
     /**
      * hot release app
      */
-    hotReleaseAdminRoute(
-//        hotReleaseDataSource = hotReleaseDataSource,
-//        productDataSource = productDataSource
+
+    hotReleaseUserRoute(
+//        hotReleaseDataSource = hotReleaseDataSource
     )
-    contactUsAdminRoute(
+    contactUsUserRoute(
 //        contactUsDataSource = contactUsDataSource
     )
-    newsAdminRoute(
+    newsUserRoute(
 //        newsDataSource = newsDataSource,
-//        storageService = storageService
     )
-    offersAdminRoute(
+    offersUserRoute(
 //        offersDataSource = offersDataSource,
-//        storageService = storageService
     )
-    youtubeLinkAdminRoute(
+    youtubeLinkUserRoute(
 //        youtubeDataSource=youtubeDataSource
     )
+}
+
+
 }

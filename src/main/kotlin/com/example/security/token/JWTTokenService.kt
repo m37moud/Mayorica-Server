@@ -17,20 +17,20 @@ class JWTTokenService(
 ) : TokenService {
 
     override val audience by lazy {
-        config.applicationConfiguration.propertyOrNull("jwt.audience")?.getString() ?: "jwt-audience"
+        config.applicationConfiguration.propertyOrNull("jwt.audience")?.getString() ?: ""
     }
     override val realm by lazy {
-        config.applicationConfiguration.propertyOrNull("jwt.realm")?.getString() ?: "jwt-realm"
+        config.applicationConfiguration.propertyOrNull("jwt.realm")?.getString() ?: ""
     }
     override val issuer by lazy {
-        config.applicationConfiguration.propertyOrNull("jwt.issuer")?.getString() ?: "jwt-issuer"
+        config.applicationConfiguration.propertyOrNull("jwt.issuer")?.getString() ?: ""
     }
     override val expiresIn by lazy {
-        360L * 60L * 60L * 24L*1000L
+        360L * 60L * 60L * 24L * 1000L
 //        config.applicationConfiguration.propertyOrNull("jwt.tiempo")?.getString()?.toLong() ?: 3600
     }
     override val refreshIn by lazy {
-        360L * 60L * 60L * 24L*1000L
+        360L * 60L * 60L * 24L * 1000L
 //        config.applicationConfiguration.propertyOrNull("jwt.tiempo")?.getString()?.toLong() ?: 3600
     }
     override val secret by lazy {
@@ -43,7 +43,12 @@ class JWTTokenService(
 
 
     init {
-        logger.debug { "Init tokens service with audience: $audience" }
+        logger.debug { "Init tokens service with" +
+                "\n audience: $audience" +
+                " \n issuer : $issuer" +
+                " \n secret : $secret " +
+                "\n realm : $realm" +
+                "\n appApiKey : $appApiKey" }
     }
 
     override fun generateToken(
@@ -68,6 +73,13 @@ class JWTTokenService(
      * @throws TokenException.InvalidTokenException
      */
     override fun verifyJWT(): JWTVerifier? {
+        logger.debug { "verifyJWT tokens service with" +
+                "\n audience: $audience" +
+                " \n issuer : $issuer" +
+                " \n secret : $secret " +
+                "\n realm : $realm" +
+                "\n appApiKey : $appApiKey" }
+
 
         return try {
             JWT.require(Algorithm.HMAC256(secret))

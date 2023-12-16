@@ -4,6 +4,7 @@ import com.example.data.administrations.apps.admin.AppsAdminDataSource
 import com.example.database.table.AdminAppEntity
 import com.example.database.table.ContactUsEntity
 import com.example.models.AppsModel
+import com.example.utils.generateApiKey
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -22,7 +23,7 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
     override suspend fun appCreate(app: AppsModel): Int = withContext(Dispatchers.IO) {
         val result = db.insert(AdminAppEntity) {
             set(it.packageName, app.packageName)
-            set(it.apiKey, app.apiKey)
+            set(it.apiKey, generateApiKey())
             set(it.currentVersion, app.currentVersion)
             set(it.forceUpdate, app.forceUpdate)
             set(it.updateMessage, app.updateMessage)
@@ -58,7 +59,7 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
     override suspend fun appUpdate(app: AppsModel): Int = withContext(Dispatchers.IO) {
         val result = db.update(AdminAppEntity) {
             set(it.packageName, app.packageName)
-            set(it.apiKey, app.apiKey)
+//            set(it.apiKey, app.apiKey)
             set(it.currentVersion, app.currentVersion)
             set(it.forceUpdate, app.forceUpdate)
             set(it.updateMessage, app.updateMessage)
@@ -75,6 +76,17 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
             .select()
             .where {
                 AdminAppEntity.id eq appId
+            }
+            .map { rowToAppsModel(it) }
+            .firstOrNull()
+        result
+
+    }
+    override suspend fun getAppInfo(packageName: String): AppsModel? = withContext(Dispatchers.IO) {
+        val result = db.from(AdminAppEntity)
+            .select()
+            .where {
+                AdminAppEntity.packageName eq packageName
             }
             .map { rowToAppsModel(it) }
             .firstOrNull()

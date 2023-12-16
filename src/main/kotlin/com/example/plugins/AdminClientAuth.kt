@@ -13,15 +13,14 @@ fun AuthenticationConfig.adminClientAuth(
 ) {
 
     jwt {
-        jwtService.verifyJWT()
+        // Load the token verification config
+        jwtService.verifyJWT()?.let { verifier(it) }
+        // With realm we can get the token from the request
         realm = jwtService.realm
-//        verifier(
-//            JWT
-//                .require(Algorithm.HMAC256(config.secret))
-//                .withAudience(config.audience)
-//                .withIssuer(config.issuer)
-//                .build()
-//        )
+
+        // If the token is valid, it also has the indicated audience,
+        // and has the user's field to compare it with the one we want
+        // return the JWTPrincipal, otherwise return null
         validate { credential ->
             if (credential.payload.audience.contains(jwtService.audience))
                 JWTPrincipal(credential.payload)

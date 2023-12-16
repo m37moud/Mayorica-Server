@@ -25,6 +25,7 @@ private const val ADMIN_APP = "${Constants.ADMIN_CLIENT}/admin-app"
 private const val CREATE_ADMIN_APP = "${ADMIN_APP}/create"
 private const val UPDATE_ADMIN_APP = "${ADMIN_APP}/update"
 private const val DELETE_ADMIN_APP = "${ADMIN_APP}/delete"
+
 /**
  * USER APP
  */
@@ -47,7 +48,7 @@ fun Route.appsAdminRoute() {
         //get all -> api/v1/admin-client/admin-app/{id}
         get("$ADMIN_APP/{id}") {
             logger.debug { "get youtube Links $ADMIN_APP/{id}" }
-            call.parameters["id"]?.toIntOrNull()?.let {id->
+            call.parameters["id"]?.toIntOrNull()?.let { id ->
                 try {
                     val link = appsAdminDataSource.getAppInfo(appId = id)
                     if (link != null) {
@@ -113,40 +114,62 @@ fun Route.appsAdminRoute() {
                 )
                 return@post
             }
-            val principal = call.principal<JWTPrincipal>()
-            val adminUserId = try {
-                principal?.getClaim("userId", String::class)?.toIntOrNull()
-            } catch (e: Exception) {
-                call.respond(
-                    status = HttpStatusCode.Conflict,
-                    message = MyResponse(
-                        success = false, message = e.message ?: "Missing Some Fields",
-                        data = null
-                    )
-                )
-                return@post
-            }
-            try {
-                val result = appsAdminDataSource.appCreate(appRequest.copy(userAdminId = adminUserId ?: -1))
-                if (result > 0) {
+
+
+
+            try {//check if this app is inserted before
+
+                appsAdminDataSource
+                    .getAppInfo(packageName = appRequest.packageName)?.let {
                     call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = true,
-                            message = "App Information inserted successfully .",
-                            data = appRequest
-                        )
-                    )
-                    return@post
-                } else {
-                    call.respond(
-                        HttpStatusCode.OK, MyResponse(
+                        status = HttpStatusCode.OK,
+                        message = MyResponse(
                             success = false,
-                            message = "App Information inserted failed .",
+                            message = "this app inserted before",
                             data = null
                         )
                     )
                     return@post
+
+
+                } ?: run { // app not found try to insert new one
+                    val principal = call.principal<JWTPrincipal>()
+                    val adminUserId = try {
+                        principal?.getClaim("userId", String::class)?.toIntOrNull()
+                    } catch (e: Exception) {
+                        call.respond(
+                            status = HttpStatusCode.Conflict,
+                            message = MyResponse(
+                                success = false,
+                                message = e.message ?: "Missing Some Fields",
+                                data = null
+                            )
+                        )
+                        return@post
+                    }
+
+                    val result = appsAdminDataSource
+                        .appCreate(appRequest.copy(userAdminId = adminUserId ?: -1))
+                    if (result > 0) {
+                        call.respond(
+                            HttpStatusCode.OK,
+                            MyResponse(
+                                success = true,
+                                message = "App Information inserted successfully .",
+                                data = appRequest
+                            )
+                        )
+                        return@post
+                    } else {
+                        call.respond(
+                            HttpStatusCode.OK, MyResponse(
+                                success = false,
+                                message = "App Information inserted failed .",
+                                data = null
+                            )
+                        )
+                        return@post
+                    }
                 }
 
             } catch (e: Exception) {
@@ -296,7 +319,7 @@ fun Route.appsAdminRoute() {
         //get all -> api/v1/admin-client/user-app/{id}
         get("$USER_APP/{id}") {
             logger.debug { "get youtube Links $USER_APP/{id}" }
-            call.parameters["id"]?.toIntOrNull()?.let {id->
+            call.parameters["id"]?.toIntOrNull()?.let { id ->
                 try {
                     val link = appsUserDataSource.getAppInfo(appId = id)
                     if (link != null) {
@@ -347,7 +370,7 @@ fun Route.appsAdminRoute() {
         }
         //post  -> api/v1/admin-client/user-app/create
         post(CREATE_USER_APP) {
-            logger.debug { "create new app $CREATE_USER_APP" }
+            logger.debug { "create new user app $CREATE_ADMIN_APP" }
 
             val appRequest = try {
                 call.receive<AppsModel>()
@@ -362,40 +385,62 @@ fun Route.appsAdminRoute() {
                 )
                 return@post
             }
-            val principal = call.principal<JWTPrincipal>()
-            val adminUserId = try {
-                principal?.getClaim("userId", String::class)?.toIntOrNull()
-            } catch (e: Exception) {
-                call.respond(
-                    status = HttpStatusCode.Conflict,
-                    message = MyResponse(
-                        success = false, message = e.message ?: "Missing Some Fields",
-                        data = null
-                    )
-                )
-                return@post
-            }
-            try {
-                val result = appsUserDataSource.appCreate(appRequest.copy(userAdminId = adminUserId ?: -1))
-                if (result > 0) {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = true,
-                            message = "App Information inserted successfully .",
-                            data = appRequest
+
+
+
+            try {//check if this app is inserted before
+
+                appsUserDataSource
+                    .getAppInfo(packageName = appRequest.packageName)?.let {
+                        call.respond(
+                            status = HttpStatusCode.OK,
+                            message = MyResponse(
+                                success = false,
+                                message = "this app inserted before",
+                                data = null
+                            )
                         )
-                    )
-                    return@post
-                } else {
-                    call.respond(
-                        HttpStatusCode.OK, MyResponse(
-                            success = false,
-                            message = "App Information inserted failed .",
-                            data = null
+                        return@post
+
+
+                    } ?: run { // app not found try to insert new one
+                    val principal = call.principal<JWTPrincipal>()
+                    val adminUserId = try {
+                        principal?.getClaim("userId", String::class)?.toIntOrNull()
+                    } catch (e: Exception) {
+                        call.respond(
+                            status = HttpStatusCode.Conflict,
+                            message = MyResponse(
+                                success = false,
+                                message = e.message ?: "Missing Some Fields",
+                                data = null
+                            )
                         )
-                    )
-                    return@post
+                        return@post
+                    }
+
+                    val result = appsUserDataSource
+                        .appCreate(appRequest.copy(userAdminId = adminUserId ?: -1))
+                    if (result > 0) {
+                        call.respond(
+                            HttpStatusCode.OK,
+                            MyResponse(
+                                success = true,
+                                message = "App Information inserted successfully .",
+                                data = appRequest
+                            )
+                        )
+                        return@post
+                    } else {
+                        call.respond(
+                            HttpStatusCode.OK, MyResponse(
+                                success = false,
+                                message = "App Information inserted failed .",
+                                data = null
+                            )
+                        )
+                        return@post
+                    }
                 }
 
             } catch (e: Exception) {
@@ -413,7 +458,7 @@ fun Route.appsAdminRoute() {
         }
         //put  -> api/v1/admin-client/user-app/update
         put("$UPDATE_USER_APP/{id}") {
-            logger.debug { "update apps $UPDATE_USER_APP" }
+            logger.debug { "update USER apps $UPDATE_USER_APP" }
 
             call.parameters["id"]?.toIntOrNull()?.let {
                 val linkRequest = try {

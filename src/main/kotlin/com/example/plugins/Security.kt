@@ -19,6 +19,7 @@ fun Application.configureSecurity(
 ) {
     // Inject the token service
     val jwtService: TokenService by inject()
+
     val app: AppsAdminDataSource by inject()
 
     // Please read the jwt property from the config file if you are using EngineMain
