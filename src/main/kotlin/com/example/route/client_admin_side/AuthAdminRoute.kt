@@ -11,6 +11,10 @@ import com.example.security.hash.SaltedHash
 import com.example.security.token.TokenClaim
 import com.example.security.token.TokenConfig
 import com.example.security.token.TokenService
+import com.example.utils.Claim.PERMISSION
+import com.example.utils.Claim.TOKEN_TYPE
+import com.example.utils.Claim.USERNAME
+import com.example.utils.Claim.USER_ID
 import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.MyResponse
 import com.example.utils.toDatabaseString
@@ -176,11 +180,13 @@ fun Route.authenticationRoutes(
 //            )
 //            return@post
 //        }
-        val username = call.request.queryParameters["username"] ?: ""
-        val password = call.request.queryParameters["password"] ?: ""
-//        val params = call.receiveParameters()
-//        val username = params["username"]?.trim().toString()
-//        val password = params["password"]?.trim().toString()
+//        val username = call.request.queryParameters["username"]
+//        val password = call.request.queryParameters["password"]
+        val params = call.receiveParameters()
+        val username = params["username"]?.trim().toString()
+        val password = params["password"]?.trim().toString()
+
+        logger.debug { "username /$username , password = $password " }
 
         // check if operation connected db successfully
         try {
@@ -196,24 +202,39 @@ fun Route.authenticationRoutes(
                     )
                 )
                 if (isValidPassword) {
-                    val token = tokenService.generateToken(
-//                        config = config,
+                    val tokensResponse = tokenService.generateUserTokens(
                         TokenClaim(
-                            name = "userId",
+                            name = USER_ID,
                             value = adminUser.id.toString()
                         ),
                         TokenClaim(
-                            name = "userRole",
-                            value = adminUser.role.toString()
-                        )
+                            name = PERMISSION,
+                            value = adminUser.role
+                        ),
+                        TokenClaim(
+                            name = USERNAME,
+                            value = adminUser.username
+                        ),
 
-                    )
+                        )
+//                    val token = tokenService.generateToken(
+////                        config = config,
+//                        TokenClaim(
+//                            name = "userId",
+//                            value = adminUser.id.toString()
+//                        ),
+//                        TokenClaim(
+//                            name = "userRole",
+//                            value = adminUser.role.toString()
+//                        )
+//
+//                    )
                     call.respond(
                         HttpStatusCode.OK,
                         MyResponse(
                             success = true,
                             message = "You are logged in successfully",
-                            data = token
+                            data = tokensResponse
                         )
                     )
                     return@post
@@ -373,24 +394,39 @@ fun Route.login(
                     saltedHash = SaltedHash(hash = adminUser.password, salt = adminUser.salt)
                 )
                 if (isValidPassword) {
-                    val token = tokenService.generateToken(
-//                        config = config,
+                    val tokensResponse = tokenService.generateUserTokens(
                         TokenClaim(
-                            name = "userId",
+                            name = USER_ID,
                             value = adminUser.id.toString()
                         ),
                         TokenClaim(
-                            name = "userRole",
-                            value = adminUser.role.toString()
-                        )
+                            name = PERMISSION,
+                            value = adminUser.role
+                        ),
+                        TokenClaim(
+                            name = USERNAME,
+                            value = adminUser.username
+                        ),
 
-                    )
+                        )
+//                    val token = tokenService.generateToken(
+////                        config = config,
+//                        TokenClaim(
+//                            name = "userId",
+//                            value = adminUser.id.toString()
+//                        ),
+//                        TokenClaim(
+//                            name = "userRole",
+//                            value = adminUser.role.toString()
+//                        )
+//
+//                    )
                     call.respond(
                         HttpStatusCode.OK,
                         MyResponse(
                             success = true,
                             message = "You are logged in successfully",
-                            data = token
+                            data = tokensResponse
                         )
                     )
                     return@post

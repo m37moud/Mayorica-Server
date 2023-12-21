@@ -7,6 +7,9 @@ import mu.KotlinLogging
 import org.koin.core.annotation.Single
 import java.util.*
 import com.auth0.jwt.JWTVerifier
+import com.example.models.response.UserTokensResponse
+import com.example.utils.Claim.TOKEN_TYPE
+import com.example.utils.TokenType
 import org.koin.core.annotation.Singleton
 
 private val logger = KotlinLogging.logger {}
@@ -43,29 +46,62 @@ class JWTTokenService(
 
 
     init {
-        logger.debug { "Init tokens service with" +
-                "\n audience: $audience" +
-                " \n issuer : $issuer" +
-                " \n secret : $secret " +
-                "\n realm : $realm" +
-                "\n appApiKey : $appApiKey" }
+        logger.debug {
+            "Init tokens service with" +
+                    "\n audience: $audience" +
+                    " \n issuer : $issuer" +
+                    " \n secret : $secret " +
+                    "\n realm : $realm" +
+                    "\n appApiKey : $appApiKey"
+        }
+    }
+
+    override fun generateUserTokens(
+        vararg claim: TokenClaim
+    ): UserTokensResponse {
+
+        val accessTokenExpirationDate = getExpirationDate(expiresIn)
+        val refreshTokenExpirationDate = getExpirationDate(refreshIn)
+
+        val refreshToken =
+            generateToken(
+                tokenType = TokenType.REFRESH_TOKEN,
+                claims = claim
+            )
+        val accessToken =
+            generateToken(
+                tokenType = TokenType.ACCESS_TOKEN,
+                claims = claim)
+
+        return UserTokensResponse(
+            accessTokenExpirationDate.time,
+            refreshTokenExpirationDate.time,
+            accessToken,
+            refreshToken
+        )
     }
 
     override fun generateToken(
 //        config: TokenConfig,
+        tokenType: TokenType,
         vararg claims: TokenClaim
     ): String {
         var token = JWT.create()
             .withAudience(audience)
             .withIssuer(issuer)
             .withExpiresAt(Date(System.currentTimeMillis() + expiresIn))
+            .withClaim(TOKEN_TYPE, tokenType.name)
         claims.forEach { claim ->
             token = token.withClaim(claim.name, claim.value)
         }
 
-
         return token.sign(Algorithm.HMAC256(secret))
     }
+
+    private fun getExpirationDate(timestamp: Long): Date {
+        return Date(System.currentTimeMillis() + timestamp)
+    }
+
 
     /**
      * Verify a token JWT
@@ -73,12 +109,14 @@ class JWTTokenService(
      * @throws TokenException.InvalidTokenException
      */
     override fun verifyJWT(): JWTVerifier? {
-        logger.debug { "verifyJWT tokens service with" +
-                "\n audience: $audience" +
-                " \n issuer : $issuer" +
-                " \n secret : $secret " +
-                "\n realm : $realm" +
-                "\n appApiKey : $appApiKey" }
+        logger.debug {
+            "verifyJWT tokens service with" +
+                    "\n audience: $audience" +
+                    " \n issuer : $issuer" +
+                    " \n secret : $secret " +
+                    "\n realm : $realm" +
+                    "\n appApiKey : $appApiKey"
+        }
 
 
         return try {
