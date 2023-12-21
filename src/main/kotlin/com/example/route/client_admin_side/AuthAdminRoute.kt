@@ -163,27 +163,37 @@ fun Route.authenticationRoutes(
     post(LOGIN_REQUEST) {
         logger.debug { "POST /$LOGIN_REQUEST" }
         // check body request if  missing some fields
-        val loginRequest = try {
-            call.receive<LoginRequest>()
-        } catch (e: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = e.message ?: "Missing Some Fields",
-                    data = null
-                )
-            )
-            return@post
-        }
+//        val loginRequest = try {
+//            call.receive<LoginRequest>()
+//        } catch (e: Exception) {
+//            call.respond(
+//                HttpStatusCode.Conflict,
+//                MyResponse(
+//                    success = false,
+//                    message = e.message ?: "Missing Some Fields",
+//                    data = null
+//                )
+//            )
+//            return@post
+//        }
+        val username = call.request.queryParameters["username"] ?: ""
+        val password = call.request.queryParameters["password"] ?: ""
+//        val params = call.receiveParameters()
+//        val username = params["username"]?.trim().toString()
+//        val password = params["password"]?.trim().toString()
 
         // check if operation connected db successfully
         try {
-            val adminUser = userDataSource.getUserByUsername(loginRequest.username)
+            val adminUser = userDataSource.getUserByUsername(
+                username //loginRequest.username
+            )
             if (adminUser != null) {
                 val isValidPassword = hashingService.verifyHashingPassword(
-                    value = loginRequest.password,
-                    saltedHash = SaltedHash(hash = adminUser.password, salt = adminUser.salt)
+                    value = password,//loginRequest.password,
+                    saltedHash = SaltedHash(
+                        hash = adminUser.password,
+                        salt = adminUser.salt
+                    )
                 )
                 if (isValidPassword) {
                     val token = tokenService.generateToken(
@@ -295,10 +305,11 @@ fun Route.authenticationRoutes(
     }
 
 }
+
 fun Route.adminUsers(
 //    userDataSource: UserDataSource,
 
-    ) {
+) {
     val userDataSource: UserDataSource by inject()
 
     get(USERS) {
@@ -427,52 +438,52 @@ fun Route.login(
 fun Route.getSecretInfo() {
 
 
-        authenticate {
-            // Get the user info --> GET /api/v1/users/me (with token)
-            get(ME_REQUEST) {
-                logger.debug { "get /$ME_REQUEST" }
+    authenticate {
+        // Get the user info --> GET /api/v1/users/me (with token)
+        get(ME_REQUEST) {
+            logger.debug { "get /$ME_REQUEST" }
 
-                val principal = call.principal<JWTPrincipal>()
-                val userId = try {
-                    principal?.getClaim("userId", String::class)?.toIntOrNull()
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "Failed ",
-                            data = null
-                        )
-                    )
-                    return@get
-                }
-                val userRole = try {
-                    principal?.getClaim("userRole", String::class)
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "Failed ",
-                            data = null
-                        )
-                    )
-                    return@get
-                }
-
+            val principal = call.principal<JWTPrincipal>()
+            val userId = try {
+                principal?.getClaim("userId", String::class)?.toIntOrNull()
+            } catch (e: Exception) {
                 call.respond(
-                    HttpStatusCode.OK, MyResponse(
-                        success = true,
-                        message = "",
-                        data = UserAdminResponse(
-                            id = userId!!,
-                            role = userRole!!
-                        )
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
                     )
                 )
-
+                return@get
             }
+            val userRole = try {
+                principal?.getClaim("userRole", String::class)
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = e.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+
+            call.respond(
+                HttpStatusCode.OK, MyResponse(
+                    success = true,
+                    message = "",
+                    data = UserAdminResponse(
+                        id = userId!!,
+                        role = userRole!!
+                    )
+                )
+            )
+
         }
+    }
 
 }
 
