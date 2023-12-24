@@ -225,7 +225,7 @@ task("deploy") {
                 )
                 if (deleteLog) {
                     sshCommand(
-                        "rm /var/log/$serviceName.log -f",
+                        "${sudoIfNeeded()}rm /var/log/$serviceName.log -f",
                         knownHosts
                     )
                     println("The $serviceName log at /var/log/$serviceName.log has been removed")
