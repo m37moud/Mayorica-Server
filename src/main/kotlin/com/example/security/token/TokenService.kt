@@ -12,6 +12,7 @@ interface TokenService {
     val refreshIn: Long
     val secret: String
     val appApiKey: String
+    val isProductionServer: Boolean
     fun generateToken(
 //        config: TokenConfig ,
         tokenType: TokenType,

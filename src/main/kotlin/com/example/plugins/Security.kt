@@ -3,9 +3,14 @@ package com.example.plugins
 import com.example.data.administrations.apps.admin.AppsAdminDataSource
 import com.example.models.response.AppResponse
 import com.example.security.token.TokenService
+import com.example.utils.Constants.SERVER_LOCKED_FILE_NAME
+import com.example.utils.getUserWorkingDirectory
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.response.*
 import org.koin.ktor.ext.inject
+import java.io.File
 
 
 // principal for the app
@@ -22,6 +27,15 @@ fun Application.configureSecurity(
 
     val app: AppsAdminDataSource by inject()
 
+//    intercept(ApplicationCallPipeline.Call) {
+//        val file = File(getUserWorkingDirectory(jwtService.isProductionServer), SERVER_LOCKED_FILE_NAME)
+//        if (file.exists()) {
+//            println("lock exist ${file.path}")
+//
+//            call.respond(HttpStatusCode.ServiceUnavailable, "Sorry, the service is undergoing maintenance.")
+//            return@intercept
+//        }
+//    }
     // Please read the jwt property from the config file if you are using EngineMain
     install(Authentication) {
         configureAppAuthority(jwtService)

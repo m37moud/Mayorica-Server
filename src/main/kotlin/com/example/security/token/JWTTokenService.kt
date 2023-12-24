@@ -44,6 +44,12 @@ class JWTTokenService(
 
     }
 
+    override val isProductionServer by lazy {
+        config.applicationConfiguration.propertyOrNull("ktor.productionServer")?.getString()?.toBoolean() ?: false
+
+    }
+
+
 
     init {
         logger.debug {
@@ -52,7 +58,9 @@ class JWTTokenService(
                     " \n issuer : $issuer" +
                     " \n secret : $secret " +
                     "\n realm : $realm" +
-                    "\n appApiKey : $appApiKey"
+                    "\n appApiKey : $appApiKey" +
+                    "\n isProductionServer : $isProductionServer"
+
         }
     }
 
