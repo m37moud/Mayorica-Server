@@ -63,6 +63,8 @@ fun Route.registerAdmin(){
                     val user = AdminUser(
                         username = registerRequest.username,
                         full_name = registerRequest.full_name,
+                        email = registerRequest.email,
+                        phone = registerRequest.phone,
                         password = saltedHash.hash,
                         salt = saltedHash.salt,
                         role = registerRequest.role,
@@ -116,6 +118,10 @@ fun Route.registerAdmin(){
                 )
                 return@post
             }
+
+        }
+        post(REGISTER_ADMIN_REQUEST){
+
 
         }
     }

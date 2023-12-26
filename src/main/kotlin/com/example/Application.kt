@@ -21,28 +21,6 @@ fun main(args: Array<String>): Unit =
 fun Application.module() {
     configureKoin() // Configure the Koin plugin to inject dependencies
     val appConfig = HoconApplicationConfig(ConfigFactory.load())
-//    val database = DBHelper(
-//        appConfig = appConfig,
-//    )
-
-//    val db = database.init()
-//    val userDataSource = MYSqlUserDataSource(db = db)
-//    val orderDataSource = MYSqlOrderDataSource(db = db)
-//    val orderStatusDataSource = MYSqlOrderStatusDataSource(db = db)
-//    val ceramicProvider = MySqlCeramicProviderDataSource(db = db)
-//    val productDataSource = MySqlProductDataSource(db = db)
-//    val categoryDataSource = MySqlCategoryDataSource(db = db)
-//    val aboutUsDataSource = MySqlAboutUsDataSource(db = db)
-//    val hotReleaseDataSource = MySqlHotReleaseDataSource(db = db)
-//    val contactUsDataSource = MySqlContactUsDataSource(db = db)
-//    val newsDataSource = MySqlNewsDataSource(db = db)
-//    val offersDataSource = MySqlOffersDataSource(db = db)
-//    val youtubeDataSource = MySqlYoutubeDataSource(db = db)
-//    val mobileApp = MySqlMobileAppDataSource(db = db)
-//    val storageService = StorageServiceImpl(appConfig)
-//    val hashingService = SHA256HashingService()
-//    val tokenService = JWTTokenService()
-
 
     val config = TokenConfig(
         audience = appConfig.property("jwt.audience").getString(),
@@ -60,21 +38,7 @@ fun Application.module() {
 //        config = config, appConfig = appConfig, app = mobileApp
     )
     configureRouting(
-//        userDataSource = userDataSource,
-//        orderDataSource = orderDataSource,
-//        orderStatusDataSource = orderStatusDataSource,
-//        ceramicProvider = ceramicProvider,
-//        productDataSource = productDataSource,
-//        categoryDataSource = categoryDataSource,
-//        aboutUsDataSource = aboutUsDataSource,
-//        hotReleaseDataSource = hotReleaseDataSource,
-//        contactUsDataSource = contactUsDataSource,
-//        newsDataSource = newsDataSource,
-//        offersDataSource = offersDataSource,
-//        youtubeDataSource = youtubeDataSource,
-//        storageService = storageService,
-//        hashingService = hashingService,
-//        tokenService = tokenService,
 //        config = config
     )
+    configureStatusPages()
 }
