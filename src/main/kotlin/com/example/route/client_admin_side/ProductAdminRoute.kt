@@ -1,10 +1,9 @@
 package com.example.route.client_admin_side
 
-import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.data.gallery.products.ProductDataSource
 import com.example.database.table.ProductEntity
 import com.example.models.Product
-import com.example.models.ProductPage
+import com.example.models.MyResponsePageable
 
 import com.example.service.storage.StorageService
 import com.example.utils.Constants.ADMIN_CLIENT
@@ -116,8 +115,8 @@ fun Route.productAdminRoute(
                     call.respond(
                         HttpStatusCode.OK, MyResponse(
                             success = true,
-                            message = "get all type categories successfully",
-                            data = ProductPage(page = page, perPage = perPage, data = productList)
+                            message = "get all products successfully",
+                            data = MyResponsePageable(page = page, perPage = perPage, data = productList)
                         )
                     )
 
@@ -126,7 +125,7 @@ fun Route.productAdminRoute(
                     call.respond(
                         HttpStatusCode.OK, MyResponse(
                             success = false,
-                            message = "type categories is empty",
+                            message = "no product is found.",
                             data = null
                         )
                     )

@@ -9,10 +9,7 @@ import com.example.models.request.auth.AdminRegister
 import com.example.security.hash.HashingService
 import com.example.security.hash.SaltedHash
 import com.example.service.validate.UserInfoValidation
-import com.example.utils.INVALID_CREDENTIALS
-import com.example.utils.INVALID_REQUEST_PARAMETER
-import com.example.utils.InvalidCredentialsException
-import com.example.utils.RequestValidationException
+import com.example.utils.*
 import org.koin.core.annotation.Singleton
 
 @Singleton
@@ -35,10 +32,10 @@ class AuthServiceImpl(
                     return true
 
                 } else {
-                    throw throw InvalidCredentialsException(INVALID_CREDENTIALS)
+                     throw InvalidCredentialsException(INVALID_CREDENTIALS)
                 }
 
-            } ?: throw throw InvalidCredentialsException(INVALID_CREDENTIALS)
+            } ?:  throw InvalidCredentialsException(INVALID_CREDENTIALS)
 
 
         } catch (e: Exception) {
@@ -52,6 +49,9 @@ class AuthServiceImpl(
         userInfoValidationUseCase.validateUserInformation(password = password, user = user)
         if (password == null) {
             throw RequestValidationException(listOf(INVALID_REQUEST_PARAMETER))
+        }
+         userDataSource.getUserByUsername(user.username)?.let {
+            throw UserAlreadyExistsException(USER_ALREADY_EXISTS)
         }
         val saltedHash = hashingService.createHashingPassword(password)
 

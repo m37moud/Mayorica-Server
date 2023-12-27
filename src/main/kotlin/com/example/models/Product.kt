@@ -19,10 +19,10 @@ data class Product(
 )
 
 @Serializable
-data class ProductPage(
+data class MyResponsePageable<T>(
     val page: Int,
     val perPage: Int,
-    val data: List<Product>
+    val data: List<T>
 )
 
 @Serializable

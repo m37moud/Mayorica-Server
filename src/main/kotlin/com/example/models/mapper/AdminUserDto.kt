@@ -16,8 +16,8 @@ fun AdminRegister.toModel() = UserInfo(
 fun UserInfo.toModel(saltedHash: SaltedHash) = AdminUser(
     full_name = this.fullName,
     username = this.username,
-    email = this.email,
-    phone = this.phone,
+//    email = this.email,
+//    phone = this.phone,
     password = saltedHash.hash,
     salt = saltedHash.salt,
 
@@ -26,10 +26,14 @@ fun UserInfo.toModel(saltedHash: SaltedHash) = AdminUser(
 fun AdminUser.toModel() = AdminUserDetail(
     full_name = this.full_name,
     username = this.username,
-    email = this.email,
-    phone = this.phone,
+//    email = this.email,
+//    phone = this.phone,
     role = this.role,
     created_at = this.created_at,
     updated_at = this.updated_at
 )
+
+fun List<AdminUser>.toModel() = map { it.toModel() }
+
+
 

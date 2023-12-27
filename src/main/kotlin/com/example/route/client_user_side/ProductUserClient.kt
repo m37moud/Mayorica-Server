@@ -1,9 +1,8 @@
 package com.example.route.client_user_side
 
-import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.data.gallery.products.ProductDataSource
 import com.example.database.table.ProductEntity
-import com.example.models.ProductPage
+import com.example.models.MyResponsePageable
 import com.example.models.ProductResponsePage
 
 import com.example.utils.Constants.USER_CLIENT
@@ -94,7 +93,7 @@ fun Route.productUserRoute(
                     HttpStatusCode.OK, MyResponse(
                         success = true,
                         message = "get all products successfully",
-                        data = ProductPage(page = page, perPage = perPage, data = productList)
+                        data = MyResponsePageable(page = page, perPage = perPage, data = productList)
 
                     )
                 )

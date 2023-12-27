@@ -1,18 +1,18 @@
 package com.example.route.client_admin_side
 
 import com.example.data.administrations.admin_user.UserDataSource
-import com.example.data.offers.OffersDataSource
+import com.example.database.table.AdminUserEntity
 import com.example.models.AdminUser
+import com.example.models.AdminUserDetail
+import com.example.models.MyResponsePageable
 import com.example.models.request.auth.AdminRegister
 import com.example.models.request.auth.LoginRequest
 import com.example.models.response.UserAdminResponse
 import com.example.security.hash.HashingService
 import com.example.security.hash.SaltedHash
 import com.example.security.token.TokenClaim
-import com.example.security.token.TokenConfig
 import com.example.security.token.TokenService
 import com.example.utils.Claim.PERMISSION
-import com.example.utils.Claim.TOKEN_TYPE
 import com.example.utils.Claim.USERNAME
 import com.example.utils.Claim.USER_ID
 import com.example.utils.Constants.ADMIN_CLIENT
@@ -143,24 +143,102 @@ fun Route.authenticationRoutes(
     //get al users
     get(USERS) {
         logger.debug { "get /$USERS" }
-        val users = userDataSource.getAllUser()
-        if (users.isEmpty()) {
-            call.respond(
-                HttpStatusCode.OK, MyResponse(
-                    success = false,
-                    message = "no admins user is found .",
-                    data = null
+        val params = call.request.queryParameters
+        params["page"]?.toIntOrNull()?.let { pageNum ->
+            val page = if (pageNum > 0) pageNum else 0
+            val perPage = params["perPage"]?.toIntOrNull() ?: 10
+            val sortFied = when (params["sort_by"] ?: "date") {
+                "name" -> AdminUserEntity.full_name
+                "date" -> AdminUserEntity.created_at
+                else -> {
+                    return@get call.respond(
+                        status = HttpStatusCode.BadRequest,
+                        message = MyResponse(
+                            success = false,
+                            message = "invalid parameter for sort_by chose between (name & date)",
+                            data = null
+                        )
+                    )
+                }
+            }
+            val sortDirection = when (params["sort_direction"] ?: "dec") {
+                "dec" -> -1
+                "asc" -> 1
+                else -> {
+                    return@get call.respond(
+                        status = HttpStatusCode.BadRequest,
+                        message = MyResponse(
+                            success = false,
+                            message = "invalid parameter for sort_direction chose between (dec & asc)",
+                            data = null
+                        )
+                    )
+                }
+            }
+            logger.debug { "GET ALL User /$USERS?page=$page&perPage=$perPage" }
+            val query: String? = params["query"]?.trim()
+            val users = try {
+                userDataSource.getAllUserPageable(
+                    query = query,
+                    page = page,
+                    perPage = perPage,
+                    sortField = sortFied,
+                    sortDirection = sortDirection
+
                 )
-            )
-            return@get
+            } catch (exc: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = exc.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+            if (users.isNotEmpty()) {
+                call.respond(
+                    HttpStatusCode.OK, MyResponse(
+                        success = true,
+                        message = "get all users successfully",
+                        data = MyResponsePageable(page = page, perPage = perPage, data = users)
+                    )
+                )
+            } else {
+                call.respond(
+                    HttpStatusCode.OK, MyResponse(
+                        success = false,
+                        message = "no user is found",
+                        data = null
+                    )
+                )
+            }
+
+
+        } ?: run {
+            val users = userDataSource.getAllUser()
+            if (users.isEmpty()) {
+                call.respond(
+                    HttpStatusCode.OK, MyResponse(
+                        success = false,
+                        message = "no admins user is found .",
+                        data = null
+                    )
+                )
+                return@get
+            } else {
+                call.respond(
+                    HttpStatusCode.OK, MyResponse(
+                        success = true,
+                        message = "admins user is found .",
+                        data = users
+                    )
+                )
+                return@get
+            }
         }
-        call.respond(
-            HttpStatusCode.OK, MyResponse(
-                success = true,
-                message = "admins user is found .",
-                data = users
-            )
-        )
+
 
     }
     // Login a user --> POST /api/v1/admin-client/users/login
