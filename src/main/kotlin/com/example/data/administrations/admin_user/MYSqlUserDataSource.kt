@@ -1,9 +1,11 @@
 package com.example.data.administrations.admin_user
 
 import com.example.database.table.AdminUserEntity
+import com.example.database.table.UserEntity
 import com.example.models.AdminUser
 import com.example.models.AdminUserDetail
 import com.example.models.Role
+import com.example.models.User
 import com.example.models.mapper.toModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -50,6 +52,19 @@ class MYSqlUserDataSource(
         result
     }
 
+    override suspend fun create(newUser: User) = withContext(Dispatchers.IO) {
+        val result = db.insert(UserEntity) {
+            set(it.full_name, newUser.full_name)
+            set(it.username, newUser.username)
+            set(it.password, newUser.password)
+            set(it.salt, newUser.salt)
+            set(it.permission, newUser.role)
+            set(it.created_at, LocalDateTime.now())
+            set(it.updated_at, LocalDateTime.now())
+        }
+        result
+    }
+
 
     override suspend fun getAllUser(): List<AdminUserDetail> = withContext(Dispatchers.IO) {
         val result = db.from(AdminUserEntity)
@@ -65,6 +80,7 @@ class MYSqlUserDataSource(
 
     override suspend fun getAllUserPageable(
         query: String?,
+        permission: String?,
         page: Int,
         perPage: Int,
         sortField: Column<*>,
@@ -84,6 +100,8 @@ class MYSqlUserDataSource(
             )
             .whereWithConditions {
                 if (query != null) AdminUserEntity.full_name eq query
+                if (query != null) AdminUserEntity.username eq query
+                if (permission != null) AdminUserEntity.role eq permission
             }
             .orderBy(AdminUserEntity.created_at.desc())
             .mapNotNull {

@@ -17,5 +17,5 @@ data class AdminUser(
 ) : Principal
 
 enum class Role {
-    ADMIN, USER, UNKNOWN
+    SUPERADMIN, ADMIN, USER, UNKNOWN
 }

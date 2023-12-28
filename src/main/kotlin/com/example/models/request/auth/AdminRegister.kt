@@ -7,8 +7,6 @@ import kotlinx.serialization.Serializable
 data class AdminRegister(
     val full_name: String,
     val username: String,
-    val email: String,
-    val phone: String,
     val password: String,
     val role: String ,
 )

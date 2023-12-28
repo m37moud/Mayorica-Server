@@ -12,6 +12,7 @@ data class User(
     val password: String,
     val salt: String,
     val role: String = Role.ADMIN.name,
+    val userAdminID: Int = -1,
     val created_at: String = "",
     val updated_at: String = ""
 

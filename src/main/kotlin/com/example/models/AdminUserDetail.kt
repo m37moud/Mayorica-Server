@@ -1,5 +1,8 @@
 package com.example.models
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class AdminUserDetail(
     val id: Int = -1,
     val full_name: String,

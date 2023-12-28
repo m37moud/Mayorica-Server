@@ -13,12 +13,14 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import mu.KotlinLogging
 import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 
 private const val REGISTER = "${Constants.ADMIN_CLIENT}/register"
 private const val REGISTER_ADMIN_REQUEST = "$REGISTER/admin"
+private val logger = KotlinLogging.logger {}
 fun Route.registerAdmin(){
 
     val userDataSource: UserDataSource by inject()
@@ -41,6 +43,7 @@ fun Route.registerAdmin(){
                 )
                 return@post
             }
+            logger.debug { "POST registerRequest =${registerRequest}" }
 
             // check if operation connected db successfully
             try {
@@ -63,13 +66,13 @@ fun Route.registerAdmin(){
                     val user = AdminUser(
                         username = registerRequest.username,
                         full_name = registerRequest.full_name,
-                        email = registerRequest.email,
-                        phone = registerRequest.phone,
+//                        email = registerRequest.email,
+//                        phone = registerRequest.phone,
                         password = saltedHash.hash,
                         salt = saltedHash.salt,
                         role = registerRequest.role,
-                        created_at = LocalDateTime.now().toDatabaseString(),
-                        updated_at = ""
+//                        created_at = LocalDateTime.now().toDatabaseString(),
+//                        updated_at = ""
                     )
 
                     val result = userDataSource.register(user)

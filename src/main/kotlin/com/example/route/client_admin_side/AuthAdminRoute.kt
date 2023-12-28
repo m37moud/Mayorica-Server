@@ -177,9 +177,11 @@ fun Route.authenticationRoutes(
             }
             logger.debug { "GET ALL User /$USERS?page=$page&perPage=$perPage" }
             val query: String? = params["query"]?.trim()
+            val permission: String? = params["permission"]?.trim()
             val users = try {
                 userDataSource.getAllUserPageable(
                     query = query,
+                    permission = permission,
                     page = page,
                     perPage = perPage,
                     sortField = sortFied,
