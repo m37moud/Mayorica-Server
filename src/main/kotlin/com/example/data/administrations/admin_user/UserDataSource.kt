@@ -21,5 +21,7 @@ interface UserDataSource {
     ): List<AdminUserDetail>
 
     suspend fun isAdmin(id: Int): Boolean
+    suspend fun updatePermission(id: Int, permission: String): Int
+    suspend fun deleteAdminUser(id: Int): Int
 
 }

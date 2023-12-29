@@ -124,6 +124,25 @@ class MYSqlUserDataSource(
         }
     }
 
+    override suspend fun updatePermission(id: Int, permission: String): Int {
+        return withContext(Dispatchers.IO) {
+            val result = db.update(AdminUserEntity) {
+                set(it.role, permission)
+                where {
+                    it.id eq id
+                }
+            }
+            result
+        }
+    }
+
+    override suspend fun deleteAdminUser(id: Int): Int = withContext(Dispatchers.IO) {
+        val result = db.delete(AdminUserEntity) {
+            it.id eq id
+        }
+        result
+    }
+
     private fun rowToAdminUser(row: QueryRowSet?): AdminUser? {
         return if (row == null) {
             null
@@ -143,6 +162,33 @@ class MYSqlUserDataSource(
                 password = password,
                 salt = salt,
                 role = role,
+                created_at = createdAt.toString(),
+                updated_at = updatedAt.toString()
+            )
+        }
+    }
+
+    private fun rowToUser(row: QueryRowSet?): User? {
+        return if (row == null) {
+            null
+        } else {
+            val id = row[UserEntity.id] ?: -1
+            val fullName = row[UserEntity.full_name] ?: ""
+            val username = row[UserEntity.username] ?: ""
+            val password = row[UserEntity.password] ?: ""
+            val salt = row[UserEntity.salt] ?: ""
+            val role = row[UserEntity.permission] ?: -1
+            val userAdminId = row[UserEntity.id] ?: -1
+            val createdAt = row[UserEntity.created_at] ?: ""
+            val updatedAt = row[UserEntity.updated_at] ?: ""
+            User(
+                id = id,
+                full_name = fullName,
+                username = username,
+                password = password,
+                salt = salt,
+                role = role,
+                userAdminID = userAdminId,
                 created_at = createdAt.toString(),
                 updated_at = updatedAt.toString()
             )

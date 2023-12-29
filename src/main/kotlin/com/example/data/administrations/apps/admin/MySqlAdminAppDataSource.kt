@@ -67,6 +67,9 @@ class MySqlAdminAppDataSource(private val db: Database) : AppsAdminDataSource {
             set(it.enableMessage, app.enableMessage)
             set(it.userAdminId, app.userAdminId)
             set(it.updatedAt, LocalDateTime.now())
+            where {
+                it.id eq app.id
+            }
         }
         result
     }
