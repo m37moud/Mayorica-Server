@@ -25,11 +25,11 @@ class UserInfoValidationImpl :UserInfoValidation {
             reasons.add(INVALID_REQUEST_PARAMETER)
         }
 
-        if (user.phone.isBlank()) {
-            reasons.add(INVALID_REQUEST_PARAMETER)
-        } else if (!isValidPhone(user.phone)) {
-            reasons.add(INVALID_PHONE)
-        }
+//        if (user.phone.isBlank()) {
+//            reasons.add(INVALID_REQUEST_PARAMETER)
+//        } else if (!isValidPhone(user.phone)) {
+//            reasons.add(INVALID_PHONE)
+//        }
 
         password?.let {
             if (!validatePasswordIsNotEmpty(password)) {
@@ -40,9 +40,9 @@ class UserInfoValidationImpl :UserInfoValidation {
             }
         }
 
-        if (!validateEmail(user.email)) {
-            reasons.add(INVALID_EMAIL)
-        }
+//        if (!validateEmail(user.email)) {
+//            reasons.add(INVALID_EMAIL)
+//        }
 
         if (reasons.isNotEmpty()) {
             throw RequestValidationException(reasons)

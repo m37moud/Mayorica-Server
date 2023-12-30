@@ -9,8 +9,8 @@ import com.example.security.hash.SaltedHash
 fun AdminRegister.toModel() = UserInfo(
     fullName = this.full_name,
     username = this.username,
-    email = this.email,
-    phone = this.phone
+//    email = this.email,
+//    phone = this.phone
 )
 
 fun UserInfo.toModel(saltedHash: SaltedHash) = AdminUser(
