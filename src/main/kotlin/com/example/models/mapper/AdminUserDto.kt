@@ -24,13 +24,14 @@ fun UserInfo.toModel(saltedHash: SaltedHash) = AdminUser(
     )
 
 fun AdminUser.toModel() = AdminUserDetail(
-    full_name = this.full_name,
-    username = this.username,
+    id = id,
+    full_name = full_name,
+    username = username,
 //    email = this.email,
 //    phone = this.phone,
-    role = this.role,
-    created_at = this.created_at,
-    updated_at = this.updated_at
+    role = role,
+    created_at = created_at,
+    updated_at = updated_at
 )
 
 fun List<AdminUser>.toModel() = map { it.toModel() }
