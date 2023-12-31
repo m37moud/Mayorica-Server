@@ -28,11 +28,14 @@ import io.ktor.server.routing.*
 import mu.KotlinLogging
 import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
+import java.util.*
 
 private const val USERS = "$ADMIN_CLIENT/users"
 private const val USER = "$ADMIN_CLIENT/user"
 private const val REGISTER_REQUEST = "$USER/register"
 private const val DELETE_REQUEST = "$USER/delete"
+private const val UPDATE_USER_INFO_REQUEST = "$USER/update"
+private const val UPDATE_USER_PERMISSION_REQUEST = "$UPDATE_USER_INFO_REQUEST/permission"
 private const val LOGIN_REQUEST = "$USER/login"
 private const val ME_REQUEST = "$USERS/me"
 
@@ -245,7 +248,7 @@ fun Route.authenticationRoutes(
 
         }
         // me
-        // Get the user info --> GET /api/v1/users/me (with token)
+        // Get the user info --> GET /api/v1/user/me (with token)
         get(ME_REQUEST) {
             logger.debug { "get /$ME_REQUEST" }
 
@@ -289,7 +292,7 @@ fun Route.authenticationRoutes(
             )
 
         }
-        // delete the user info --> delete /api/v1/users/delete (with token)
+        // delete the user info --> delete /api/v1/user/delete (with token)
         delete("$DELETE_REQUEST/{id}") {
             logger.debug { "delete /$DELETE_REQUEST/{id}" }
             call.parameters["id"]?.toIntOrNull()?.let { id ->
@@ -334,6 +337,50 @@ fun Route.authenticationRoutes(
                     data = null
                 )
             )
+
+        }
+        // put update user permission info --> put /api/v1/user/delete (with token)
+        put("$UPDATE_USER_PERMISSION_REQUEST/{id}") {
+            logger.debug { "Put -> $UPDATE_USER_PERMISSION_REQUEST" }
+            call.parameters["id"]?.toIntOrNull()?.let { id ->
+                val permission = call.request.queryParameters["permission"]?.uppercase(Locale.getDefault())
+                try {
+                    val result = userDataSource.updatePermission(id = id, permission = permission!!)
+                    if (result > 0) {
+                        call.respond(
+                            status = HttpStatusCode.OK,
+                            message = MyResponse(
+                                success = true,
+                                message = "Permission Updated Successfully .",
+                                data = null
+                            )
+                        )
+                        return@put
+                    } else {
+                        call.respond(
+                            status = HttpStatusCode.OK,
+                            message = MyResponse(
+                                success = false,
+                                message = "Permission Updated Failed .",
+                                data = null
+                            )
+                        )
+                        return@put
+
+                    }
+                } catch (e: Exception) {
+                    call.respond(
+                        status = HttpStatusCode.Conflict,
+                        message = MyResponse(
+                            success = false,
+                            message = e.message ?: "Failed .",
+                            data = null
+                        )
+                    )
+                    return@put
+                }
+
+            }
 
         }
     }
