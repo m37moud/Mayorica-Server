@@ -30,8 +30,10 @@ import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 private const val USERS = "$ADMIN_CLIENT/users"
-private const val REGISTER_REQUEST = "$USERS/register"
-private const val LOGIN_REQUEST = "$USERS/login"
+private const val USER = "$ADMIN_CLIENT/user"
+private const val REGISTER_REQUEST = "$USER/register"
+private const val DELETE_REQUEST = "$USER/delete"
+private const val LOGIN_REQUEST = "$USER/login"
 private const val ME_REQUEST = "$USERS/me"
 
 private val logger = KotlinLogging.logger {}
@@ -249,7 +251,7 @@ fun Route.authenticationRoutes(
 
             val principal = call.principal<JWTPrincipal>()
             val userId = try {
-                principal?.getClaim("userId", String::class)?.toIntOrNull()
+                principal?.getClaim(USER_ID, String::class)?.toIntOrNull()
             } catch (e: Exception) {
                 call.respond(
                     HttpStatusCode.Conflict,
@@ -262,7 +264,7 @@ fun Route.authenticationRoutes(
                 return@get
             }
             val userRole = try {
-                principal?.getClaim("userRole", String::class)
+                principal?.getClaim(PERMISSION, String::class)
             } catch (e: Exception) {
                 call.respond(
                     HttpStatusCode.Conflict,
@@ -283,6 +285,53 @@ fun Route.authenticationRoutes(
                         id = userId!!,
                         role = userRole!!
                     )
+                )
+            )
+
+        }
+        // delete the user info --> delete /api/v1/users/delete (with token)
+        delete("$DELETE_REQUEST/{id}") {
+            logger.debug { "delete /$DELETE_REQUEST/{id}" }
+            call.parameters["id"]?.toIntOrNull()?.let { id ->
+                try {
+                    val result = userDataSource.deleteAdminUser(id = id)
+                    if (result > 0) {
+                        call.respond(
+                            HttpStatusCode.OK,
+                            MyResponse(
+                                success = true,
+                                message = "User deleted successfully .",
+                                data = null
+                            )
+                        )
+                    } else {
+                        call.respond(
+                            HttpStatusCode.NotFound,
+                            MyResponse(
+                                success = false,
+                                message = " User deleted failed .",
+                                data = null
+                            )
+                        )
+                        return@delete
+                    }
+                } catch (e: Exception) {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = e.message ?: "Failed ",
+                            data = null
+                        )
+                    )
+                    return@delete
+                }
+
+            } ?: call.respond(
+                status = HttpStatusCode.OK, message = MyResponse(
+                    success = false,
+                    message = "M",
+                    data = null
                 )
             )
 
