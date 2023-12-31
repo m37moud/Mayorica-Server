@@ -45,7 +45,6 @@ fun Route.authenticationRoutes(
 
     //register new user
     authenticate {
-
         post(REGISTER_REQUEST) {
 
             // check body request if  missing some fields
@@ -145,10 +144,11 @@ fun Route.authenticationRoutes(
         logger.debug { "get /$USERS" }
         val params = call.request.queryParameters
         params["page"]?.toIntOrNull()?.let { pageNum ->
-            val page = if (pageNum > 0) pageNum else 0
+            val page = if (pageNum > 0) pageNum-1 else 0
             val perPage = params["perPage"]?.toIntOrNull() ?: 10
             val sortFied = when (params["sort_by"] ?: "date") {
                 "name" -> AdminUserEntity.full_name
+                "username" -> AdminUserEntity.username
                 "date" -> AdminUserEntity.created_at
                 else -> {
                     return@get call.respond(
@@ -177,7 +177,7 @@ fun Route.authenticationRoutes(
             }
             logger.debug { "GET ALL User /$USERS?page=$page&perPage=$perPage" }
             val query: String? = params["query"]?.trim()
-            val permission: String? = params["permission"]?.trim()
+            val permission: String? = params["permission"]
             val users = try {
                 userDataSource.getAllUserPageable(
                     query = query,

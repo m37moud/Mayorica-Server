@@ -99,11 +99,9 @@ class MYSqlUserDataSource(
                     sortField.desc()
             )
             .whereWithConditions {
-                if (query != null) AdminUserEntity.full_name eq query
-                if (query != null) AdminUserEntity.username eq query
-                if (permission != null) AdminUserEntity.role eq permission
+                if (query != null) it += AdminUserEntity.full_name like "%${query}%" or (AdminUserEntity.username like "%${query}%")
+                if (permission != null) it += AdminUserEntity.role eq "$permission"
             }
-            .orderBy(AdminUserEntity.created_at.desc())
             .mapNotNull {
                 rowToAdminUser(it)
             }.toModel()

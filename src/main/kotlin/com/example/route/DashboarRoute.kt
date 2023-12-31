@@ -19,86 +19,23 @@ import com.example.security.token.TokenService
 import com.example.service.storage.StorageService
 import io.ktor.server.routing.*
 
-fun Route.configureDashboardClient(
-//    userDataSource: UserDataSource,
-//    orderDataSource: OrderDataSource,
-//    orderStatusDataSource: OrderStatusDataSource,
-//    ceramicProvider: CeramicProviderDataSource,
-//    productDataSource: ProductDataSource,
-//    categoryDataSource: CategoryDataSource,
-//    aboutUsDataSource: AboutUsDataSource,
-//    hotReleaseDataSource: HotReleaseDataSource,
-//    contactUsDataSource: ContactUsDataSource,
-//    newsDataSource: NewsDataSource,
-//    offersDataSource: OffersDataSource,
-//    youtubeDataSource: YoutubeDataSource,
-//    storageService: StorageService,
-//    hashingService: HashingService,
-//    tokenService: TokenService,
-//    config: TokenConfig
+fun Route.configureDashboardClient() {
+    authenticationRoutes()
 
-) {
-    authenticationRoutes(
-//        config
-    )
-//    adminUsers(
-////        userDataSource = userDataSource,
-//
-//        )
-//    login(
-////        userDataSource = userDataSource,
-////        hashingService = hashingService,
-////        tokenService = tokenService,
-////        config = config
-//    )
-//    getSecretInfo()
-//    register(
-////        userDataSource = userDataSource,
-////        hashingService = hashingService
-//    )
-
-    ordersAdminRoute(
-//        orderDataSource = orderDataSource,
-//        orderStatusDataSource = orderStatusDataSource,
-//        userDataSource = userDataSource
-    )
-    providerAdminClient(
-//        ceramicProvider = ceramicProvider
-    )
-    productAdminRoute(
-//        productDataSource = productDataSource,
-//        storageService = storageService
-    )
-    categoriesAdminRoute(
-//        categoryDataSource = categoryDataSource,
-//        storageService = storageService
-    )
+    ordersAdminRoute()
+    providerAdminClient()
+    productAdminRoute()
+    categoriesAdminRoute()
     /**
      * about us
      */
-    aboutUsAdminRoute(
-//        aboutUsDataSource = aboutUsDataSource,
-
-        )
+    aboutUsAdminRoute()
     /**
      * hot release app
      */
-    hotReleaseAdminRoute(
-//        hotReleaseDataSource = hotReleaseDataSource,
-//        productDataSource = productDataSource
-    )
-    contactUsAdminRoute(
-//        contactUsDataSource = contactUsDataSource
-    )
-    newsAdminRoute(
-//        newsDataSource = newsDataSource,
-//        storageService = storageService
-    )
-    offersAdminRoute(
-//        offersDataSource = offersDataSource,
-//        storageService = storageService
-    )
-    youtubeLinkAdminRoute(
-//        youtubeDataSource=youtubeDataSource
-    )
+    hotReleaseAdminRoute()
+    contactUsAdminRoute()
+    newsAdminRoute()
+    offersAdminRoute()
+    youtubeLinkAdminRoute()
 }

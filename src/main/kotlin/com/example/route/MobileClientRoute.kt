@@ -15,69 +15,27 @@ import com.example.route.client_user_side.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 
-fun Route.configureMobileClient(
-//    orderDataSource: OrderDataSource,
-//    orderStatusDataSource: OrderStatusDataSource,
-//    ceramicProvider: CeramicProviderDataSource,
-//    productDataSource: ProductDataSource,
-//    categoryDataSource: CategoryDataSource,
-//    aboutUsDataSource: AboutUsDataSource,
-//    hotReleaseDataSource: HotReleaseDataSource,
-//    contactUsDataSource: ContactUsDataSource,
-//    newsDataSource: NewsDataSource,
-//    offersDataSource: OffersDataSource,
-//    youtubeDataSource: YoutubeDataSource,
+fun Route.configureMobileClient() {
 
-
-    ) {
-
-authenticate ("mobile"){
-    userOrderRequest(
-//        orderDataSource = orderDataSource,
-//        orderStatusDataSource = orderStatusDataSource
-    )
-    getUserOrderClient(
-//        orderDataSource = orderDataSource,
-//        orderStatusDataSource = orderStatusDataSource,
-    )
-    getNearlyProvider(
-//        ceramicProvider = ceramicProvider
-    )
-    productUserRoute(
-//        productDataSource = productDataSource,
-    )
-    categoriesUserRoute(
-//        categoryDataSource = categoryDataSource,
-
-    )
-    /**
-     * about us
-     */
-    aboutUsUserRoute(
-//        aboutUsDataSource = aboutUsDataSource,
-
-    )
-
-    /**
-     * hot release app
-     */
-
-    hotReleaseUserRoute(
-//        hotReleaseDataSource = hotReleaseDataSource
-    )
-    contactUsUserRoute(
-//        contactUsDataSource = contactUsDataSource
-    )
-    newsUserRoute(
-//        newsDataSource = newsDataSource,
-    )
-    offersUserRoute(
-//        offersDataSource = offersDataSource,
-    )
-    youtubeLinkUserRoute(
-//        youtubeDataSource=youtubeDataSource
-    )
-}
+    authenticate("mobile") {
+        userOrderRequest()
+        getUserOrderClient()
+        getNearlyProvider()
+        productUserRoute()
+        categoriesUserRoute()
+        /**
+         * about us
+         */
+        aboutUsUserRoute()
+        /**
+         * hot release app
+         */
+        hotReleaseUserRoute()
+        contactUsUserRoute()
+        newsUserRoute()
+        offersUserRoute()
+        youtubeLinkUserRoute()
+    }
 
 
 }
