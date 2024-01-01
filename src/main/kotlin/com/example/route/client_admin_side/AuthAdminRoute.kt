@@ -203,11 +203,12 @@ fun Route.authenticationRoutes(
                     return@get
                 }
                 if (users.isNotEmpty()) {
+                    val numberOfUsers = userDataSource.getNumberOUsers()
                     call.respond(
                         HttpStatusCode.OK, MyResponse(
                             success = true,
                             message = "get all users successfully",
-                            data = MyResponsePageable(page = page + 1, perPage = perPage, data = users)
+                            data = MyResponsePageable(page = page + 1, perPage = numberOfUsers, data = users)
                         )
                     )
                 } else {

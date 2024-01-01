@@ -119,6 +119,18 @@ class MYSqlUserDataSource(
         result
     }
 
+    override suspend fun getNumberOUsers(): Int = withContext(Dispatchers.IO) {
+        val result = db.from(AdminUserEntity)
+            .select()
+            .orderBy(AdminUserEntity.created_at.desc())
+            .mapNotNull {
+                rowToAdminUser(it)
+            }.toModel()
+
+
+        result.size
+    }
+
     override suspend fun getAllUserPageable(
         query: String?,
         permission: String?,

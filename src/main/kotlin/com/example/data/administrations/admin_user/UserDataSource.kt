@@ -16,6 +16,7 @@ interface UserDataSource {
     suspend fun register(newUser: AdminUser): Int
     suspend fun create(newUser: User): Int
     suspend fun getAllUser(): List<AdminUserDetail>
+    suspend fun getNumberOUsers(): Int
     suspend fun getAllUserPageable(
         query: String?,
         permission: String?,
