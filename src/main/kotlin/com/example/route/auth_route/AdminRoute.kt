@@ -6,7 +6,6 @@ import com.example.models.request.auth.AdminRegister
 import com.example.security.hash.HashingService
 import com.example.utils.Constants
 import com.example.utils.MyResponse
-import com.example.utils.toDatabaseString
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -15,7 +14,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
 import org.koin.ktor.ext.inject
-import java.time.LocalDateTime
 
 
 private const val REGISTER = "${Constants.ADMIN_CLIENT}/register"
@@ -60,7 +58,7 @@ fun Route.registerAdmin(){
                 }
 
                 // check if email exist or note
-                if (userDataSource.getUserByUsername(registerRequest.username) == null) // means not found
+                if (userDataSource.getUserDetailByUsername(registerRequest.username) == null) // means not found
                 {
                     val saltedHash = hashingService.createHashingPassword(registerRequest.password)
                     val user = AdminUser(

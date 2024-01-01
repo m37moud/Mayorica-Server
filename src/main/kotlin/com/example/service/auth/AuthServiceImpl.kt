@@ -1,11 +1,9 @@
 package com.example.service.auth
 
 import com.example.data.administrations.admin_user.UserDataSource
-import com.example.models.AdminUser
 import com.example.models.AdminUserDetail
 import com.example.models.UserInfo
 import com.example.models.mapper.toModel
-import com.example.models.request.auth.AdminRegister
 import com.example.security.hash.HashingService
 import com.example.security.hash.SaltedHash
 import com.example.service.validate.UserInfoValidation
@@ -20,7 +18,7 @@ class AuthServiceImpl(
 ) : AuthService {
     override suspend fun login(username: String, password: String): Boolean {
         try {
-            userDataSource.getUserByUsername(username)?.let { adminUser ->
+            userDataSource.getAdminUserByUsername(username)?.let { adminUser ->
                 val isValidPassword = hashingService.verifyHashingPassword(
                     value = password,
                     saltedHash = SaltedHash(
@@ -50,14 +48,14 @@ class AuthServiceImpl(
         if (password == null) {
             throw RequestValidationException(listOf(INVALID_REQUEST_PARAMETER))
         }
-         userDataSource.getUserByUsername(user.username)?.let {
+         userDataSource.getUserDetailByUsername(user.username)?.let {
             throw UserAlreadyExistsException(USER_ALREADY_EXISTS)
         }
         val saltedHash = hashingService.createHashingPassword(password)
 
         val newUser = userDataSource.register(newUser = user.toModel(saltedHash))
 
-        val userDetails = userDataSource.getUserByUsername(user.username)?.toModel()
+        val userDetails = userDataSource.getAdminUserByUsername(user.username)?.toModel()
         return userDetails!!
     }
 

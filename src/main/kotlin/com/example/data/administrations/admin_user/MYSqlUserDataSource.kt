@@ -7,6 +7,7 @@ import com.example.models.AdminUserDetail
 import com.example.models.Role
 import com.example.models.User
 import com.example.models.mapper.toModel
+import com.example.security.hash.SaltedHash
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
@@ -26,7 +27,33 @@ class MYSqlUserDataSource(
      * @param username User username
      * @return AdminUser? User if exists, null otherwise
      */
-    override suspend fun getUserByUsername(username: String): AdminUser? {
+    override suspend fun getUserDetailByUsername(username: String): AdminUserDetail? {
+        return withContext(Dispatchers.IO) {
+            val user = db.from(AdminUserEntity)
+                .select()
+                .where {
+                    AdminUserEntity.username eq username
+                }.map {
+                    rowToAdminUser(it)
+                }.firstOrNull()
+            user?.toModel()
+        }
+    }
+
+    override suspend fun getUserDetailById(userId: Int): AdminUserDetail? {
+        return withContext(Dispatchers.IO) {
+            val user = db.from(AdminUserEntity)
+                .select()
+                .where {
+                    AdminUserEntity.id eq userId
+                }.map {
+                    rowToAdminUser(it)
+                }.firstOrNull()
+            user?.toModel()
+        }
+    }
+
+    override suspend fun getAdminUserByUsername(username: String): AdminUser? {
         return withContext(Dispatchers.IO) {
             val user = db.from(AdminUserEntity)
                 .select()
@@ -36,6 +63,20 @@ class MYSqlUserDataSource(
                     rowToAdminUser(it)
                 }.firstOrNull()
             user
+        }
+    }
+
+    override suspend fun getHashed(username: String): SaltedHash {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(AdminUserEntity)
+                .select(
+                    AdminUserEntity.password
+                )
+                .where {
+                    AdminUserEntity.username eq username
+                }.mapNotNull { rowToAdminUser(it) }
+                .firstOrNull()
+            SaltedHash(result?.password ?: "", salt = result?.salt ?: "")
         }
     }
 
@@ -100,7 +141,7 @@ class MYSqlUserDataSource(
             )
             .whereWithConditions {
                 if (!query.isNullOrEmpty()) it += AdminUserEntity.full_name like "%${query}%" or (AdminUserEntity.username like "%${query}%")
-                if (!permission.isNullOrEmpty()) it +=  (AdminUserEntity.role eq "$permission")
+                if (!permission.isNullOrEmpty()) it += (AdminUserEntity.role eq "$permission")
             }
             .mapNotNull {
                 rowToAdminUser(it)

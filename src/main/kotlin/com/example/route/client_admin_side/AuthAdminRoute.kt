@@ -3,10 +3,8 @@ package com.example.route.client_admin_side
 import com.example.data.administrations.admin_user.UserDataSource
 import com.example.database.table.AdminUserEntity
 import com.example.models.AdminUser
-import com.example.models.AdminUserDetail
 import com.example.models.MyResponsePageable
 import com.example.models.request.auth.AdminRegister
-import com.example.models.request.auth.LoginRequest
 import com.example.models.response.UserAdminResponse
 import com.example.security.hash.HashingService
 import com.example.security.hash.SaltedHash
@@ -42,7 +40,6 @@ private const val ME_REQUEST = "$USERS/me"
 private val logger = KotlinLogging.logger {}
 
 fun Route.authenticationRoutes(
-//    config: TokenConfig
 ) {
     val userDataSource: UserDataSource by inject()
     val hashingService: HashingService by inject()
@@ -82,7 +79,7 @@ fun Route.authenticationRoutes(
                 }
 
                 // check if email exist or note
-                if (userDataSource.getUserByUsername(registerRequest.username) == null) // means not found
+                if (userDataSource.getUserDetailByUsername(registerRequest.username) == null) // means not found
                 {
                     val saltedHash = hashingService.createHashingPassword(registerRequest.password)
                     val user = AdminUser(
@@ -98,12 +95,14 @@ fun Route.authenticationRoutes(
                     val result = userDataSource.register(user)
                     // if result >0 it's success else is failed
                     if (result > 0) {
+                        val adminUser = userDataSource.getUserDetailByUsername(user.username)
+
                         call.respond(
                             HttpStatusCode.OK,
                             MyResponse(
                                 success = true,
                                 message = "Registration Successfully",
-                                data = null
+                                data = adminUser
                             )
                         )
                         return@post
@@ -343,19 +342,22 @@ fun Route.authenticationRoutes(
         put("$UPDATE_USER_PERMISSION_REQUEST/{id}") {
             logger.debug { "Put -> $UPDATE_USER_PERMISSION_REQUEST" }
             call.parameters["id"]?.toIntOrNull()?.let { id ->
-                val permission = call.request.queryParameters["permission"]?.uppercase(Locale.getDefault())
+                val permission = call.parameters["permission"]?.trim()?.uppercase(Locale.getDefault())
                 try {
                     val result = userDataSource.updatePermission(id = id, permission = permission!!)
                     if (result > 0) {
-                        call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
-                                success = true,
-                                message = "Permission Updated Successfully .",
-                                data = null
+                        userDataSource.getUserDetailById(id)?.let { user ->
+
+                            call.respond(
+                                status = HttpStatusCode.OK,
+                                message = MyResponse(
+                                    success = true,
+                                    message = "Permission Updated Successfully .",
+                                    data = user
+                                )
                             )
-                        )
-                        return@put
+                            return@put
+                        }
                     } else {
                         call.respond(
                             status = HttpStatusCode.OK,
@@ -389,21 +391,6 @@ fun Route.authenticationRoutes(
     post(LOGIN_REQUEST) {
         logger.debug { "POST /$LOGIN_REQUEST" }
         // check body request if  missing some fields
-//        val loginRequest = try {
-//            call.receive<LoginRequest>()
-//        } catch (e: Exception) {
-//            call.respond(
-//                HttpStatusCode.Conflict,
-//                MyResponse(
-//                    success = false,
-//                    message = e.message ?: "Missing Some Fields",
-//                    data = null
-//                )
-//            )
-//            return@post
-//        }
-//        val username = call.request.queryParameters["username"]
-//        val password = call.request.queryParameters["password"]
         val params = call.receiveParameters()
         val username = params["username"]?.trim().toString()
         val password = params["password"]?.trim().toString()
@@ -412,7 +399,7 @@ fun Route.authenticationRoutes(
 
         // check if operation connected db successfully
         try {
-            val adminUser = userDataSource.getUserByUsername(
+            val adminUser = userDataSource.getAdminUserByUsername(
                 username //loginRequest.username
             )
             if (adminUser != null) {
@@ -439,23 +426,11 @@ fun Route.authenticationRoutes(
                         ),
 
                         )
-//                    val token = tokenService.generateToken(
-////                        config = config,
-//                        TokenClaim(
-//                            name = "userId",
-//                            value = adminUser.id.toString()
-//                        ),
-//                        TokenClaim(
-//                            name = "userRole",
-//                            value = adminUser.role.toString()
-//                        )
-//
-//                    )
                     call.respond(
                         HttpStatusCode.OK,
                         MyResponse(
                             success = true,
-                            message = "You are logged in successfully",
+                            message = "logged in successfully",
                             data = tokensResponse
                         )
                     )
