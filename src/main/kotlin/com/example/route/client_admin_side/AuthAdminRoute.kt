@@ -29,6 +29,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 private const val USERS = "$ADMIN_CLIENT/users"
+private const val USERS_PAGEABLE = "$USERS-pageable"
 private const val USER = "$ADMIN_CLIENT/user"
 private const val REGISTER_REQUEST = "$USER/register"
 private const val DELETE_REQUEST = "$USER/delete"
@@ -142,14 +143,14 @@ fun Route.authenticationRoutes(
             }
 
         }
-        //get al users
-        get(USERS) {
-            logger.debug { "get /$USERS" }
+        //get all pageable users
+        get(USERS_PAGEABLE) {
+            logger.debug { "get all pageable users /$USERS_PAGEABLE" }
             val params = call.request.queryParameters
             params["page"]?.toIntOrNull()?.let { pageNum ->
                 val page = if (pageNum > 0) pageNum - 1 else 0
                 val perPage = params["perPage"]?.toIntOrNull() ?: 10
-                val sortFied = when (params["sort_by"] ?: "date") {
+                val sortFiled = when (params["sort_by"] ?: "date") {
                     "name" -> AdminUserEntity.full_name
                     "username" -> AdminUserEntity.username
                     "date" -> AdminUserEntity.created_at
@@ -158,7 +159,7 @@ fun Route.authenticationRoutes(
                             status = HttpStatusCode.BadRequest,
                             message = MyResponse(
                                 success = false,
-                                message = "invalid parameter for sort_by chose between (name & date)",
+                                message = "invalid parameter for sort_by chose between (name & username & date)",
                                 data = null
                             )
                         )
@@ -181,16 +182,36 @@ fun Route.authenticationRoutes(
                 logger.debug { "GET ALL User /$USERS?page=$page&perPage=$perPage" }
                 val query: String? = params["query"]?.trim()
                 val permission: String? = params["permission"]?.trim()
-                val users = try {
-                    userDataSource.getAllUserPageable(
+                try {
+                    val users = userDataSource.getAllUserPageable(
                         query = query,
                         permission = permission,
                         page = page,
                         perPage = perPage,
-                        sortField = sortFied,
+                        sortField = sortFiled,
                         sortDirection = sortDirection
 
                     )
+                    if (users.isNotEmpty()) {
+                        val numberOfUsers = userDataSource.getNumberOUsers()
+                        call.respond(
+                            HttpStatusCode.OK, MyResponse(
+                                success = true,
+                                message = "get all users successfully",
+                                data = MyResponsePageable(page = page + 1, perPage = numberOfUsers, data = users)
+                            )
+                        )
+                        return@get
+                    } else {
+                        return@get call.respond(
+                            HttpStatusCode.OK, MyResponse(
+                                success = false,
+                                message = "no user is found",
+                                data = null
+                            )
+                        )
+                    }
+
                 } catch (exc: Exception) {
                     call.respond(
                         HttpStatusCode.Conflict,
@@ -202,27 +223,17 @@ fun Route.authenticationRoutes(
                     )
                     return@get
                 }
-                if (users.isNotEmpty()) {
-                    val numberOfUsers = userDataSource.getNumberOUsers()
-                    call.respond(
-                        HttpStatusCode.OK, MyResponse(
-                            success = true,
-                            message = "get all users successfully",
-                            data = MyResponsePageable(page = page + 1, perPage = numberOfUsers, data = users)
-                        )
-                    )
-                } else {
-                    call.respond(
-                        HttpStatusCode.OK, MyResponse(
-                            success = false,
-                            message = "no user is found",
-                            data = null
-                        )
-                    )
-                }
 
 
-            } ?: run {
+            }
+
+
+        }
+        //get all users
+        get(USERS) {
+            logger.debug { "get all users /$USERS_PAGEABLE" }
+
+            try {
                 val users = userDataSource.getAllUser()
                 if (users.isEmpty()) {
                     call.respond(
@@ -243,10 +254,20 @@ fun Route.authenticationRoutes(
                     )
                     return@get
                 }
+            } catch (exc: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = exc.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
             }
 
-
         }
+
         // me
         // Get the user info --> GET /api/v1/user/me (with token)
         get(ME_REQUEST) {

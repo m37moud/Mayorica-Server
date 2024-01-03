@@ -2,9 +2,14 @@ package com.example.route.client_admin_side
 
 import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.data.order.OrderDataSource
+import com.example.database.table.CeramicProviderEntity
+import com.example.mapper.toModel
 import com.example.mapper.toModelCreate
 import com.example.models.CeramicProvider
+import com.example.models.MyResponsePageable
+import com.example.models.dto.ProviderCreateDto
 import com.example.models.request.ceramic_provider.CeramicProviderRequest
+import com.example.utils.Claim.USER_ID
 import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.MyResponse
 import com.example.utils.toDatabaseString
@@ -20,19 +25,19 @@ import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 // get all providers
-const val PROVIDERS = "$ADMIN_CLIENT/providers"
+private const val PROVIDERS = "$ADMIN_CLIENT/providers"
+private const val PROVIDERS_PAGEABLE = "$PROVIDERS-pageable"
 
 // get single provider
-const val PROVIDER = "$ADMIN_CLIENT/provider"
-const val CREATE_PROVIDER = "$PROVIDER/create"
-const val UPDATE_PROVIDER = "$PROVIDER/update"
-const val DELETE_PROVIDER = "$PROVIDER/delete"
+private const val PROVIDER = "$ADMIN_CLIENT/provider"
+private const val PROVIDER_COUNTRIES = "$PROVIDER/countries"
+private const val CREATE_PROVIDER = "$PROVIDER/create"
+private const val UPDATE_PROVIDER = "$PROVIDER/update"
+private const val DELETE_PROVIDER = "$PROVIDER/delete"
 private val logger = KotlinLogging.logger {}
 
 
-fun Route.providerAdminClient(
-//    ceramicProvider: CeramicProviderDataSource
-) {
+fun Route.providerAdminClient() {
     val ceramicProvider: CeramicProviderDataSource by inject()
 
     authenticate {
@@ -77,6 +82,98 @@ fun Route.providerAdminClient(
             }
 
         }
+        //get all pageable provides //api/v1/admin-client/provides-pageable
+        get(PROVIDERS_PAGEABLE) {
+            logger.debug { "get pageable providers $PROVIDERS_PAGEABLE" }
+            val params = call.request.queryParameters
+            params["page"]?.toIntOrNull()?.let { pageNum ->
+                val page = if (pageNum > 0) pageNum - 1 else -1
+                val perPage = params["perPAge"]?.toIntOrNull() ?: 10
+                val sortField = when (params["sort_by"] ?: "date") {
+                    "name" -> CeramicProviderEntity.name
+                    "date" -> CeramicProviderEntity.createdAt
+                    else -> {
+                        return@get call.respond(
+                            status = HttpStatusCode.Conflict,
+                            message = MyResponse(
+                                success = false,
+                                message = "invalid parameter for sort_by chose between (name & date)",
+                                data = null
+                            )
+                        )
+                    }
+
+                }
+                val sortDirections = when (params["sort_direction"] ?: "dec") {
+                    "dec" -> -1
+                    "asc" -> 1
+                    else -> {
+                        return@get call.respond(
+                            status = HttpStatusCode.BadRequest,
+                            message = MyResponse(
+                                success = false,
+                                message = "invalid parameter for sort_direction chose between (dec & asc)",
+                                data = null
+                            )
+                        )
+                    }
+
+                }
+                logger.debug { "GET ALL Pageable Providers /$PROVIDERS_PAGEABLE?page=$page&perPage=$perPage" }
+                val query = params["query"]?.trim() ?: ""
+                val country = params["byCountry"]?.trim()
+                val governorate = params["byGovernorate"]?.trim()
+                try {
+                    val providers = ceramicProvider.getAllCeramicProviderPageable(
+                        pageNumber = page,
+                        numberOfProviderInPage = perPage,
+                        searchQuery = query ?: "",
+                        byCountry = country,
+                        byGovernorate = governorate,
+                        sortField = sortField,
+                        sortDirection = sortDirections
+
+                    )
+                    if (providers.isNotEmpty()) {
+                        val numberOfProviders = ceramicProvider.getNumberOfProviders()
+                        call.respond(
+                            HttpStatusCode.OK, MyResponse(
+                                success = true,
+                                message = "get all providers successfully",
+                                data = MyResponsePageable(
+                                    page = page + 1,
+                                    perPage = numberOfProviders,
+                                    data = providers
+                                )
+                            )
+                        )
+                        return@get
+
+                    } else {
+                        return@get call.respond(
+                            HttpStatusCode.OK, MyResponse(
+                                success = false,
+                                message = "No Providers is found",
+                                data = null
+                            )
+                        )
+                    }
+
+                } catch (e: Exception) {
+                    return@get call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = e.message ?: "Failed To Get Providers",
+                            data = null
+                        )
+                    )
+                }
+
+
+            }
+
+        }
         //get single providers //api/v1/admin-client/provider/6
         get("$PROVIDER/{id}") {
             logger.debug { "get /$PROVIDER/{id}" }
@@ -117,7 +214,7 @@ fun Route.providerAdminClient(
             val id = call.parameters["id"]?.toIntOrNull()
             id?.let { providerId ->
                 val updateProvider = try {
-                    call.receive<CeramicProvider>()
+                    call.receive<ProviderCreateDto>()
                 } catch (exc: Exception) {
                     call.respond(
                         HttpStatusCode.OK,
@@ -129,18 +226,35 @@ fun Route.providerAdminClient(
                     )
                     return@put
                 }
-                ceramicProvider.getCeramicProviderByID(id = providerId)?.let { temp ->
+                val principal = call.principal<JWTPrincipal>()
+                val adminUserId = try {
+                    principal?.getClaim(USER_ID, String::class)?.toIntOrNull()
+                } catch (e: Exception) {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = e.message ?: "Failed ",
+                            data = null
+                        )
+                    )
+                    return@put
+                }
+                try {
                     val updateResult = ceramicProvider.updateCeramicProvider(
                         providerId = providerId,
-                        updateProvider
+                        adminUserId = adminUserId ?: -1,
+                        updateProvider.toModel()
                     )
                     if (updateResult > 0) {
+                        val provider = ceramicProvider.getCeramicProviderByIdDto(id = providerId)
+
                         call.respond(
                             HttpStatusCode.OK,
                             MyResponse(
                                 success = true,
                                 message = "provider update successfully .",
-                                data = null
+                                data = provider
                             )
                         )
                         return@put
@@ -157,14 +271,16 @@ fun Route.providerAdminClient(
                         return@put
 
                     }
-                } ?: call.respond(
-                    HttpStatusCode.NotFound,
-                    MyResponse(
-                        success = false,
-                        message = "no provider found .",
-                        data = null
+                } catch (e: Exception) {
+                    return@put call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = e.message ?: "Update Failed",
+                            data = null
+                        )
                     )
-                )
+                }
 
 
             } ?: call.respond(
@@ -199,7 +315,7 @@ fun Route.providerAdminClient(
                 val provider = ceramicProvider.getCeramicProviderByName(providerRequest.name)
                 val principal = call.principal<JWTPrincipal>()
                 val userId = try {
-                    principal?.getClaim("userId", String::class)?.toIntOrNull()
+                    principal?.getClaim(USER_ID, String::class)?.toIntOrNull()
                 } catch (e: Exception) {
                     call.respond(
                         HttpStatusCode.Conflict,
@@ -214,11 +330,12 @@ fun Route.providerAdminClient(
                 if (provider == null) {
                     val result = ceramicProvider.addCeramicProvider(providerRequest.toModelCreate(userId!!))
                     if (result > 0) {
+                        val createdProvider = ceramicProvider.getCeramicProviderByNameDto(providerRequest.name)
                         call.respond(
                             HttpStatusCode.OK, MyResponse(
                                 success = true,
                                 message = "provider inserted successfully .",
-                                data = providerRequest.name
+                                data = createdProvider
                             )
                         )
                         return@post
