@@ -393,6 +393,7 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
             null
         else {
             val id = row[CeramicProviderEntity.id] ?: -1
+            val adminUserName = row[AdminUserEntity.username] ?: ""
             val name = row[CeramicProviderEntity.name] ?: ""
             val latitude = row[CeramicProviderEntity.latitude] ?: 0.0
             val longitude = row[CeramicProviderEntity.longitude] ?: 0.0
@@ -404,6 +405,7 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
 
             ProviderDto(
                 id = id,
+                adminUsername = adminUserName,
                 name = name,
                 latitude = latitude,
                 longitude = longitude,

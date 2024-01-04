@@ -179,7 +179,7 @@ fun Route.providerAdminClient() {
             logger.debug { "get /$PROVIDER/{id}" }
             val id = call.parameters["id"]?.toIntOrNull()
             id?.let {
-                ceramicProvider.getCeramicProviderByID(it)?.let { provider ->
+                ceramicProvider.getCeramicProviderByIdDto(it)?.let { provider ->
                     call.respond(
                         HttpStatusCode.OK,
                         MyResponse(
