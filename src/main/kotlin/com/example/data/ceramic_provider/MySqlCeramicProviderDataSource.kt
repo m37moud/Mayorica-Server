@@ -55,8 +55,8 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
     }
 
     override suspend fun getAllCeramicProviderPageable(
-        pageNumber: Int,
-        numberOfProviderInPage: Int,
+        page: Int,
+        perPage: Int,
         searchQuery: String?,
         byCountry: String?,
         byGovernorate: String?,
@@ -64,8 +64,8 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
         sortDirection: Int
     ): List<ProviderDto> {
         return withContext(Dispatchers.IO) {
-            val myLimit = if (pageNumber > 100) 100 else pageNumber
-            val myOffset = (pageNumber * numberOfProviderInPage)
+            val myLimit = if (perPage > 100) 100 else perPage
+            val myOffset = (page * perPage)
             val result = db.from(CeramicProviderEntity)
                 .innerJoin(AdminUserEntity, on = CeramicProviderEntity.userAdminID eq AdminUserEntity.id)
                 .select(

@@ -55,7 +55,7 @@ fun Route.productAdminRoute(
         // get the products --> get /api/v1/admin-client/products/ (token required)
         get(ALL_PRODUCTS) {
             call.request.queryParameters["page"]?.toIntOrNull()?.let {
-                val page = if (it > 0) it else 0
+                val page = if (it > 0) it-1 else 0
                 val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
                 val type = call.request.queryParameters["type"]?.toIntOrNull() ?: -1
                 val size = call.request.queryParameters["size"]?.toIntOrNull() ?: -1

@@ -87,8 +87,8 @@ fun Route.providerAdminClient() {
             logger.debug { "get pageable providers $PROVIDERS_PAGEABLE" }
             val params = call.request.queryParameters
             params["page"]?.toIntOrNull()?.let { pageNum ->
-                val page = if (pageNum > 0) pageNum - 1 else -1
-                val perPage = params["perPAge"]?.toIntOrNull() ?: 10
+                val page = if (pageNum > 0) pageNum - 1 else 0
+                val perPage = params["perPage"]?.toIntOrNull() ?: 10
                 val sortField = when (params["sort_by"] ?: "date") {
                     "name" -> CeramicProviderEntity.name
                     "date" -> CeramicProviderEntity.createdAt
@@ -119,14 +119,15 @@ fun Route.providerAdminClient() {
                     }
 
                 }
-                logger.debug { "GET ALL Pageable Providers /$PROVIDERS_PAGEABLE?page=$page&perPage=$perPage" }
                 val query = params["query"]?.trim() ?: ""
-                val country = params["byCountry"]?.trim()
-                val governorate = params["byGovernorate"]?.trim()
+                val country = params["byCountry"]?.trim() ?: ""
+                val governorate = params["byGovernorate"]?.trim() ?: ""
                 try {
+                    logger.debug { "GET ALL Pageable Providers /$PROVIDERS_PAGEABLE?page=$page&perPage=$perPage" }
+
                     val providers = ceramicProvider.getAllCeramicProviderPageable(
-                        pageNumber = page,
-                        numberOfProviderInPage = perPage,
+                        page = page,
+                        perPage = perPage,
                         searchQuery = query ?: "",
                         byCountry = country,
                         byGovernorate = governorate,
@@ -381,7 +382,7 @@ fun Route.providerAdminClient() {
                 val result = ceramicProvider.deleteCeramicProvider(id)
                 if (result > 0) {
                     call.respond(
-                        HttpStatusCode.BadRequest,
+                        HttpStatusCode.OK,
                         MyResponse(
                             success = true,
                             message = "delete provider success .",
@@ -391,7 +392,7 @@ fun Route.providerAdminClient() {
                     return@delete
                 } else {
                     call.respond(
-                        HttpStatusCode.BadRequest,
+                        HttpStatusCode.OK,
                         MyResponse(
                             success = false,
                             message = "fail to delete provider .",

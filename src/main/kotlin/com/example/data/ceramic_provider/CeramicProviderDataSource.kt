@@ -10,8 +10,8 @@ interface CeramicProviderDataSource {
     suspend fun getAllCeramicProvider(): List<CeramicProvider>
     suspend fun getAllCeramicProviderDto(): List<ProviderDto>
     suspend fun getAllCeramicProviderPageable(
-        pageNumber: Int,
-        numberOfProviderInPage: Int,
+        page: Int,
+        perPage: Int,
         searchQuery: String?,
         byCountry: String?,
         byGovernorate: String?,

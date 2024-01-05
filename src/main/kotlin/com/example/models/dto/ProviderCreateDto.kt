@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ProviderCreateDto(
-    @SerialName("providerName") val name: String? = null,
+    @SerialName("name") val name: String? = null,
     @SerialName("latitude") val latitude: Double? = null,
     @SerialName("longitude") val longitude: Double? = null,
     @SerialName("country") val country: String? = null,
