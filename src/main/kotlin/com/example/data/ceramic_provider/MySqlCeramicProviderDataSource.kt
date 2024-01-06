@@ -89,9 +89,13 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                         sortField.desc()
                 )
                 .whereWithConditions {
-                    if (!searchQuery.isNullOrEmpty()) it += CeramicProviderEntity.name like "%${searchQuery}%"
-                    if (!byCountry.isNullOrEmpty()) it += CeramicProviderEntity.country eq "$byCountry"
-                    if (!byGovernorate.isNullOrEmpty()) it += CeramicProviderEntity.governorate eq "$byGovernorate"
+                    if (!searchQuery.isNullOrEmpty()) {
+                        it += (CeramicProviderEntity.name like "%${searchQuery}%") or
+                                (CeramicProviderEntity.country like "%${searchQuery}%") or
+                                (CeramicProviderEntity.governorate like "%${searchQuery}%")
+                    }
+//                    if (!byCountry.isNullOrEmpty()) it += CeramicProviderEntity.country like "%${byCountry}%"
+//                    if (!byGovernorate.isNullOrEmpty()) it += CeramicProviderEntity.governorate like "%${byGovernorate}%"
 
                 }
                 .mapNotNull {
@@ -103,7 +107,7 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
 
     }
 
-    override suspend fun getAllCountries(): List<Country> {
+    override suspend fun getAllLocations(): List<Country> {
         return withContext(Dispatchers.IO) {
             val result = db.from(CeramicProviderEntity)
                 .select(
@@ -113,8 +117,40 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 .mapNotNull {
                     rowToCountry(it)
                 }
-            result
+            result.distinct()
         }
+    }
+
+    private suspend fun getAllCountries(): List<String> {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(CeramicProviderEntity)
+
+                .select(
+                    CeramicProviderEntity.country
+                )
+                .mapNotNull {
+                    it[CeramicProviderEntity.country]
+                }
+            result
+
+        }
+
+    }
+
+    private suspend fun getAllGovernorates(): List<String> {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(CeramicProviderEntity)
+
+                .select(
+                    CeramicProviderEntity.governorate
+                )
+                .mapNotNull {
+                    it[CeramicProviderEntity.governorate]
+                }
+            result
+
+        }
+
     }
 
     override suspend fun getNumberOfProviders(): Int {
@@ -167,9 +203,6 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
     }
 
 
-
-
-
     override suspend fun getCeramicProviderByName(providerName: String): CeramicProvider? {
         return withContext(Dispatchers.IO) {
             val provider = db.from(CeramicProviderEntity)
@@ -207,6 +240,7 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
             provider
         }
     }
+
     override suspend fun getCeramicProviderBySearching(searchValue: String): List<CeramicProvider> {
         return withContext(Dispatchers.IO) {
             val providers = db.from(CeramicProviderEntity)
@@ -236,6 +270,7 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
             providers
         }
     }
+
     override suspend fun getCeramicProviderByCountryDto(country: String): List<ProviderDto> {
         return withContext(Dispatchers.IO) {
             val providers = db.from(CeramicProviderEntity)

@@ -20,7 +20,7 @@ interface CeramicProviderDataSource {
     ): List<ProviderDto>
 
     suspend fun getNumberOfProviders(): Int
-    suspend fun getAllCountries() : List<Country>
+    suspend fun getAllLocations() : List<Country>
 
 
     suspend fun getCeramicProviderByID(id: Int): CeramicProvider?

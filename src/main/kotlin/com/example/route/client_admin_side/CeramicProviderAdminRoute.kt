@@ -1,18 +1,15 @@
 package com.example.route.client_admin_side
 
 import com.example.data.ceramic_provider.CeramicProviderDataSource
-import com.example.data.order.OrderDataSource
 import com.example.database.table.CeramicProviderEntity
 import com.example.mapper.toModel
 import com.example.mapper.toModelCreate
-import com.example.models.CeramicProvider
 import com.example.models.MyResponsePageable
 import com.example.models.dto.ProviderCreateDto
 import com.example.models.request.ceramic_provider.CeramicProviderRequest
 import com.example.utils.Claim.USER_ID
 import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.MyResponse
-import com.example.utils.toDatabaseString
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -22,7 +19,6 @@ import io.ktor.server.response.*
 import mu.KotlinLogging
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
-import java.time.LocalDateTime
 
 // get all providers
 private const val PROVIDERS = "$ADMIN_CLIENT/providers"
@@ -30,7 +26,7 @@ private const val PROVIDERS_PAGEABLE = "$PROVIDERS-pageable"
 
 // get single provider
 private const val PROVIDER = "$ADMIN_CLIENT/provider"
-private const val PROVIDER_COUNTRIES = "$PROVIDER/countries"
+private const val PROVIDER_LOCATIONS = "$PROVIDER/locations"
 private const val CREATE_PROVIDER = "$PROVIDER/create"
 private const val UPDATE_PROVIDER = "$PROVIDER/update"
 private const val DELETE_PROVIDER = "$PROVIDER/delete"
@@ -81,6 +77,46 @@ fun Route.providerAdminClient() {
                 return@get
             }
 
+        }
+
+        //get all providers locations fo filtering //api/v1/admin-client/provider/locations
+        get(PROVIDER_LOCATIONS) {
+            logger.debug { "get all locations PROVIDER_LOCATIONS" }
+            try {
+                val result = ceramicProvider.getAllLocations()
+                if (result.isNotEmpty()) {
+                    return@get call.respond(
+                        status = HttpStatusCode.OK,
+                        message = MyResponse(
+                            success = true,
+                            message = "get all locations successfully",
+                            data = result
+                        )
+                    )
+
+                } else {
+                    return@get call.respond(
+                        status = HttpStatusCode.OK,
+                        message = MyResponse(
+                            success = false,
+                            message = "no locations is found",
+                            data = null
+                        )
+                    )
+
+
+                }
+            } catch (e: Exception) {
+                return@get call.respond(
+                    status = HttpStatusCode.Conflict,
+                    message = MyResponse(
+                        success = false,
+                        message = e.message ?: "Some Thing Goes Wrong",
+                        data = null
+                    )
+                )
+
+            }
         }
         //get all pageable provides //api/v1/admin-client/provides-pageable
         get(PROVIDERS_PAGEABLE) {
