@@ -58,8 +58,8 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
         page: Int,
         perPage: Int,
         searchQuery: String?,
-        byCountry: String?,
-        byGovernorate: String?,
+//        byCountry: String?,
+//        byGovernorate: String?,
         sortField: Column<*>,
         sortDirection: Int
     ): List<ProviderDto> {

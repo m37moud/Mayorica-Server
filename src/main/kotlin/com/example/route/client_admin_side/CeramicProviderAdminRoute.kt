@@ -156,8 +156,8 @@ fun Route.providerAdminClient() {
 
                 }
                 val query = params["query"]?.trim() ?: ""
-                val country = params["byCountry"]?.trim() ?: ""
-                val governorate = params["byGovernorate"]?.trim() ?: ""
+//                val country = params["byCountry"]?.trim() ?: ""
+//                val governorate = params["byGovernorate"]?.trim() ?: ""
                 try {
                     logger.debug { "GET ALL Pageable Providers /$PROVIDERS_PAGEABLE?page=$page&perPage=$perPage" }
 
@@ -165,8 +165,8 @@ fun Route.providerAdminClient() {
                         page = page,
                         perPage = perPage,
                         searchQuery = query ?: "",
-                        byCountry = country,
-                        byGovernorate = governorate,
+//                        byCountry = country,
+//                        byGovernorate = governorate,
                         sortField = sortField,
                         sortDirection = sortDirections
 
