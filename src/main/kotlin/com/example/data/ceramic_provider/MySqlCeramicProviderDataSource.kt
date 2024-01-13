@@ -440,7 +440,7 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
 
             ProviderDto(
                 id = id,
-                adminUsername = adminUserName,
+                adminUserName = adminUserName,
                 name = name,
                 latitude = latitude,
                 longitude = longitude,

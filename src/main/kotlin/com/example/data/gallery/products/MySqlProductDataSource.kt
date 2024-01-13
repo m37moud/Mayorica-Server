@@ -3,7 +3,6 @@ package com.example.data.gallery.products
 import com.example.database.table.*
 import com.example.models.Product
 import com.example.models.response.ProductResponse
-import com.example.route.client_admin_side.TYPE_CATEGORIES
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,7 +12,6 @@ import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import org.ktorm.schema.Column
 import java.time.LocalDateTime
-import kotlin.reflect.KProperty1
 
 private val logger = KotlinLogging.logger {}
 @Singleton

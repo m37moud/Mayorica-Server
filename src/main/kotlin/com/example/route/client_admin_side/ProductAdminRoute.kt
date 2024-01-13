@@ -162,7 +162,7 @@ fun Route.productAdminRoute(
                         )
                     }
                 }
-                logger.debug { "GET ALL /$TYPE_CATEGORIES" }
+                logger.debug { "GET ALL /$ALL_PRODUCTS" }
 
                 val productList = try {
 //                    productDataSource.getAllProduct()

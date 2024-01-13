@@ -1,5 +1,6 @@
 package com.example.service.storage
 
+import com.example.config.AppConfig
 import io.ktor.http.content.*
 import io.ktor.server.config.*
 import kotlinx.coroutines.Dispatchers
@@ -19,10 +20,10 @@ private val logger = KotlinLogging.logger {}
  */
 @Singleton
 class StorageServiceImpl(
-    private val myConfig: HoconApplicationConfig
+    private val myConfig: AppConfig
 ) : StorageService {
     private val uploadDir by lazy {
-        myConfig.propertyOrNull("storage.uploadDir")?.getString() ?: "uploads"
+        myConfig.applicationConfiguration.propertyOrNull("storage.uploadDir")?.getString() ?: "uploads"
     }
 
     private val products by lazy { "$uploadDir/products" }

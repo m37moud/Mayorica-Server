@@ -1,10 +1,11 @@
 package com.example.route.client_user_side
 
-import com.example.data.gallery.categories.CategoryDataSource
+import com.example.data.gallery.categories.TypeCategoryDataSource
+import com.example.data.gallery.categories.color.ColorCategoryDataSource
+import com.example.data.gallery.categories.size.SizeCategoryDataSource
 import com.example.models.ColorCategoryPage
 import com.example.models.SizeCategoryPage
 import com.example.models.TypeCategoryPage
-import com.example.utils.Constants
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
 import io.ktor.http.*
@@ -27,7 +28,9 @@ private val logger = KotlinLogging.logger {}
 fun Route.categoriesUserRoute(
 //    categoryDataSource: CategoryDataSource,
 ) {
-val categoryDataSource: CategoryDataSource by inject()
+    val typeCategoryDataSource: TypeCategoryDataSource by inject()
+    val sizeCategoryDataSource: SizeCategoryDataSource by inject()
+    val colorCategoryDataSource: ColorCategoryDataSource by inject()
     /**
      * get all categories
      */
@@ -41,7 +44,7 @@ val categoryDataSource: CategoryDataSource by inject()
 
                 logger.debug { "GET ALL /$TYPE_CATEGORIES?page=$page&perPage=$perPage" }
 
-                val typeCategoriesList = categoryDataSource.getAllTypeCategoryPageable(page, perPage)
+                val typeCategoriesList = typeCategoryDataSource.getAllTypeCategoryPageable(page, perPage)
                 if (typeCategoriesList.isNotEmpty()) {
                     call.respond(
                         HttpStatusCode.OK, MyResponse(
@@ -63,7 +66,7 @@ val categoryDataSource: CategoryDataSource by inject()
             } ?: run {
                 logger.debug { "GET ALL /$TYPE_CATEGORIES" }
 
-                val typeCategoriesList = categoryDataSource.getAllTypeCategory()
+                val typeCategoriesList = typeCategoryDataSource.getAllTypeCategory()
                 if (typeCategoriesList.isNotEmpty()) {
                     call.respond(
                         HttpStatusCode.OK, MyResponse(
@@ -104,7 +107,7 @@ val categoryDataSource: CategoryDataSource by inject()
 
                 logger.debug { "GET ALL /$SIZE_CATEGORIES?page=$page&perPage=$perPage" }
 
-                val sizeCategoriesList = categoryDataSource.getAllSizeCategoryPageable(page, perPage)
+                val sizeCategoriesList = sizeCategoryDataSource.getAllSizeCategoryPageable(page, perPage)
                 if (sizeCategoriesList.isNotEmpty()) {
                     call.respond(
                         HttpStatusCode.OK,
@@ -127,7 +130,7 @@ val categoryDataSource: CategoryDataSource by inject()
             } ?: run {
                 logger.debug { "GET ALL /$SIZE_CATEGORIES" }
 
-                val typeCategoriesList = categoryDataSource.getAllSizeCategory()
+                val typeCategoriesList = sizeCategoryDataSource.getAllSizeCategory()
                 if (typeCategoriesList.isNotEmpty()) {
                     call.respond(
                         HttpStatusCode.OK, MyResponse(
@@ -168,7 +171,7 @@ val categoryDataSource: CategoryDataSource by inject()
 
                 logger.debug { "GET ALL /$TYPE_CATEGORIES?page=$page&perPage=$perPage" }
 
-                val colorCategoriesList = categoryDataSource.getAllColorCategoryPageable(page, perPage)
+                val colorCategoriesList = colorCategoryDataSource.getAllColorCategoryPageable(page, perPage)
                 if (colorCategoriesList.isNotEmpty()) {
                     call.respond(
                         HttpStatusCode.OK, MyResponse(
@@ -190,7 +193,7 @@ val categoryDataSource: CategoryDataSource by inject()
             } ?: run {
                 logger.debug { "GET ALL /$TYPE_CATEGORIES" }
 
-                val typeCategoriesList = categoryDataSource.getAllTypeCategory()
+                val typeCategoriesList = typeCategoryDataSource.getAllTypeCategory()
                 if (typeCategoriesList.isNotEmpty()) {
                     call.respond(
                         HttpStatusCode.OK, MyResponse(
@@ -229,7 +232,7 @@ val categoryDataSource: CategoryDataSource by inject()
             id?.let {
                 logger.debug { "get /$SIZE_CATEGORY?typeCategoryId=$it" }
 
-                val sizeCategoriesList = categoryDataSource.getAllSizeCategoryByTypeId(it)
+                val sizeCategoriesList = sizeCategoryDataSource.getAllSizeCategoryByTypeId(it)
                 if (sizeCategoriesList.isNotEmpty()) {
                     call.respond(
                         HttpStatusCode.OK,

@@ -1,8 +1,9 @@
 package com.example.route.client_admin_side
 
-import com.example.data.gallery.categories.CategoryDataSource
-import com.example.data.gallery.products.ProductDataSource
-import com.example.database.table.AdminUserEntity
+import com.example.data.gallery.categories.TypeCategoryDataSource
+import com.example.data.gallery.categories.color.ColorCategoryDataSource
+import com.example.data.gallery.categories.size.SizeCategoryDataSource
+import com.example.database.table.TypeCategoryEntity
 import com.example.mapper.toModelCreate
 import com.example.models.*
 import com.example.models.request.categories.ColorCategoryRequest
@@ -22,32 +23,31 @@ import mu.KotlinLogging
 import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
-const val CATEGORIES = "$ADMIN_CLIENT/categories"
-const val TYPE_CATEGORIES = "$CATEGORIES/type"
-const val TYPE_CATEGORIES_PAGEABLE = "$TYPE_CATEGORIES-pageable"
-const val SIZE_CATEGORIES = "$CATEGORIES/size"
-const val COLOR_CATEGORIES = "$CATEGORIES/color"
-const val CATEGORY = "$ADMIN_CLIENT/category"
-const val TYPE_CATEGORY = "$CATEGORY/type"
-const val CREATE_TYPE_CATEGORY = "$TYPE_CATEGORY/create"
-const val UPDATE_TYPE_CATEGORY = "$TYPE_CATEGORY/update"
-const val DELETE_TYPE_CATEGORY = "$TYPE_CATEGORY/delete"
-const val SIZE_CATEGORY = "$CATEGORY/size"
-const val CREATE_SIZE_CATEGORY = "$SIZE_CATEGORY/create"
-const val UPDATE_SIZE_CATEGORY = "$SIZE_CATEGORY/update"
-const val DELETE_SIZE_CATEGORY = "$SIZE_CATEGORY/delete"
-const val COLOR_CATEGORY = "$CATEGORY/color"
-const val CREATE_COLOR_CATEGORY = "$COLOR_CATEGORY/create"
-const val UPDATE_COLOR_CATEGORY = "$COLOR_CATEGORY/update"
-const val DELETE_COLOR_CATEGORY = "$COLOR_CATEGORY/delete"
+private const val CATEGORIES = "$ADMIN_CLIENT/categories"
+private const val TYPE_CATEGORIES = "$CATEGORIES/type"
+private const val TYPE_CATEGORIES_PAGEABLE = "$TYPE_CATEGORIES-pageable"
+private const val SIZE_CATEGORIES = "$CATEGORIES/size"
+private const val COLOR_CATEGORIES = "$CATEGORIES/color"
+private const val CATEGORY = "$ADMIN_CLIENT/category"
+private const val TYPE_CATEGORY = "$CATEGORY/type"
+private const val CREATE_TYPE_CATEGORY = "$TYPE_CATEGORY/create"
+private const val UPDATE_TYPE_CATEGORY = "$TYPE_CATEGORY/update"
+private const val DELETE_TYPE_CATEGORY = "$TYPE_CATEGORY/delete"
+private const val SIZE_CATEGORY = "$CATEGORY/size"
+private const val CREATE_SIZE_CATEGORY = "$SIZE_CATEGORY/create"
+private const val UPDATE_SIZE_CATEGORY = "$SIZE_CATEGORY/update"
+private const val DELETE_SIZE_CATEGORY = "$SIZE_CATEGORY/delete"
+private const val COLOR_CATEGORY = "$CATEGORY/color"
+private const val CREATE_COLOR_CATEGORY = "$COLOR_CATEGORY/create"
+private const val UPDATE_COLOR_CATEGORY = "$COLOR_CATEGORY/update"
+private const val DELETE_COLOR_CATEGORY = "$COLOR_CATEGORY/delete"
 
 private val logger = KotlinLogging.logger {}
 
-fun Route.categoriesAdminRoute(
-//    categoryDataSource: CategoryDataSource,
-//    storageService: StorageService
-) {
-    val categoryDataSource: CategoryDataSource by inject()
+fun Route.categoriesAdminRoute() {
+    val typeCategoryDataSource: TypeCategoryDataSource by inject()
+    val sizeCategoryDataSource: SizeCategoryDataSource by inject()
+    val colorCategoryDataSource: ColorCategoryDataSource by inject()
     val storageService: StorageService by inject()
 
     authenticate {
@@ -121,7 +121,7 @@ fun Route.categoriesAdminRoute(
                 }
 
 
-                val typeCategory = categoryDataSource.getTypeCategoryByName(typeCategoryName!!)
+                val typeCategory = typeCategoryDataSource.getTypeCategoryByName(typeCategoryName!!)
                 if (typeCategory == null) {
                     imageUrl = try {
                         storageService.saveCategoryIcons(
@@ -151,7 +151,7 @@ fun Route.categoriesAdminRoute(
                             updatedAt = LocalDateTime.now().toDatabaseString()
                         ).apply {
 
-                            val result = categoryDataSource.createTypeCategory(this)
+                            val result = typeCategoryDataSource.createTypeCategory(this)
 
                             if (result > 0) {
                                 call.respond(
@@ -283,7 +283,7 @@ fun Route.categoriesAdminRoute(
                 }
 
 
-                val sizeCategory = categoryDataSource.getTypeCategoryByName(size!!)
+                val sizeCategory = typeCategoryDataSource.getTypeCategoryByName(size!!)
                 if (sizeCategory == null) {
                     imageUrl = try {
                         storageService.saveCategoryImages(
@@ -311,7 +311,7 @@ fun Route.categoriesAdminRoute(
                         createdAt = LocalDateTime.now().toDatabaseString(),
                         updatedAt = LocalDateTime.now().toDatabaseString()
                     ).apply {
-                        val result = categoryDataSource.createSizeCategory(this)
+                        val result = sizeCategoryDataSource.createSizeCategory(this)
                         if (result > 0) {
                             call.respond(
                                 HttpStatusCode.OK, MyResponse(
@@ -391,10 +391,11 @@ fun Route.categoriesAdminRoute(
             }
 
             try {
-                val typeCategory = categoryDataSource.getColorCategoryByName(colorCategoryRequest.color)
+                val typeCategory = colorCategoryDataSource.getColorCategoryByName(colorCategoryRequest.color)
                 if (typeCategory == null) {
 
-                    val result = categoryDataSource.createColorCategory(colorCategoryRequest.toModelCreate(userId!!))
+                    val result =
+                        colorCategoryDataSource.createColorCategory(colorCategoryRequest.toModelCreate(userId!!))
 
                     if (result > 0) {
                         call.respond(
@@ -439,6 +440,7 @@ fun Route.categoriesAdminRoute(
 
 
         }
+
         /**
          * get all type categories
          */
@@ -452,7 +454,7 @@ fun Route.categoriesAdminRoute(
 
                     logger.debug { "GET ALL /$TYPE_CATEGORIES?page=$page&perPage=$perPage" }
 
-                    val typeCategoriesList = categoryDataSource.getAllTypeCategoryPageable(page, perPage)
+                    val typeCategoriesList = typeCategoryDataSource.getAllTypeCategoryPageable(page, perPage)
                     if (typeCategoriesList.isNotEmpty()) {
                         call.respond(
                             HttpStatusCode.OK, MyResponse(
@@ -474,7 +476,7 @@ fun Route.categoriesAdminRoute(
                 } ?: run {
                     logger.debug { "GET ALL /$TYPE_CATEGORIES" }
 
-                    val typeCategoriesList = categoryDataSource.getAllTypeCategory()
+                    val typeCategoriesList = typeCategoryDataSource.getAllTypeCategory()
                     if (typeCategoriesList.isNotEmpty()) {
                         call.respond(
                             HttpStatusCode.OK, MyResponse(
@@ -514,9 +516,8 @@ fun Route.categoriesAdminRoute(
                     val page = if (it > 0) it - 1 else 0
                     val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
                     val sortFiled = when (params["sort_by"] ?: "date") {
-                        "name" -> AdminUserEntity.full_name
-                        "username" -> AdminUserEntity.username
-                        "date" -> AdminUserEntity.created_at
+                        "name" -> TypeCategoryEntity.typeName
+                        "date" -> TypeCategoryEntity.createdAt
                         else -> {
                             return@get call.respond(
                                 status = HttpStatusCode.BadRequest,
@@ -543,17 +544,29 @@ fun Route.categoriesAdminRoute(
                         }
                     }
                     val query: String? = params["query"]?.trim()
-                    val permission: String? = params["permission"]?.trim()
                     logger.debug { "GET ALL /$TYPE_CATEGORIES_PAGEABLE?page=$page&perPage=$perPage" }
 
-                    val typeCategoriesList = categoryDataSource.getAllTypeCategoryPageable(page, perPage)
+                    val typeCategoriesList =
+                        typeCategoryDataSource
+                            .getAllTypeCategoryPageable(
+                                query = query,
+                                page = page,
+                                perPage = perPage,
+                                sortField = sortFiled,
+                                sortDirection = sortDirection
+                            )
 
                     if (typeCategoriesList.isNotEmpty()) {
+                        val numberOfCategories = typeCategoryDataSource.getNumberOfCategories()
                         call.respond(
                             HttpStatusCode.OK, MyResponse(
                                 success = true,
                                 message = "get all type categories successfully",
-                                data = TypeCategoryPage(page, perPage, typeCategoriesList)
+                                data = MyResponsePageable(
+                                    page = page + 1,
+                                    perPage = numberOfCategories,
+                                    data = typeCategoriesList
+                                )
                             )
                         )
                     } else {
@@ -589,7 +602,7 @@ fun Route.categoriesAdminRoute(
 
                     logger.debug { "GET ALL /$SIZE_CATEGORIES?page=$page&perPage=$perPage" }
 
-                    val sizeCategoriesList = categoryDataSource.getAllSizeCategoryPageable(page, perPage)
+                    val sizeCategoriesList = sizeCategoryDataSource.getAllSizeCategoryPageable(page, perPage)
                     if (sizeCategoriesList.isNotEmpty()) {
                         call.respond(
                             HttpStatusCode.OK, MyResponse(
@@ -611,7 +624,7 @@ fun Route.categoriesAdminRoute(
                 } ?: run {
                     logger.debug { "GET ALL /$SIZE_CATEGORIES" }
 
-                    val typeCategoriesList = categoryDataSource.getAllSizeCategory()
+                    val typeCategoriesList = sizeCategoryDataSource.getAllSizeCategory()
                     if (typeCategoriesList.isNotEmpty()) {
                         call.respond(
                             HttpStatusCode.OK, MyResponse(
@@ -652,7 +665,7 @@ fun Route.categoriesAdminRoute(
 
                     logger.debug { "GET ALL /$TYPE_CATEGORIES?page=$page&perPage=$perPage" }
 
-                    val colorCategoriesList = categoryDataSource.getAllColorCategoryPageable(page, perPage)
+                    val colorCategoriesList = colorCategoryDataSource.getAllColorCategoryPageable(page, perPage)
                     if (colorCategoriesList.isNotEmpty()) {
                         call.respond(
                             HttpStatusCode.OK, MyResponse(
@@ -674,7 +687,7 @@ fun Route.categoriesAdminRoute(
                 } ?: run {
                     logger.debug { "GET ALL /$TYPE_CATEGORIES" }
 
-                    val typeCategoriesList = categoryDataSource.getAllTypeCategory()
+                    val typeCategoriesList = colorCategoryDataSource.getAllColorCategory()
                     if (typeCategoriesList.isNotEmpty()) {
                         call.respond(
                             HttpStatusCode.OK, MyResponse(
@@ -705,6 +718,7 @@ fun Route.categoriesAdminRoute(
                 return@get
             }
         }
+
         /**
          * get category by id
          */
@@ -714,7 +728,7 @@ fun Route.categoriesAdminRoute(
                 logger.debug { "get /$TYPE_CATEGORY/{id}" }
                 val id = call.parameters["id"]?.toIntOrNull()
                 id?.let {
-                    categoryDataSource.getTypeCategoryById(it)?.let { typeCategory ->
+                    typeCategoryDataSource.getTypeCategoryById(it)?.let { typeCategory ->
                         call.respond(
                             HttpStatusCode.OK,
                             MyResponse(
@@ -759,7 +773,7 @@ fun Route.categoriesAdminRoute(
                 logger.debug { "get /$SIZE_CATEGORY/{id}" }
                 val id = call.parameters["id"]?.toIntOrNull()
                 id?.let {
-                    categoryDataSource.getSizeCategoryById(it)?.let { sizeCategory ->
+                    sizeCategoryDataSource.getSizeCategoryById(it)?.let { sizeCategory ->
                         call.respond(
                             HttpStatusCode.OK,
                             MyResponse(
@@ -804,7 +818,7 @@ fun Route.categoriesAdminRoute(
                 logger.debug { "get /$TYPE_CATEGORY/{id}" }
                 val id = call.parameters["id"]?.toIntOrNull()
                 id?.let {
-                    categoryDataSource.getColorCategoryById(it)?.let { colorCategory ->
+                    colorCategoryDataSource.getColorCategoryById(it)?.let { colorCategory ->
                         call.respond(
                             HttpStatusCode.OK,
                             MyResponse(
@@ -853,7 +867,7 @@ fun Route.categoriesAdminRoute(
                 logger.debug { "get /$DELETE_TYPE_CATEGORY/{id}" }
                 val id = call.parameters["id"]?.toIntOrNull()
                 id?.let {
-                    categoryDataSource.getTypeCategoryById(it)?.let { typeCategory ->
+                    typeCategoryDataSource.getTypeCategoryById(it)?.let { typeCategory ->
 
                         val isDeletedIcon = try {
                             storageService.deleteCategoryIcons(fileName = typeCategory.typeIcon.substringAfterLast("/"))
@@ -869,7 +883,7 @@ fun Route.categoriesAdminRoute(
                             return@delete
                         }
                         if (isDeletedIcon) {
-                            val deleteResult = categoryDataSource.deleteTypeCategory(it)
+                            val deleteResult = typeCategoryDataSource.deleteTypeCategory(it)
                             if (deleteResult > 0) {
                                 call.respond(
                                     HttpStatusCode.OK,
@@ -940,7 +954,7 @@ fun Route.categoriesAdminRoute(
                 logger.debug { "delete /$DELETE_SIZE_CATEGORY/{id}" }
                 val id = call.parameters["id"]?.toIntOrNull()
                 id?.let {
-                    categoryDataSource.getSizeCategoryById(it)?.let { sizeCategory ->
+                    sizeCategoryDataSource.getSizeCategoryById(it)?.let { sizeCategory ->
                         val isDeleted = try {
                             storageService.deleteCategoryImages(
                                 fileName = sizeCategory.sizeImage.substringAfterLast("/")
@@ -957,7 +971,7 @@ fun Route.categoriesAdminRoute(
                             return@delete
                         }
                         if (isDeleted) {
-                            val deleteResult = categoryDataSource.deleteSizeCategory(it)
+                            val deleteResult = sizeCategoryDataSource.deleteSizeCategory(it)
                             if (deleteResult > 0) {
                                 call.respond(
                                     HttpStatusCode.OK,
@@ -1019,7 +1033,7 @@ fun Route.categoriesAdminRoute(
                 logger.debug { "get /$DELETE_COLOR_CATEGORY/{id}" }
                 val id = call.parameters["id"]?.toIntOrNull()
                 id?.let {
-                    val deleteResult = categoryDataSource.deleteColorCategory(it)
+                    val deleteResult = colorCategoryDataSource.deleteColorCategory(it)
                     if (deleteResult > 0) {
                         call.respond(
                             HttpStatusCode.OK,
@@ -1084,12 +1098,12 @@ fun Route.categoriesAdminRoute(
                         )
                         return@put
                     }
-                    categoryDataSource.getTypeCategoryById(id)?.let { temp ->
+                    typeCategoryDataSource.getTypeCategoryById(id)?.let { temp ->
                         val newTypeCategory = typeCategory.copy(
                             createdAt = temp.createdAt,
                             updatedAt = LocalDateTime.now().toDatabaseString()
                         )
-                        val updateResult = categoryDataSource.updateTypeCategory(newTypeCategory)
+                        val updateResult = typeCategoryDataSource.updateTypeCategory(newTypeCategory)
                         if (updateResult > 0) {
                             call.respond(
                                 HttpStatusCode.OK,
@@ -1159,12 +1173,12 @@ fun Route.categoriesAdminRoute(
                         )
                         return@put
                     }
-                    categoryDataSource.getSizeCategoryById(it)?.let { temp ->
+                    sizeCategoryDataSource.getSizeCategoryById(it)?.let { temp ->
                         val newSizeCategory = sizeCategory.copy(
                             createdAt = temp.createdAt,
                             updatedAt = LocalDateTime.now().toDatabaseString()
                         )
-                        val updateResult = categoryDataSource.updateSizeCategory(newSizeCategory)
+                        val updateResult = sizeCategoryDataSource.updateSizeCategory(newSizeCategory)
                         if (updateResult > 0) {
                             call.respond(
                                 HttpStatusCode.OK,
@@ -1233,12 +1247,12 @@ fun Route.categoriesAdminRoute(
                         )
                         return@put
                     }
-                    categoryDataSource.getColorCategoryById(it)?.let { temp ->
+                    colorCategoryDataSource.getColorCategoryById(it)?.let { temp ->
                         val newColorCategory = colorCategory.copy(
                             createdAt = temp.createdAt,
                             updatedAt = LocalDateTime.now().toDatabaseString()
                         )
-                        val updateResult = categoryDataSource.updateColorCategory(newColorCategory)
+                        val updateResult = colorCategoryDataSource.updateColorCategory(newColorCategory)
                         if (updateResult > 0) {
                             call.respond(
                                 HttpStatusCode.OK,
