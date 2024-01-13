@@ -1,13 +1,11 @@
 package com.example.data.gallery.categories
 
-import com.example.database.table.CeramicProviderEntity
-import com.example.database.table.ColorCategoryEntity
-import com.example.database.table.SizeCategoryEntity
-import com.example.database.table.TypeCategoryEntity
+import com.example.database.table.*
 import com.example.models.CeramicProvider
 import com.example.models.ColorCategory
 import com.example.models.SizeCategory
 import com.example.models.TypeCategory
+import com.example.models.dto.ProviderDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -15,6 +13,7 @@ import mu.KotlinLogging
 import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import org.ktorm.schema.Column
 import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
@@ -44,6 +43,46 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
                 .mapNotNull { rowToTypeCategory(it) }
             typeCategoriesList
         }
+    }
+
+    override suspend fun getAllTypeCategoryPageable(
+        query: String?,
+        page: Int,
+        perPage: Int,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<TypeCategory> {
+        return withContext(Dispatchers.IO) {
+            val myLimit = if (perPage > 100) 100 else perPage
+            val myOffset = (page * perPage)
+            val typeCategoriesList = db.from(TypeCategoryEntity)
+                .innerJoin(AdminUserEntity, on = CeramicProviderEntity.userAdminID eq AdminUserEntity.id)
+                .select(
+                    TypeCategoryEntity.id,
+                    AdminUserEntity.username,
+                    TypeCategoryEntity.typeName,
+                    TypeCategoryEntity.typeIcon,
+                    TypeCategoryEntity.createdAt,
+                    TypeCategoryEntity.updatedAt,
+                )
+                .limit(myLimit)
+                .offset(myOffset)
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+                .whereWithConditions {
+                    if (!query.isNullOrEmpty()) {
+                        it += (TypeCategoryEntity.typeName like "%${query}%")
+                    }
+
+                }
+                .mapNotNull { rowToTypeCategory(it) }
+            typeCategoriesList
+        }
+
     }
 
 
@@ -156,7 +195,7 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
             val typeCategoriesList = db.from(SizeCategoryEntity)
                 .select()
 
-                    .where { SizeCategoryEntity.typeCategoryId eq typeCategoryId }
+                .where { SizeCategoryEntity.typeCategoryId eq typeCategoryId }
                 .mapNotNull { rowToSizeCategory(it) }
             typeCategoriesList
         }
@@ -400,6 +439,39 @@ class MySqlCategoryDataSource(private val db: Database) : CategoryDataSource {
             )
         }
     }
+
+    // TODO: handle this rowToTypeCategoryDto function
+    private fun rowToTypeCategoryDto(row: QueryRowSet?): ProviderDto? {
+        return if (row == null)
+            null
+        else {
+            val id = row[CeramicProviderEntity.id] ?: -1
+            val adminUserName = row[AdminUserEntity.username] ?: ""
+            val name = row[CeramicProviderEntity.name] ?: ""
+            val latitude = row[CeramicProviderEntity.latitude] ?: 0.0
+            val longitude = row[CeramicProviderEntity.longitude] ?: 0.0
+            val country = row[CeramicProviderEntity.country] ?: ""
+            val governorate = row[CeramicProviderEntity.governorate] ?: ""
+            val address = row[CeramicProviderEntity.address] ?: ""
+            val createdAt = row[CeramicProviderEntity.createdAt] ?: ""
+            val updatedAt = row[CeramicProviderEntity.updatedAt] ?: ""
+
+            ProviderDto(
+                id = id,
+                adminUsername = adminUserName,
+                name = name,
+                latitude = latitude,
+                longitude = longitude,
+                country = country,
+                governorate = governorate,
+                address = address,
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString()
+
+            )
+        }
+    }
+
 
     private fun rowToSizeCategory(row: QueryRowSet?): SizeCategory? {
         return if (row == null)

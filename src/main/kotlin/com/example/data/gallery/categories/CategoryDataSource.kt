@@ -4,10 +4,19 @@ import com.example.models.ColorCategory
 import com.example.models.SizeCategory
 import com.example.models.TypeCategory
 import kotlinx.coroutines.flow.Flow
+import org.ktorm.schema.Column
 
 interface CategoryDataSource {
     suspend fun getAllTypeCategory(): List<TypeCategory>
     suspend fun getAllTypeCategoryPageable(page: Int = 0, perPage: Int = 10): List<TypeCategory>
+    suspend fun getAllTypeCategoryPageable(
+        query: String?,
+        page: Int = 0,
+        perPage: Int = 10,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<TypeCategory>
+
     suspend fun getTypeCategoryById(categoryTypeId: Int): TypeCategory?
     suspend fun getTypeCategoryByName(categoryName: String): TypeCategory?
     suspend fun createTypeCategory(typeCategory: TypeCategory): Int

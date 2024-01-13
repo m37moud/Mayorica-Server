@@ -2,6 +2,7 @@ package com.example.route.client_admin_side
 
 import com.example.data.gallery.categories.CategoryDataSource
 import com.example.data.gallery.products.ProductDataSource
+import com.example.database.table.AdminUserEntity
 import com.example.mapper.toModelCreate
 import com.example.models.*
 import com.example.models.request.categories.ColorCategoryRequest
@@ -23,6 +24,7 @@ import java.time.LocalDateTime
 
 const val CATEGORIES = "$ADMIN_CLIENT/categories"
 const val TYPE_CATEGORIES = "$CATEGORIES/type"
+const val TYPE_CATEGORIES_PAGEABLE = "$TYPE_CATEGORIES-pageable"
 const val SIZE_CATEGORIES = "$CATEGORIES/size"
 const val COLOR_CATEGORIES = "$CATEGORIES/color"
 const val CATEGORY = "$ADMIN_CLIENT/category"
@@ -438,7 +440,7 @@ fun Route.categoriesAdminRoute(
 
         }
         /**
-         * get all categories
+         * get all type categories
          */
         //get all type category //api/v1/admin-client/categories/type
         get(TYPE_CATEGORIES) {
@@ -490,6 +492,80 @@ fun Route.categoriesAdminRoute(
                             )
                         )
                     }
+                }
+            } catch (exc: Exception) {
+                call.respond(
+                    HttpStatusCode.Conflict,
+                    MyResponse(
+                        success = false,
+                        message = exc.message ?: "Failed ",
+                        data = null
+                    )
+                )
+                return@get
+            }
+        }
+        //get all type category //api/v1/admin-client/categories/type
+        get(TYPE_CATEGORIES_PAGEABLE) {
+            try {
+                // QueryParams: type categories?page=1&perPage=10
+                val params = call.request.queryParameters
+                params["page"]?.toIntOrNull()?.let {
+                    val page = if (it > 0) it - 1 else 0
+                    val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
+                    val sortFiled = when (params["sort_by"] ?: "date") {
+                        "name" -> AdminUserEntity.full_name
+                        "username" -> AdminUserEntity.username
+                        "date" -> AdminUserEntity.created_at
+                        else -> {
+                            return@get call.respond(
+                                status = HttpStatusCode.BadRequest,
+                                message = MyResponse(
+                                    success = false,
+                                    message = "invalid parameter for sort_by chose between (name & username & date)",
+                                    data = null
+                                )
+                            )
+                        }
+                    }
+                    val sortDirection = when (params["sort_direction"] ?: "dec") {
+                        "dec" -> -1
+                        "asc" -> 1
+                        else -> {
+                            return@get call.respond(
+                                status = HttpStatusCode.BadRequest,
+                                message = MyResponse(
+                                    success = false,
+                                    message = "invalid parameter for sort_direction chose between (dec & asc)",
+                                    data = null
+                                )
+                            )
+                        }
+                    }
+                    val query: String? = params["query"]?.trim()
+                    val permission: String? = params["permission"]?.trim()
+                    logger.debug { "GET ALL /$TYPE_CATEGORIES_PAGEABLE?page=$page&perPage=$perPage" }
+
+                    val typeCategoriesList = categoryDataSource.getAllTypeCategoryPageable(page, perPage)
+
+                    if (typeCategoriesList.isNotEmpty()) {
+                        call.respond(
+                            HttpStatusCode.OK, MyResponse(
+                                success = true,
+                                message = "get all type categories successfully",
+                                data = TypeCategoryPage(page, perPage, typeCategoriesList)
+                            )
+                        )
+                    } else {
+                        call.respond(
+                            HttpStatusCode.NotFound, MyResponse(
+                                success = false,
+                                message = "type categories is empty",
+                                data = null
+                            )
+                        )
+                    }
+
                 }
             } catch (exc: Exception) {
                 call.respond(
@@ -867,7 +943,8 @@ fun Route.categoriesAdminRoute(
                     categoryDataSource.getSizeCategoryById(it)?.let { sizeCategory ->
                         val isDeleted = try {
                             storageService.deleteCategoryImages(
-                                fileName = sizeCategory.sizeImage.substringAfterLast("/"))
+                                fileName = sizeCategory.sizeImage.substringAfterLast("/")
+                            )
                         } catch (e: Exception) {
                             call.respond(
                                 HttpStatusCode.InternalServerError,
