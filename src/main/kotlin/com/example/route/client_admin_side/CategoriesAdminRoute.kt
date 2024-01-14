@@ -82,8 +82,15 @@ fun Route.categoriesAdminRoute() {
                 val baseUrl =
                     call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "${Constants.ENDPOINT}/image/"
                 multiPart.forEachPart { part ->
+                    logger.debug { "PartData contentType = ${part.contentType}" }
+                    logger.debug { "PartData contentDisposition = ${part.contentDisposition}" }
+                    logger.debug { "PartData name = ${part.name}" }
+                    logger.debug { "PartData headers = ${part.headers}" }
+
                     when (part) {
                         is PartData.FormItem -> {
+                            logger.debug { "PartData FormItem = ${part}" }
+
                             // to read parameters that we sent with the image
                             when (part.name) {
                                 "typeCategoryName" -> {
@@ -96,105 +103,129 @@ fun Route.categoriesAdminRoute() {
                         }
 
                         is PartData.FileItem -> {
+                            logger.debug { "PartData FileItem = ${part}" }
+
                             if (!isImageContentType(part.contentType.toString())) {
                                 call.respond(
                                     message = MyResponse(
                                         success = false,
                                         message = "Invalid file format",
                                         data = null
-                                    ), status = HttpStatusCode.BadRequest
+                                    ),
+                                    status = HttpStatusCode.BadRequest
                                 )
                                 part.dispose()
                                 return@forEachPart
 
+
                             }
                             fileName = generateSafeFileName(part.originalFileName as String)
+                            logger.debug { "FileItem fileName = ${part.originalFileName}" }
+
                             fileBytes = part.streamProvider().readBytes()
+                            logger.debug { "FileItem fileName = ${fileBytes}" }
+
                             url = "${baseUrl}categories/icons/${fileName}"
 
                         }
 
-                        else -> {}
+                        else -> {
+                            logger.debug { "PartData else = ${part}" }
+                            part.dispose()
+                            return@forEachPart
+                        }
 
                     }
                     part.dispose()
                 }
-
-
-                val typeCategory = typeCategoryDataSource.getTypeCategoryByName(typeCategoryName!!)
-                if (typeCategory == null) {
-                    imageUrl = try {
-                        storageService.saveCategoryIcons(
-                            fileName = fileName!!,
-                            fileUrl = url!!,
-                            fileBytes = fileBytes!!
-                        )
-                    } catch (e: Exception) {
-                        storageService.deleteCategoryIcons(fileName = fileName!!)
-                        call.respond(
-                            status = HttpStatusCode.InternalServerError,
-                            message = MyResponse(
-                                success = false,
-                                message = e.message ?: "Error happened while uploading Image.",
-                                data = null
+                if (fileName != null && fileBytes != null) {
+                    val typeCategory = typeCategoryDataSource.getTypeCategoryByName(typeCategoryName!!)
+                    if (typeCategory == null) {
+                        imageUrl = try {
+                            storageService
+                                .saveCategoryIcons(
+                                    fileName = fileName!!,
+                                    fileUrl = url!!,
+                                    fileBytes = fileBytes!!
+                                )
+                        } catch (e: Exception) {
+                            storageService.deleteCategoryIcons(fileName = fileName!!)
+                            call.respond(
+                                status = HttpStatusCode.InternalServerError,
+                                message = MyResponse(
+                                    success = false,
+                                    message = e.message ?: "Error happened while uploading Image.",
+                                    data = null
+                                )
                             )
-                        )
-                        return@post
-                    }
-                    if (!imageUrl.isNullOrEmpty()) {
+                            return@post
+                        }
+                        if (!imageUrl.isNullOrEmpty()) {
 
-                        TypeCategory(
-                            typeName = typeCategoryName!!,
-                            typeIcon = imageUrl,
-                            userAdminID = userId!!,
-                            createdAt = LocalDateTime.now().toDatabaseString(),
-                            updatedAt = LocalDateTime.now().toDatabaseString()
-                        ).apply {
+                            TypeCategory(
+                                typeName = typeCategoryName!!,
+                                typeIcon = imageUrl,
+                                userAdminID = userId!!,
+                                createdAt = LocalDateTime.now().toDatabaseString(),
+                                updatedAt = LocalDateTime.now().toDatabaseString()
+                            ).apply {
 
-                            val result = typeCategoryDataSource.createTypeCategory(this)
+                                val result = typeCategoryDataSource.createTypeCategory(this)
 
-                            if (result > 0) {
-                                call.respond(
-                                    HttpStatusCode.OK, MyResponse(
-                                        success = true,
-                                        message = "Type Category inserted successfully .",
-                                        data = this
+                                if (result > 0) {
+                                    val tempCategory = typeCategoryDataSource.getTypeCategoryByName(typeCategoryName!!)
+                                    call.respond(
+                                        HttpStatusCode.OK, MyResponse(
+                                            success = true,
+                                            message = "Type Category inserted successfully .",
+                                            data = tempCategory
+                                        )
                                     )
-                                )
-                                return@post
-                            } else {
-                                call.respond(
-                                    HttpStatusCode.OK,
-                                    MyResponse(
-                                        success = false,
-                                        message = "Type Category inserted failed .",
-                                        data = null
+                                    return@post
+                                } else {
+                                    call.respond(
+                                        HttpStatusCode.OK,
+                                        MyResponse(
+                                            success = false,
+                                            message = "Type Category inserted failed .",
+                                            data = null
+                                        )
                                     )
-                                )
-                                return@post
+                                    return@post
+                                }
                             }
+                        } else {
+                            storageService.deleteCategoryIcons(fileName = fileName!!)
+                            call.respond(
+                                status = HttpStatusCode.OK,
+                                message = MyResponse(
+                                    success = false,
+                                    message = "some Error happened while uploading .",
+                                    data = null
+                                )
+                            )
+                            return@post
                         }
                     } else {
-                        storageService.deleteCategoryIcons(fileName = fileName!!)
                         call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
+                            HttpStatusCode.OK, MyResponse(
                                 success = false,
-                                message = "some Error happened while uploading .",
+                                message = "Type Category inserted before .",
                                 data = null
                             )
                         )
                         return@post
                     }
                 } else {
-                    call.respond(
-                        HttpStatusCode.OK, MyResponse(
+                    return@post call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
                             success = false,
-                            message = "Type Category inserted before .",
+                            message = "Failed to Upload Image .",
                             data = null
                         )
                     )
-                    return@post
+
                 }
             } catch (exc: Exception) {
                 call.respond(
@@ -1103,7 +1134,9 @@ fun Route.categoriesAdminRoute() {
                             createdAt = temp.createdAt,
                             updatedAt = LocalDateTime.now().toDatabaseString()
                         )
-                        val updateResult = typeCategoryDataSource.updateTypeCategory(newTypeCategory)
+                        val updateResult =
+                            typeCategoryDataSource
+                            .updateTypeCategory(newTypeCategory)
                         if (updateResult > 0) {
                             call.respond(
                                 HttpStatusCode.OK,

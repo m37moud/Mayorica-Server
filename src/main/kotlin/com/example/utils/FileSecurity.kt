@@ -9,6 +9,11 @@ fun isImageContentType(contentType: String): Boolean {
     // Example: Check if the content type starts with "image/"
     return contentType.startsWith("image/")
 }
+fun isValidImage(name: String?) : Boolean {
+    val extension = name?.substringAfterLast(".", "")
+    val isImage = extension?.let { it in listOf("jpg", "jpeg", "png") } ?: false
+    return if (isImage) true else false
+}
 
 fun generateSafeFileName(originalFileName: String): String {
     // Sanitize the file name to prevent directory traversal attacks
