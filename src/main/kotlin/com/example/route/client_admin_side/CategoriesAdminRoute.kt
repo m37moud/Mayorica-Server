@@ -1114,6 +1114,7 @@ fun Route.categoriesAdminRoute() {
         put("$UPDATE_TYPE_CATEGORY/{id}") {
             try {
                 logger.debug { "get /$TYPE_CATEGORY/{id}" }
+
                 val id = call.parameters["id"]?.toIntOrNull()
                 id?.let {
                     val typeCategory = try {
