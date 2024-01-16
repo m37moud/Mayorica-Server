@@ -2,6 +2,7 @@ package com.example.data.gallery.categories
 
 import com.example.database.table.*
 import com.example.models.TypeCategory
+import com.example.models.TypeCategoryInfo
 import com.example.models.dto.TypeCategoryDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -106,6 +107,27 @@ class MySqlTypeCategoryDataSource(private val db: Database) : TypeCategoryDataSo
         }
     }
 
+    override suspend fun getTypeCategoryByIdDto(categoryTypeId: Int): TypeCategoryDto? {
+        logger.debug { "getTypeCategoryByIdDto: $categoryTypeId" }
+
+        return withContext(Dispatchers.IO) {
+            val typeCategory = db.from(TypeCategoryEntity)
+                .innerJoin(AdminUserEntity, on = TypeCategoryEntity.userAdminID eq AdminUserEntity.id)
+                .select(
+                    TypeCategoryEntity.id,
+                    AdminUserEntity.username,
+                    TypeCategoryEntity.typeName,
+                    TypeCategoryEntity.typeIcon,
+                    TypeCategoryEntity.createdAt,
+                    TypeCategoryEntity.updatedAt,
+                )
+                .where { TypeCategoryEntity.id eq categoryTypeId }
+                .map { rowToTypeCategoryDto(it) }
+                .firstOrNull()
+            typeCategory
+        }
+    }
+
     override suspend fun getTypeCategoryByName(categoryName: String): TypeCategory? {
         logger.debug { "getTypeCategoryByName: $categoryName" }
 
@@ -118,15 +140,35 @@ class MySqlTypeCategoryDataSource(private val db: Database) : TypeCategoryDataSo
             typeCategory
         }
     }
+    override suspend fun getTypeCategoryByNameDto(categoryName: String): TypeCategoryDto? {
+        logger.debug { "getTypeCategoryByName: $categoryName" }
 
-    override suspend fun createTypeCategory(typeCategory: TypeCategory): Int {
+        return withContext(Dispatchers.IO) {
+            val typeCategory = db.from(TypeCategoryEntity)
+                .innerJoin(AdminUserEntity, on = TypeCategoryEntity.userAdminID eq AdminUserEntity.id)
+                .select(
+                    TypeCategoryEntity.id,
+                    AdminUserEntity.username,
+                    TypeCategoryEntity.typeName,
+                    TypeCategoryEntity.typeIcon,
+                    TypeCategoryEntity.createdAt,
+                    TypeCategoryEntity.updatedAt,
+                )
+                .where { TypeCategoryEntity.typeName eq categoryName }
+                .map { rowToTypeCategoryDto(it) }
+                .firstOrNull()
+            typeCategory
+        }
+    }
+
+    override suspend fun createTypeCategory(typeCategory: TypeCategoryInfo): Int {
         logger.debug { "createTypeCategory: $typeCategory" }
 
         return withContext(Dispatchers.IO) {
             val result = db.insert(TypeCategoryEntity) {
                 set(it.typeName, typeCategory.typeName)
-                set(it.typeIcon, typeCategory.typeIcon)
-                set(it.userAdminID, typeCategory.userAdminID)
+                set(it.typeIcon, typeCategory.iconUrl)
+                set(it.userAdminID, typeCategory.userAdminId)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
             }
@@ -134,17 +176,17 @@ class MySqlTypeCategoryDataSource(private val db: Database) : TypeCategoryDataSo
         }
     }
 
-    override suspend fun updateTypeCategory(typeCategory: TypeCategory): Int {
-        logger.debug { "updateTypeCategory: $typeCategory" }
+    override suspend fun updateTypeCategory(id: Int, typeInfo: TypeCategoryInfo): Int {
+        logger.debug { "updateTypeCategory: $typeInfo" }
 
         return withContext(Dispatchers.IO) {
             val result = db.update(TypeCategoryEntity) {
-                set(it.typeName, typeCategory.typeName)
-                set(it.userAdminID, typeCategory.userAdminID)
-
+                set(it.typeName, typeInfo.typeName)
+                set(it.typeIcon, typeInfo.iconUrl)
+                set(it.userAdminID, typeInfo.userAdminId)
                 set(it.updatedAt, LocalDateTime.now())
                 where {
-                    it.id eq typeCategory.id
+                    it.id eq id
                 }
             }
             result
@@ -172,7 +214,7 @@ class MySqlTypeCategoryDataSource(private val db: Database) : TypeCategoryDataSo
     }
 
 
-    override suspend fun saveAllTypeCategory(typeCategories: Iterable<TypeCategory>): Int {
+    override suspend fun saveAllTypeCategory(typeCategories: Iterable<TypeCategoryInfo>): Int {
         logger.debug { "saveAllTypeCategory: $typeCategories" }
         return withContext(Dispatchers.IO) {
             var result = 0

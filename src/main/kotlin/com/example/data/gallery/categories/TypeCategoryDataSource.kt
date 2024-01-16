@@ -1,6 +1,7 @@
 package com.example.data.gallery.categories
 
 import com.example.models.TypeCategory
+import com.example.models.TypeCategoryInfo
 import com.example.models.dto.TypeCategoryDto
 import org.ktorm.schema.Column
 
@@ -18,12 +19,14 @@ interface TypeCategoryDataSource {
     ): List<TypeCategoryDto>
 
     suspend fun getTypeCategoryById(categoryTypeId: Int): TypeCategory?
+    suspend fun getTypeCategoryByIdDto(categoryTypeId: Int): TypeCategoryDto?
     suspend fun getTypeCategoryByName(categoryName: String): TypeCategory?
-    suspend fun createTypeCategory(typeCategory: TypeCategory): Int
-    suspend fun updateTypeCategory(typeCategory: TypeCategory): Int
+    suspend fun getTypeCategoryByNameDto(categoryName: String): TypeCategoryDto?
+    suspend fun createTypeCategory(typeCategory: TypeCategoryInfo): Int
+    suspend fun updateTypeCategory(id: Int, typeInfo: TypeCategoryInfo): Int
     suspend fun deleteTypeCategory(categoryTypeId: Int): Int
     suspend fun deleteAllTypeCategory(): Int
-    suspend fun saveAllTypeCategory(typeCategories: Iterable<TypeCategory>): Int
+    suspend fun saveAllTypeCategory(typeCategories: Iterable<TypeCategoryInfo>): Int
 
 
 }

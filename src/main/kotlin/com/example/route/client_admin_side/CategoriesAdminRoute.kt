@@ -9,6 +9,7 @@ import com.example.models.*
 import com.example.models.request.categories.ColorCategoryRequest
 import com.example.service.storage.StorageService
 import com.example.utils.*
+import com.example.utils.Claim.USER_ID
 import com.example.utils.Constants.ADMIN_CLIENT
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -138,6 +139,7 @@ fun Route.categoriesAdminRoute() {
                     }
                     part.dispose()
                 }
+
                 if (fileName != null && fileBytes != null) {
                     val typeCategory = typeCategoryDataSource.getTypeCategoryByName(typeCategoryName!!)
                     if (typeCategory == null) {
@@ -162,18 +164,18 @@ fun Route.categoriesAdminRoute() {
                         }
                         if (!imageUrl.isNullOrEmpty()) {
 
-                            TypeCategory(
+                            TypeCategoryInfo(
                                 typeName = typeCategoryName!!,
-                                typeIcon = imageUrl,
-                                userAdminID = userId!!,
-                                createdAt = LocalDateTime.now().toDatabaseString(),
-                                updatedAt = LocalDateTime.now().toDatabaseString()
+                                iconUrl = imageUrl,
+                                userAdminId = userId!!,
                             ).apply {
 
-                                val result = typeCategoryDataSource.createTypeCategory(this)
+                                val result = typeCategoryDataSource
+                                    .createTypeCategory(this)
 
                                 if (result > 0) {
-                                    val tempCategory = typeCategoryDataSource.getTypeCategoryByName(typeCategoryName!!)
+                                    val tempCategory = typeCategoryDataSource
+                                        .getTypeCategoryByNameDto(typeCategoryName!!)
                                     call.respond(
                                         HttpStatusCode.OK, MyResponse(
                                             success = true,
@@ -1115,58 +1117,192 @@ fun Route.categoriesAdminRoute() {
             try {
                 logger.debug { "get /$TYPE_CATEGORY/{id}" }
 
-                val id = call.parameters["id"]?.toIntOrNull()
-                id?.let {
-                    val typeCategory = try {
-                        call.receive<TypeCategory>()
-                    } catch (exc: Exception) {
-                        call.respond(
-                            HttpStatusCode.Conflict,
-                            MyResponse(
-                                success = false,
-                                message = exc.message ?: "update Failed .",
-                                data = null
-                            )
+                val multiPart = call.receiveMultipart()
+                var typeCategoryName: String? = null
+                var fileName: String? = null
+                var fileBytes: ByteArray? = null
+                var url: String? = null
+                var imageUrl: String? = null
+                val principal = call.principal<JWTPrincipal>()
+                val userId = try {
+                    principal?.getClaim(USER_ID, String::class)?.toIntOrNull()
+                } catch (e: Exception) {
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        MyResponse(
+                            success = false,
+                            message = e.message ?: "Failed ",
+                            data = null
                         )
-                        return@put
-                    }
-                    typeCategoryDataSource.getTypeCategoryById(id)?.let { temp ->
-                        val newTypeCategory = typeCategory.copy(
-                            createdAt = temp.createdAt,
-                            updatedAt = LocalDateTime.now().toDatabaseString()
-                        )
-                        val updateResult =
-                            typeCategoryDataSource
-                            .updateTypeCategory(newTypeCategory)
-                        if (updateResult > 0) {
-                            call.respond(
-                                HttpStatusCode.OK,
-                                MyResponse(
-                                    success = true,
-                                    message = "type category updated successfully .",
-                                    data = typeCategory
+                    )
+                    return@put
+                }
+
+                multiPart.forEachPart { part ->
+                    logger.debug { "PartData contentType = ${part.contentType}" }
+                    logger.debug { "PartData contentDisposition = ${part.contentDisposition}" }
+                    logger.debug { "PartData name = ${part.name}" }
+                    logger.debug { "PartData headers = ${part.headers}" }
+
+                    when (part) {
+                        is PartData.FormItem -> {
+                            logger.debug { "PartData FormItem = $part" }
+
+                            // to read parameters that we sent with the image
+                            when (part.name) {
+                                "typeCategoryName" -> {
+                                    typeCategoryName = part.value
+                                }
+                            }
+                        }
+
+                        is PartData.FileItem -> {
+                            logger.debug { "PartData FileItem = $part" }
+
+                            if (!isImageContentType(part.contentType.toString())) {
+                                call.respond(
+                                    message = MyResponse(
+                                        success = false,
+                                        message = "Invalid file format",
+                                        data = null
+                                    ),
+                                    status = HttpStatusCode.BadRequest
                                 )
+                                part.dispose()
+                                return@forEachPart
+
+
+                            }
+                            fileName = generateSafeFileName(part.originalFileName as String)
+                            logger.debug { "FileItem fileName = ${part.originalFileName}" }
+
+                            fileBytes = part.streamProvider().readBytes()
+                            logger.debug { "FileItem fileName = $fileBytes" }
+                            val baseUrl =
+                                call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "${Constants.ENDPOINT}/image/"
+
+                            url = "${baseUrl}categories/icons/${fileName}"
+
+                        }
+
+                        else -> {
+                            logger.debug { "PartData else = ${part}" }
+                            part.dispose()
+                            return@forEachPart
+                        }
+
+                    }
+                    part.dispose()
+                }
+
+
+                call.parameters["id"]?.toIntOrNull()?.let { typeId ->
+                    logger.debug { "try to get old category data from db" }
+
+                    typeCategoryDataSource.getTypeCategoryById(typeId)?.let { tempType ->
+                        logger.debug { " get old category data successfully from db" }
+                        logger.debug {
+                            "check image data which fileName = $fileName \n " +
+                                    "url = $url"
+                        }
+                        if (fileName != null &&
+                            url != null &&
+                            fileBytes != null &&
+                            typeCategoryName != null
+                        ) {
+                            logger.debug { " get category data successfully from request" }
+                            logger.debug { "try to delete old icon from storage first extract oldImageName " }
+                            try {
+                                val oldImageName = tempType.typeIcon.substringAfterLast("/")
+                                logger.debug { "oldImageName  = $oldImageName" }
+
+                                storageService.deleteCategoryIcons(oldImageName)
+                            } catch (e: Exception) {
+                                logger.debug { "failed to delete old icon from storage" }
+                                return@put call.respond(
+                                    HttpStatusCode.InternalServerError,
+                                    MyResponse(
+                                        success = false,
+                                        message = e.message ?: "failed to delete old icon from storage",
+                                        data = null
+                                    )
+                                )
+                            }
+                            logger.debug { "old icon is deleted successfully from storage" }
+                            logger.debug { "try to save new icon in storage " }
+                            imageUrl = try {
+                                storageService
+                                    .saveCategoryIcons(
+                                        fileName = fileName!!,
+                                        fileUrl = url!!,
+                                        fileBytes = fileBytes!!
+                                    )
+                            } catch (e: Exception) {
+                                logger.debug { "Failed to save the new icon in storage" }
+
+                                storageService.deleteCategoryIcons(fileName = fileName!!)
+                                call.respond(
+                                    status = HttpStatusCode.InternalServerError,
+                                    message = MyResponse(
+                                        success = false,
+                                        message = e.message ?: "Error happened while uploading Image.",
+                                        data = null
+                                    )
+                                )
+                                return@put
+                            }
+                            logger.debug { "new icon is saved successfully in storage" }
+                            logger.debug { "try to save category data in database " }
+
+                            val createdCategory = TypeCategoryInfo(
+                                typeName = typeCategoryName!!,
+                                iconUrl = imageUrl!!,
+                                userAdminId = userId!!
                             )
+                            logger.debug { "createdCategory  = $createdCategory" }
+                            logger.debug { "try to update category data in database " }
+                            val updateResult = typeCategoryDataSource.updateTypeCategory(
+                                id = typeId,
+                                typeInfo = createdCategory
+                            )
+                            if (updateResult > 0) {
+                                logger.debug { "category is updated successfully into database " }
+
+                                val updatedCategory = typeCategoryDataSource
+                                    .getTypeCategoryByIdDto(typeId)
+                                return@put call.respond(
+                                    HttpStatusCode.OK,
+                                    MyResponse(
+                                        success = true,
+                                        message = "type category updated successfully .",
+                                        data = updatedCategory
+                                    )
+                                )
+                            } else {
+                                logger.debug { "type category updated failed." }
+
+                                return@put call.respond(
+                                    HttpStatusCode.OK,
+                                    MyResponse(
+                                        success = false,
+                                        message = " type category updated failed .",
+                                        data = null
+                                    )
+                                )
+                            }
                         } else {
-                            call.respond(
-                                HttpStatusCode.OK,
+                            logger.debug { "Failed to receive category data from request" }
+                            return@put call.respond(
+                                HttpStatusCode.Conflict,
                                 MyResponse(
                                     success = false,
-                                    message = " type category updated failed .",
+                                    message = "Failed to receive category data fro request.",
                                     data = null
                                 )
                             )
                         }
-                    } ?: call.respond(
-                        HttpStatusCode.NotFound,
-                        MyResponse(
-                            success = false,
-                            message = "no type category is found .",
-                            data = null
-                        )
-                    )
 
-
+                    }
                 } ?: call.respond(
                     HttpStatusCode.BadRequest,
                     MyResponse(
