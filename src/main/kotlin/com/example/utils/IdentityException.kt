@@ -3,6 +3,7 @@ package com.example.utils
 open class IdentityException(message: String) : Throwable(message)
 
 class UserAlreadyExistsException(message: String) : IdentityException(message)
+class AlreadyExistsException(message: String) : IdentityException(message)
 class ResourceNotFoundException(message: String) : IdentityException(message)
 
 class MissingParameterException(message: String) : IdentityException(message)

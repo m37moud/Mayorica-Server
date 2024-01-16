@@ -604,7 +604,8 @@ fun Route.categoriesAdminRoute() {
                         )
                     } else {
                         call.respond(
-                            HttpStatusCode.NotFound, MyResponse(
+                            HttpStatusCode.OK,
+                            MyResponse(
                                 success = false,
                                 message = "type categories is empty",
                                 data = null
@@ -1198,8 +1199,8 @@ fun Route.categoriesAdminRoute() {
 
                 call.parameters["id"]?.toIntOrNull()?.let { typeId ->
                     logger.debug { "try to get old category data from db" }
-
-                    typeCategoryDataSource.getTypeCategoryById(typeId)?.let { tempType ->
+                    val tempType = typeCategoryDataSource.getTypeCategoryById(typeId)
+                    if (tempType != null) {
                         logger.debug { " get old category data successfully from db" }
                         logger.debug {
                             "check image data which fileName = $fileName \n " +
@@ -1210,6 +1211,19 @@ fun Route.categoriesAdminRoute() {
                             fileBytes != null &&
                             typeCategoryName != null
                         ) {
+
+                            if (typeCategoryDataSource.getTypeCategoryByName(typeCategoryName!!) != null) {
+//                                return@put call.respond(
+//                                    HttpStatusCode.UnprocessableEntity,
+//                                    MyResponse(
+//                                        success = false,
+//                                        message = "that name ($typeCategoryName) is already found ",
+//                                        data = null
+//                                    )
+//                                )
+                                 throw AlreadyExistsException("that name ($typeCategoryName) is already found ")
+
+                            }
                             logger.debug { " get category data successfully from request" }
                             logger.debug { "try to delete old icon from storage first extract oldImageName " }
                             try {
@@ -1303,6 +1317,8 @@ fun Route.categoriesAdminRoute() {
                         }
 
                     }
+
+
                 } ?: call.respond(
                     HttpStatusCode.BadRequest,
                     MyResponse(

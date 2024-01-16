@@ -29,15 +29,27 @@ private fun StatusPagesConfig.handleStatusPageExceptions() {
     respondWithErrorCodes<InvalidCredentialsException>(HttpStatusCode.Unauthorized)
 
     respondWithErrorCodes<InvalidLocationException>(HttpStatusCode.BadRequest)
+
+    respondWithErrorCodes<AlreadyExistsException>(HttpStatusCode.UnprocessableEntity)
 }
 
 private inline fun <reified T : Throwable> StatusPagesConfig.respondWithErrorCodes(
     statusCode: HttpStatusCode
 ) {
     exception<T> { call, t ->
+        println("Status Code = $t")
 
-        val reasons = t.message?.split(",")?.map { it.toInt() }?: emptyList()
-            call.respond(statusCode,reasons)
+        val reasons = t.message?.split(",") ?: emptyList()
+        println("Status reasons = $reasons")
+
+        call.respond(
+            status = statusCode,
+            MyResponse(
+                success = false,
+                message = t.message ?: "Some thing goes wrong .",
+                data = null
+            )
+        )
 
     }
 
