@@ -4,8 +4,10 @@ import com.example.data.gallery.categories.TypeCategoryDataSource
 import com.example.data.gallery.categories.color.ColorCategoryDataSource
 import com.example.data.gallery.categories.size.SizeCategoryDataSource
 import com.example.database.table.TypeCategoryEntity
+import com.example.mapper.toEntity
 import com.example.mapper.toModelCreate
 import com.example.models.*
+import com.example.models.dto.TypeCategoryCreateDto
 import com.example.models.request.categories.ColorCategoryRequest
 import com.example.service.storage.StorageService
 import com.example.utils.*
@@ -50,196 +52,219 @@ fun Route.categoriesAdminRoute() {
     val sizeCategoryDataSource: SizeCategoryDataSource by inject()
     val colorCategoryDataSource: ColorCategoryDataSource by inject()
     val storageService: StorageService by inject()
+    val imageValidator: ImageValidator by inject()
 
     authenticate {
         /**
          * create new category
          */
         //post type category //api/v1/admin-client/category/type/create
+//        post(CREATE_TYPE_CATEGORY) {
+//            logger.debug { "POST /$CREATE_TYPE_CATEGORY" }
+//            val multiPart = call.receiveMultipart()
+//            var typeCategoryName: String? = null
+//            var fileName: String? = null
+//            var fileBytes: ByteArray? = null
+//            var url: String? = null
+//            var imageUrl: String? = null
+//            val principal = call.principal<JWTPrincipal>()
+//            val userId = try {
+//                principal?.getClaim("userId", String::class)?.toIntOrNull()
+//            } catch (e: Exception) {
+//                call.respond(
+//                    HttpStatusCode.Conflict,
+//                    MyResponse(
+//                        success = false,
+//                        message = e.message ?: "Failed ",
+//                        data = null
+//                    )
+//                )
+//                return@post
+//            }
+//            try {
+//
+//                val baseUrl =
+//                    call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "${Constants.ENDPOINT}/image/"
+//                multiPart.forEachPart { part ->
+//                    logger.debug { "PartData contentType = ${part.contentType}" }
+//                    logger.debug { "PartData contentDisposition = ${part.contentDisposition}" }
+//                    logger.debug { "PartData name = ${part.name}" }
+//                    logger.debug { "PartData headers = ${part.headers}" }
+//
+//                    when (part) {
+//                        is PartData.FormItem -> {
+//                            logger.debug { "PartData FormItem = ${part}" }
+//
+//                            // to read parameters that we sent with the image
+//                            when (part.name) {
+//                                "typeCategoryName" -> {
+//                                    typeCategoryName = part.value
+//                                }
+//
+//
+//                            }
+//
+//                        }
+//
+//                        is PartData.FileItem -> {
+//                            logger.debug { "PartData FileItem = ${part}" }
+//
+//                            if (!isValidImage(part.contentType.toString())) {
+//                                throw ErrorException("Invalid file format")
+////                                call.respond(
+////                                    message = MyResponse(
+////                                        success = false,
+////                                        message = "Invalid file format",
+////                                        data = null
+////                                    ),
+////                                    status = HttpStatusCode.BadRequest
+////                                )
+////                                part.dispose()
+////                                return@forEachPart
+//
+//
+//                            }
+//                            fileName = generateSafeFileName(part.originalFileName as String)
+//                            logger.debug { "FileItem fileName = ${part.originalFileName}" }
+//
+//                            fileBytes = part.streamProvider().readBytes()
+//                            logger.debug { "FileItem fileBytes = ${fileBytes}" }
+//
+//                            url = "${baseUrl}categories/icons/${fileName}"
+//
+//                        }
+//
+//                        else -> {
+//                            logger.debug { "PartData else = ${part}" }
+//                            part.dispose()
+//                            return@forEachPart
+//                        }
+//
+//                    }
+//                    part.dispose()
+//                }
+//
+//                if (fileName != null && fileBytes != null) {
+//                    val typeCategory = typeCategoryDataSource.getTypeCategoryByName(typeCategoryName!!)
+//                    if (typeCategory == null) {
+//                        imageUrl = try {
+//                            storageService
+//                                .saveCategoryIcons(
+//                                    fileName = fileName!!,
+//                                    fileUrl = url!!,
+//                                    fileBytes = fileBytes!!
+//                                )
+//                        } catch (e: Exception) {
+//                            storageService.deleteCategoryIcons(fileName = fileName!!)
+//                            call.respond(
+//                                status = HttpStatusCode.InternalServerError,
+//                                message = MyResponse(
+//                                    success = false,
+//                                    message = e.message ?: "Error happened while uploading Image.",
+//                                    data = null
+//                                )
+//                            )
+//                            return@post
+//                        }
+//                        if (!imageUrl.isNullOrEmpty()) {
+//
+//                            TypeCategoryInfo(
+//                                typeName = typeCategoryName!!,
+//                                iconUrl = imageUrl,
+//                                userAdminId = userId!!,
+//                            ).apply {
+//
+//                                val result = typeCategoryDataSource
+//                                    .createTypeCategory(this)
+//
+//                                if (result > 0) {
+//                                    val tempCategory = typeCategoryDataSource
+//                                        .getTypeCategoryByNameDto(typeCategoryName!!)
+//                                    call.respond(
+//                                        HttpStatusCode.OK, MyResponse(
+//                                            success = true,
+//                                            message = "Type Category inserted successfully .",
+//                                            data = tempCategory
+//                                        )
+//                                    )
+//                                    return@post
+//                                } else {
+//                                    call.respond(
+//                                        HttpStatusCode.OK,
+//                                        MyResponse(
+//                                            success = false,
+//                                            message = "Type Category inserted failed .",
+//                                            data = null
+//                                        )
+//                                    )
+//                                    return@post
+//                                }
+//                            }
+//                        } else {
+//                            storageService.deleteCategoryIcons(fileName = fileName!!)
+//                            call.respond(
+//                                status = HttpStatusCode.OK,
+//                                message = MyResponse(
+//                                    success = false,
+//                                    message = "some Error happened while uploading .",
+//                                    data = null
+//                                )
+//                            )
+//                            return@post
+//                        }
+//                    } else {
+//                        call.respond(
+//                            HttpStatusCode.OK, MyResponse(
+//                                success = false,
+//                                message = "Type Category inserted before .",
+//                                data = null
+//                            )
+//                        )
+//                        return@post
+//                    }
+//                } else {
+//                    return@post call.respond(
+//                        HttpStatusCode.Conflict,
+//                        MyResponse(
+//                            success = false,
+//                            message = "Failed to Upload Image .",
+//                            data = null
+//                        )
+//                    )
+//
+//                }
+//            } catch (exc: Exception) {
+//                call.respond(
+//                    HttpStatusCode.Conflict,
+//                    MyResponse(
+//                        success = false,
+//                        message = exc.message ?: "Creation Failed .",
+//                        data = null
+//                    )
+//                )
+//                return@post
+//            }
+//
+//
+//        }
         post(CREATE_TYPE_CATEGORY) {
             logger.debug { "POST /$CREATE_TYPE_CATEGORY" }
-            val multiPart = call.receiveMultipart()
-            var typeCategoryName: String? = null
-            var fileName: String? = null
-            var fileBytes: ByteArray? = null
-            var url: String? = null
-            var imageUrl: String? = null
-            val principal = call.principal<JWTPrincipal>()
-            val userId = try {
-                principal?.getClaim("userId", String::class)?.toIntOrNull()
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Failed ",
-                        data = null
-                    )
+            val multiPart = receiveMultipart<TypeCategoryCreateDto>(imageValidator)
+            val userId = extractAdminId()
+            val url = "${multiPart.baseUrl}categories/icons/${multiPart.fileName}"
+            val imageUrl = multiPart.image?.let { img ->
+                storageService.saveCategoryIcons(
+                    fileName = multiPart.data.typeName,
+                    fileUrl = url, fileBytes = img
                 )
-                return@post
-            }
-            try {
-
-                val baseUrl =
-                    call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "${Constants.ENDPOINT}/image/"
-                multiPart.forEachPart { part ->
-                    logger.debug { "PartData contentType = ${part.contentType}" }
-                    logger.debug { "PartData contentDisposition = ${part.contentDisposition}" }
-                    logger.debug { "PartData name = ${part.name}" }
-                    logger.debug { "PartData headers = ${part.headers}" }
-
-                    when (part) {
-                        is PartData.FormItem -> {
-                            logger.debug { "PartData FormItem = ${part}" }
-
-                            // to read parameters that we sent with the image
-                            when (part.name) {
-                                "typeCategoryName" -> {
-                                    typeCategoryName = part.value
-                                }
-
-
-                            }
-
-                        }
-
-                        is PartData.FileItem -> {
-                            logger.debug { "PartData FileItem = ${part}" }
-
-                            if (!isImageContentType(part.contentType.toString())) {
-                                call.respond(
-                                    message = MyResponse(
-                                        success = false,
-                                        message = "Invalid file format",
-                                        data = null
-                                    ),
-                                    status = HttpStatusCode.BadRequest
-                                )
-                                part.dispose()
-                                return@forEachPart
-
-
-                            }
-                            fileName = generateSafeFileName(part.originalFileName as String)
-                            logger.debug { "FileItem fileName = ${part.originalFileName}" }
-
-                            fileBytes = part.streamProvider().readBytes()
-                            logger.debug { "FileItem fileName = ${fileBytes}" }
-
-                            url = "${baseUrl}categories/icons/${fileName}"
-
-                        }
-
-                        else -> {
-                            logger.debug { "PartData else = ${part}" }
-                            part.dispose()
-                            return@forEachPart
-                        }
-
-                    }
-                    part.dispose()
-                }
-
-                if (fileName != null && fileBytes != null) {
-                    val typeCategory = typeCategoryDataSource.getTypeCategoryByName(typeCategoryName!!)
-                    if (typeCategory == null) {
-                        imageUrl = try {
-                            storageService
-                                .saveCategoryIcons(
-                                    fileName = fileName!!,
-                                    fileUrl = url!!,
-                                    fileBytes = fileBytes!!
-                                )
-                        } catch (e: Exception) {
-                            storageService.deleteCategoryIcons(fileName = fileName!!)
-                            call.respond(
-                                status = HttpStatusCode.InternalServerError,
-                                message = MyResponse(
-                                    success = false,
-                                    message = e.message ?: "Error happened while uploading Image.",
-                                    data = null
-                                )
-                            )
-                            return@post
-                        }
-                        if (!imageUrl.isNullOrEmpty()) {
-
-                            TypeCategoryInfo(
-                                typeName = typeCategoryName!!,
-                                iconUrl = imageUrl,
-                                userAdminId = userId!!,
-                            ).apply {
-
-                                val result = typeCategoryDataSource
-                                    .createTypeCategory(this)
-
-                                if (result > 0) {
-                                    val tempCategory = typeCategoryDataSource
-                                        .getTypeCategoryByNameDto(typeCategoryName!!)
-                                    call.respond(
-                                        HttpStatusCode.OK, MyResponse(
-                                            success = true,
-                                            message = "Type Category inserted successfully .",
-                                            data = tempCategory
-                                        )
-                                    )
-                                    return@post
-                                } else {
-                                    call.respond(
-                                        HttpStatusCode.OK,
-                                        MyResponse(
-                                            success = false,
-                                            message = "Type Category inserted failed .",
-                                            data = null
-                                        )
-                                    )
-                                    return@post
-                                }
-                            }
-                        } else {
-                            storageService.deleteCategoryIcons(fileName = fileName!!)
-                            call.respond(
-                                status = HttpStatusCode.OK,
-                                message = MyResponse(
-                                    success = false,
-                                    message = "some Error happened while uploading .",
-                                    data = null
-                                )
-                            )
-                            return@post
-                        }
-                    } else {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "Type Category inserted before .",
-                                data = null
-                            )
-                        )
-                        return@post
-                    }
-                } else {
-                    return@post call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = "Failed to Upload Image .",
-                            data = null
-                        )
-                    )
-
-                }
-            } catch (exc: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = exc.message ?: "Creation Failed .",
-                        data = null
-                    )
-                )
-                return@post
-            }
+            } ?: throw ErrorException("Upload Image Failed .")
+            val typeCategoryDto = multiPart.data.copy(iconUrl = imageUrl)
+            val createdCategory = typeCategoryDataSource
+                .addTypeCategory(typeCategoryDto.toEntity(userId))
+            respondWithResult(
+                statusCode = HttpStatusCode.OK, result = createdCategory,
+                message = "Type Category inserted successfully ."
+            )
 
 
         }
@@ -1160,17 +1185,18 @@ fun Route.categoriesAdminRoute() {
                         is PartData.FileItem -> {
                             logger.debug { "PartData FileItem = $part" }
 
-                            if (!isImageContentType(part.contentType.toString())) {
-                                call.respond(
-                                    message = MyResponse(
-                                        success = false,
-                                        message = "Invalid file format",
-                                        data = null
-                                    ),
-                                    status = HttpStatusCode.BadRequest
-                                )
-                                part.dispose()
-                                return@forEachPart
+                            if (!isValidImage(part.originalFileName.toString())) {
+                                throw ErrorException("Invalid file format")
+//                                call.respond(
+//                                    message = MyResponse(
+//                                        success = false,
+//                                        message = "Invalid file format",
+//                                        data = null
+//                                    ),
+//                                    status = HttpStatusCode.BadRequest
+//                                )
+//                                part.dispose()
+//                                return@forEachPart
 
 
                             }
@@ -1178,7 +1204,7 @@ fun Route.categoriesAdminRoute() {
                             logger.debug { "FileItem fileName = ${part.originalFileName}" }
 
                             fileBytes = part.streamProvider().readBytes()
-                            logger.debug { "FileItem fileName = $fileBytes" }
+                            logger.debug { "FileItem fileBytes = $fileBytes" }
                             val baseUrl =
                                 call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "${Constants.ENDPOINT}/image/"
 
@@ -1213,15 +1239,7 @@ fun Route.categoriesAdminRoute() {
                         ) {
 
                             if (typeCategoryDataSource.getTypeCategoryByName(typeCategoryName!!) != null) {
-//                                return@put call.respond(
-//                                    HttpStatusCode.UnprocessableEntity,
-//                                    MyResponse(
-//                                        success = false,
-//                                        message = "that name ($typeCategoryName) is already found ",
-//                                        data = null
-//                                    )
-//                                )
-                                 throw AlreadyExistsException("that name ($typeCategoryName) is already found ")
+                                throw AlreadyExistsException("that name ($typeCategoryName) is already found ")
 
                             }
                             logger.debug { " get category data successfully from request" }
@@ -1319,14 +1337,8 @@ fun Route.categoriesAdminRoute() {
                     }
 
 
-                } ?: call.respond(
-                    HttpStatusCode.BadRequest,
-                    MyResponse(
-                        success = false,
-                        message = "Missing parameters .",
-                        data = null
-                    )
-                )
+                } ?: throw MissingParameterException("Missing parameters .")
+
 
             } catch (exc: Exception) {
                 call.respond(

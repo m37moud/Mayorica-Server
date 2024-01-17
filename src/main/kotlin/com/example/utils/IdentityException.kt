@@ -15,3 +15,5 @@ class RequestValidationException(list: List<String>) : IdentityException(list.jo
 class InvalidCredentialsException(message: String) : IdentityException(message)
 
 class InvalidLocationException(message: String) : IdentityException(message)
+class UnknownErrorException(message: String) : IdentityException(message)
+class ErrorException(message: String) : IdentityException(message)

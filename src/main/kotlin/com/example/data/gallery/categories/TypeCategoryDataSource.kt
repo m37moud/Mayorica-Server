@@ -22,6 +22,7 @@ interface TypeCategoryDataSource {
     suspend fun getTypeCategoryByIdDto(categoryTypeId: Int): TypeCategoryDto?
     suspend fun getTypeCategoryByName(categoryName: String): TypeCategory?
     suspend fun getTypeCategoryByNameDto(categoryName: String): TypeCategoryDto?
+    suspend fun addTypeCategory(typeCategory: TypeCategoryInfo): TypeCategoryDto
     suspend fun createTypeCategory(typeCategory: TypeCategoryInfo): Int
     suspend fun updateTypeCategory(id: Int, typeInfo: TypeCategoryInfo): Int
     suspend fun deleteTypeCategory(categoryTypeId: Int): Int

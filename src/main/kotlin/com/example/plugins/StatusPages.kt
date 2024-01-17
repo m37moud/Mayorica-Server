@@ -30,14 +30,17 @@ private fun StatusPagesConfig.handleStatusPageExceptions() {
 
     respondWithErrorCodes<InvalidLocationException>(HttpStatusCode.BadRequest)
 
-    respondWithErrorCodes<AlreadyExistsException>(HttpStatusCode.UnprocessableEntity)
+    respondWithErrorCodes<AlreadyExistsException>(HttpStatusCode.BadRequest)
+
+    respondWithErrorCodes<UnknownErrorException>(HttpStatusCode.BadRequest)
+    respondWithErrorCodes<ErrorException>(HttpStatusCode.UnprocessableEntity)
 }
 
 private inline fun <reified T : Throwable> StatusPagesConfig.respondWithErrorCodes(
     statusCode: HttpStatusCode
 ) {
     exception<T> { call, t ->
-        println("Status Code = $t")
+        println("Status Code = ${t.message}")
 
         val reasons = t.message?.split(",") ?: emptyList()
         println("Status reasons = $reasons")

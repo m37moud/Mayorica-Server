@@ -1,8 +1,9 @@
 package com.example.utils
 
 import org.koin.core.annotation.Single
+import org.koin.core.annotation.Singleton
 
-@Single
+@Singleton
 class ImageValidator {
     fun isValid(name: String?) : Boolean {
         val extension = name?.substringAfterLast(".", "")
