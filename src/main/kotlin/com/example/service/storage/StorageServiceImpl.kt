@@ -1,8 +1,9 @@
 package com.example.service.storage
 
 import com.example.config.AppConfig
+import com.example.utils.DeleteImageException
+import com.example.utils.UploadImageException
 import io.ktor.http.content.*
-import io.ktor.server.config.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
@@ -33,14 +34,6 @@ class StorageServiceImpl(
     private val categoryIcons by lazy { "$uploadDir/categories/icons" }
     private val categoryImages by lazy { "$uploadDir/categories/images" }
 
-    /**
-     * delete variable
-     */
-    private val deleteProducts by lazy { "image/products" }
-    private val deleteNews by lazy { "image/news" }
-    private val deleteOffers by lazy { "image/offers" }
-    private val deleteCategoryIcons by lazy { "image/categories/icons" }
-    private val deleteCategoryImages by lazy { "image/categories/images" }
 
     init {
         logger.debug { " Starting Storage Service in $uploadDir" }
@@ -70,6 +63,8 @@ class StorageServiceImpl(
 //        }
     }
 
+    fun checkOperation(path: String) = (File(path).exists())
+
     /**
      * Saves a file in our storage
      * @param fileName String Name of the file
@@ -85,30 +80,39 @@ class StorageServiceImpl(
         logger.debug { "Saving file in: $fileName" }
 
         return withContext(Dispatchers.IO) {
+            val path = "${products}/$fileName"
+            File(path).writeBytes(fileBytes)
+            if (checkOperation(path)) {
+                fileUrl
+            } else
+                throw UploadImageException("Failed To Upload Image")
 
-
-            File("${products}/$fileName").writeBytes(fileBytes)
-
-            fileUrl
         }
 
     }
+
     override suspend fun saveCategoryIcons(
         fileName: String,
         fileUrl: String,
         fileBytes: ByteArray
-    ): String? {
-        logger.debug { "Saving file in: $fileName" }
+    ): String {
+        logger.debug { "Saving file in: ${categoryIcons}/$fileName" }
 
         return withContext(Dispatchers.IO) {
 
+            val path = "${categoryIcons}/$fileName"
+            File(path).writeBytes(fileBytes)
+            if (checkOperation(path)) {
+                fileUrl
+            } else
+                throw UploadImageException("Failed To Upload Image")
 
-            File("${categoryIcons}/$fileName").writeBytes(fileBytes)
 
-            fileUrl
+
         }
 
     }
+
     override suspend fun saveCategoryImages(
         fileName: String,
         fileUrl: String,
@@ -117,11 +121,13 @@ class StorageServiceImpl(
         logger.debug { "Saving file in: $fileName" }
 
         return withContext(Dispatchers.IO) {
+            val path = "${categoryImages}/$fileName"
+            File(path).writeBytes(fileBytes)
+            if (checkOperation(path)) {
+                fileUrl
+            } else
+                throw UploadImageException("Failed To Upload Image")
 
-
-            File("${categoryImages}/$fileName").writeBytes(fileBytes)
-
-            fileUrl
         }
 
     }
@@ -135,14 +141,17 @@ class StorageServiceImpl(
         logger.debug { "Saving file in: $fileName" }
 
         return withContext(Dispatchers.IO) {
+            val path = "${news}/$fileName"
+            File(path).writeBytes(fileBytes)
+            if (checkOperation(path)) {
+                fileUrl
+            } else
+                throw UploadImageException("Failed To Upload Image")
 
-
-            File("${news}/$fileName").writeBytes(fileBytes)
-
-            fileUrl
         }
 
     }
+
     override suspend fun saveOfferImage(
         fileName: String,
         fileUrl: String,
@@ -151,11 +160,13 @@ class StorageServiceImpl(
         logger.debug { "Saving file in: $fileName" }
 
         return withContext(Dispatchers.IO) {
+            val path = "${offers}/$fileName"
+            File(path).writeBytes(fileBytes)
+            if (checkOperation(path)) {
+                fileUrl
+            } else
+                throw UploadImageException("Failed To Upload Image")
 
-
-            File("${offers}/$fileName").writeBytes(fileBytes)
-
-            fileUrl
         }
 
     }
@@ -185,17 +196,26 @@ class StorageServiceImpl(
         logger.debug { "deleteProductImage: $fileName" }
 
         return withContext(Dispatchers.IO) {
-            Files.deleteIfExists(Path.of("${deleteProducts}/$fileName"))
-            true
+            val path = "${products}/$fileName"
+            if (checkOperation(path)) {
+                Files.deleteIfExists(Path.of(path))
+            } else
+                throw DeleteImageException("Failed To Upload Image")
+
         }
     }
 
     override suspend fun deleteCategoryIcons(fileName: String): Boolean {
-        logger.debug { "Remove file: $fileName" }
+        logger.debug { "deleteCategoryIcons Remove file:${categoryIcons}/$fileName" }
 
         return withContext(Dispatchers.IO) {
-            Files.deleteIfExists(Path.of("${deleteCategoryIcons}/$fileName"))
-            true
+            val path = "${categoryIcons}/$fileName"
+            if (checkOperation(path)) {
+                Files.deleteIfExists(Path.of(path))
+            } else
+                throw DeleteImageException("Failed To Delete Image")
+
+
         }
     }
 
@@ -203,24 +223,36 @@ class StorageServiceImpl(
         logger.debug { "deleteCategoryImages: $fileName" }
 
         return withContext(Dispatchers.IO) {
-            Files.deleteIfExists(Path.of("${deleteCategoryImages}/$fileName"))
-            true
+            val path = "${categoryImages}/$fileName"
+            if (checkOperation(path)) {
+                Files.deleteIfExists(Path.of(path))
+            } else
+                throw DeleteImageException("Failed To Delete Image")
+
         }
     }
+
     override suspend fun deleteNewsImages(fileName: String): Boolean {
         logger.debug { "deleteProductImage: $fileName" }
 
         return withContext(Dispatchers.IO) {
-            Files.deleteIfExists(Path.of("${deleteNews}/$fileName"))
-            true
+            val path = "${news}/$fileName"
+            if (checkOperation(path)) {
+                Files.deleteIfExists(Path.of(path))
+            } else
+                throw DeleteImageException("Failed To Delete Image")
         }
     }
+
     override suspend fun deleteOfferImages(fileName: String): Boolean {
         logger.debug { "deleteProductImage: $fileName" }
 
         return withContext(Dispatchers.IO) {
-            Files.deleteIfExists(Path.of("${deleteOffers}/$fileName"))
-            true
+            val path = "${offers}/$fileName"
+            if (checkOperation(path)) {
+                Files.deleteIfExists(Path.of(path))
+            } else
+                throw DeleteImageException("Failed To Delete Image")
         }
     }
 

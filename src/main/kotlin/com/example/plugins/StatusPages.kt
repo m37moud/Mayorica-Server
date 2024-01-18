@@ -33,7 +33,10 @@ private fun StatusPagesConfig.handleStatusPageExceptions() {
     respondWithErrorCodes<AlreadyExistsException>(HttpStatusCode.BadRequest)
 
     respondWithErrorCodes<UnknownErrorException>(HttpStatusCode.BadRequest)
-    respondWithErrorCodes<ErrorException>(HttpStatusCode.UnprocessableEntity)
+    respondWithErrorCodes<ErrorException>(HttpStatusCode.BadRequest)
+    respondWithErrorCodes<UploadImageException>(HttpStatusCode.InternalServerError)
+    respondWithErrorCodes<DeleteImageException>(HttpStatusCode.InternalServerError)
+    respondWithErrorCodes<NotFoundException>(HttpStatusCode.NotFound)
 }
 
 private inline fun <reified T : Throwable> StatusPagesConfig.respondWithErrorCodes(

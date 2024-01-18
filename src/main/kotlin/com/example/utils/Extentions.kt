@@ -15,11 +15,18 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import kotlinx.serialization.json.Json
+import mu.KotlinLogging
 
-suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.respondWithResult(
-    statusCode: HttpStatusCode, result: T, message: String? = null
+suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.respondWithSuccessfullyResult(
+    statusCode: HttpStatusCode = HttpStatusCode.OK, result: T, message: String? = null
 ) {
-    call.respond(statusCode, ServerResponse.success(result, message))
+    call.respond(
+        statusCode, MyResponse(
+            success = true,
+            message = message ?: "Done ..",
+            data = result
+        )
+    )
 }
 
 suspend fun respondWithError(
@@ -74,6 +81,7 @@ fun hasPermission(permission: Int, role: Int): Boolean {
 suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.receiveMultipart(
     imageValidator: ImageValidator
 ): MultipartDto<T> {
+    val logger = KotlinLogging.logger {}
 
     val multipart = call.receiveMultipart()
     var fileBytes: ByteArray? = null
@@ -84,6 +92,10 @@ suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.receiveMul
 
 
     multipart.forEachPart { part ->
+        logger.debug { "PartData contentType = ${part.contentType}" }
+        logger.debug { "PartData contentDisposition = ${part.contentDisposition}" }
+        logger.debug { "PartData name = ${part.name}" }
+        logger.debug { "PartData headers = ${part.headers.names()}" }
         when (part) {
             is PartData.FileItem -> {
                 if (imageValidator.isValid(part.originalFileName)) {
@@ -95,6 +107,8 @@ suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.receiveMul
 
             is PartData.FormItem -> {
                 if (part.name == "data") {
+                    logger.debug { "PartData name = ${part.value}" }
+
                     val json = part.value.trimIndent()
                     data = Json.decodeFromString<T>(json)
                 }
@@ -104,7 +118,7 @@ suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.receiveMul
         }
         part.dispose()
     }
-    return MultipartDto(data = data!!, image = fileBytes , baseUrl = baseUrl , fileName = fileName!!)
+    return MultipartDto(data = data!!, image = fileBytes, baseUrl = baseUrl, fileName = fileName!!)
 }
 
 fun String?.toListOfIntOrNull(): List<Int>? {

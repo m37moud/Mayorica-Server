@@ -12,7 +12,7 @@ interface StorageService {
         fileName: String,
         fileUrl: String,
         fileBytes: ByteArray
-    ): String?
+    ): String
 
     suspend fun saveCategoryImages(
         fileName: String,

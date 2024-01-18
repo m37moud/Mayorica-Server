@@ -10,6 +10,7 @@ fun Route.configureDashboardClient() {
     providerAdminClient()
     productAdminRoute()
     categoriesAdminRoute()
+    typeCategoryAdminRoute()
     /**
      * about us
      */
