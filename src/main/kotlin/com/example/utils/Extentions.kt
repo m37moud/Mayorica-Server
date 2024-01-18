@@ -100,7 +100,8 @@ suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.receiveMul
             is PartData.FileItem -> {
                 if (imageValidator.isValid(part.originalFileName)) {
                     fileBytes = part.streamProvider().readBytes()
-                    fileName = generateSafeFileName(part.originalFileName as String)
+
+                    fileName = part.originalFileName as String
 
                 }
             }

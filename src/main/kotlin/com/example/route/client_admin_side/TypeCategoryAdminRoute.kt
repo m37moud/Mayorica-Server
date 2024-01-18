@@ -39,10 +39,11 @@ fun Route.typeCategoryAdminRoute() {
             logger.debug { "POST /$CREATE_TYPE_CATEGORY" }
             val multiPart = receiveMultipart<TypeCategoryCreateDto>(imageValidator)
             val userId = extractAdminId()
-            val url = "${multiPart.baseUrl}categories/icons/${multiPart.fileName}"
+            val generateNewName = generateSafeFileName(multiPart.fileName)
+            val url = "${multiPart.baseUrl}categories/icons/${generateNewName}"
             val imageUrl = multiPart.image?.let { img ->
                 storageService.saveCategoryIcons(
-                    fileName = multiPart.fileName,
+                    fileName = generateNewName,
                     fileUrl = url, fileBytes = img
                 )
             }
@@ -136,30 +137,55 @@ fun Route.typeCategoryAdminRoute() {
                 logger.debug { "get /$TYPE_CATEGORY/{id}" }
                 val multiPart = receiveMultipart<TypeCategoryCreateDto>(imageValidator)
                 val userId = extractAdminId()
-                val url = "${multiPart.baseUrl}categories/icons/${multiPart.fileName}"
                 call.parameters["id"]?.toIntOrNull()?.let { typeId ->
                     val tempType = typeCategoryDataSource.getTypeCategoryById(typeId)
                         ?: throw NotFoundException("no type category found .")
+                    val newName = multiPart.data.typeName
+                    logger.debug { "check if ($newName) the new name if not repeat" }
+                    val checkCategoryName = typeCategoryDataSource.getTypeCategoryByName(newName)
+                    val oldImageName = tempType.typeIcon.substringAfterLast("/")
+                    val responseFileName =multiPart.fileName
+                    logger.debug { "check oldImage ($oldImageName) and response (${responseFileName}) image new name if not repeat" }
 
+                    if (checkCategoryName != null && oldImageName == multiPart.fileName) {
+                        throw AlreadyExistsException("that name ($newName) is already found ")
+                    }
                     /**
                      * get old image url to delete
                      */
-                    val oldImageName = tempType.typeIcon.substringAfterLast("/")
+                    logger.debug { "oldImageName is  : $oldImageName" }
+                    logger.debug { "try to delete old icon from storage first extract oldImageName " }
+
                     storageService.deleteCategoryIcons(oldImageName)
+
+                    logger.info { "old icon is deleted successfully from storage" }
+                    logger.debug { "try to save new icon in storage" }
+
+
+                    val generateNewName = generateSafeFileName(responseFileName)
+                    val url = "${multiPart.baseUrl}categories/icons/${generateNewName}"
 
                     val imageUrl = multiPart.image?.let { img ->
                         storageService.saveCategoryIcons(
-                            fileName = multiPart.fileName,
+                            fileName = generateNewName,
                             fileUrl = url, fileBytes = img
                         )
                     }
                     val typeCategoryDto = multiPart.data.copy(iconUrl = imageUrl!!)
-                    val updatedCategory = typeCategoryDataSource
+                    logger.debug { "try to save category info in db" }
+
+                    typeCategoryDataSource
                         .updateTypeCategory(typeId, typeCategoryDto.toEntity(userId))
+                    logger.debug { "category info save successfully in db" }
+
+                    val updatedCategory = typeCategoryDataSource.getTypeCategoryByNameDto(newName)
+                        ?: throw NotFoundException("category name ($newName) is not found ")
+
                     respondWithSuccessfullyResult(
                         result = updatedCategory,
                         message = "type category updated successfully ."
                     )
+
                 } ?: throw MissingParameterException("Missing parameters .")
 
             } catch (exc: Exception) {

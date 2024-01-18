@@ -20,13 +20,13 @@ private fun StatusPagesConfig.handleStatusPageExceptions() {
 
     respondWithErrorCodes<RequestValidationException>(HttpStatusCode.BadRequest)
 
-    respondWithErrorCodes<UserAlreadyExistsException>(HttpStatusCode.UnprocessableEntity)
+    respondWithErrorCodes<UserAlreadyExistsException>(HttpStatusCode.BadRequest)
 
-    respondWithErrorCodes<ResourceNotFoundException>(HttpStatusCode.NotFound)
+    respondWithErrorCodes<ResourceNotFoundException>(HttpStatusCode.BadRequest)
 
-    respondWithErrorCodes<InsufficientFundsException>(HttpStatusCode.UnprocessableEntity)
+    respondWithErrorCodes<InsufficientFundsException>(HttpStatusCode.BadRequest)
 
-    respondWithErrorCodes<InvalidCredentialsException>(HttpStatusCode.Unauthorized)
+    respondWithErrorCodes<InvalidCredentialsException>(HttpStatusCode.BadRequest)
 
     respondWithErrorCodes<InvalidLocationException>(HttpStatusCode.BadRequest)
 
@@ -34,8 +34,8 @@ private fun StatusPagesConfig.handleStatusPageExceptions() {
 
     respondWithErrorCodes<UnknownErrorException>(HttpStatusCode.BadRequest)
     respondWithErrorCodes<ErrorException>(HttpStatusCode.BadRequest)
-    respondWithErrorCodes<UploadImageException>(HttpStatusCode.InternalServerError)
-    respondWithErrorCodes<DeleteImageException>(HttpStatusCode.InternalServerError)
+    respondWithErrorCodes<UploadImageException>(HttpStatusCode.BadRequest)
+    respondWithErrorCodes<DeleteImageException>(HttpStatusCode.BadRequest)
     respondWithErrorCodes<NotFoundException>(HttpStatusCode.NotFound)
 }
 

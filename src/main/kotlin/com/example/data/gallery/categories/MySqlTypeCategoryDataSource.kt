@@ -189,8 +189,8 @@ class MySqlTypeCategoryDataSource(private val db: Database) : TypeCategoryDataSo
         logger.debug { "updateTypeCategory: $typeInfo" }
 
         return withContext(Dispatchers.IO) {
-            if (getTypeCategoryByName(typeInfo.typeName) != null)
-                throw AlreadyExistsException("that name (${typeInfo.typeName}) is already found ")
+//            if (getTypeCategoryByName(typeInfo.typeName) != null)
+//                throw AlreadyExistsException("that name (${typeInfo.typeName}) is already found ")
 
             val result = db.update(TypeCategoryEntity) {
                 set(it.typeName, typeInfo.typeName)
