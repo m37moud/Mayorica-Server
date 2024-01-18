@@ -1,6 +1,6 @@
 package com.example.route.client_user_side
 
-import com.example.data.gallery.categories.TypeCategoryDataSource
+import com.example.data.gallery.categories.type.TypeCategoryDataSource
 import com.example.data.gallery.categories.color.ColorCategoryDataSource
 import com.example.data.gallery.categories.size.SizeCategoryDataSource
 import com.example.models.ColorCategoryPage

@@ -1,9 +1,10 @@
-package com.example.data.gallery.categories
+package com.example.data.gallery.categories.type
 
 import com.example.database.table.*
 import com.example.models.TypeCategory
 import com.example.models.TypeCategoryInfo
 import com.example.models.dto.TypeCategoryDto
+import com.example.models.dto.TypeCategoryMenu
 import com.example.utils.AlreadyExistsException
 import com.example.utils.ErrorException
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +29,25 @@ class MySqlTypeCategoryDataSource(private val db: Database) : TypeCategoryDataSo
                 .mapNotNull { rowToTypeCategory(it) }
             typeCategoriesList
         }
+    }
+
+    override suspend fun getAllTypeCategoryMenu(): List<TypeCategoryMenu> {
+        logger.debug { "getAllTypeCategoryMenu" }
+        return withContext(Dispatchers.IO) {
+            val result = db.from(TypeCategoryEntity)
+                .select(
+                    TypeCategoryEntity.id,
+                    TypeCategoryEntity.typeName
+                )
+                .mapNotNull {
+                    TypeCategoryMenu(
+                        typeId = it[TypeCategoryEntity.id] ?: -1,
+                        typeName = it[TypeCategoryEntity.typeName] ?: ""
+                    )
+                }
+            result
+        }
+
     }
 
     override suspend fun getNumberOfCategories(): Int {
@@ -167,7 +187,8 @@ class MySqlTypeCategoryDataSource(private val db: Database) : TypeCategoryDataSo
     override suspend fun addTypeCategory(typeCategory: TypeCategoryInfo): TypeCategoryDto {
         if (getTypeCategoryByName(typeCategory.typeName) != null) throw AlreadyExistsException("Type Category inserted before .")
         if (createTypeCategory(typeCategory) < 0) throw ErrorException("Failed to create New Type Category .")
-        return getTypeCategoryByNameDto(typeCategory.typeName) ?: throw ErrorException("Type Category inserted failed .")
+        return getTypeCategoryByNameDto(typeCategory.typeName)
+            ?: throw ErrorException("Type Category inserted failed .")
     }
 
     override suspend fun createTypeCategory(typeCategory: TypeCategoryInfo): Int {

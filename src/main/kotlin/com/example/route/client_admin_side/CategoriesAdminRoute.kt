@@ -1,17 +1,13 @@
 package com.example.route.client_admin_side
 
-import com.example.data.gallery.categories.TypeCategoryDataSource
+import com.example.data.gallery.categories.type.TypeCategoryDataSource
 import com.example.data.gallery.categories.color.ColorCategoryDataSource
 import com.example.data.gallery.categories.size.SizeCategoryDataSource
-import com.example.database.table.TypeCategoryEntity
-import com.example.mapper.toEntity
 import com.example.mapper.toModelCreate
 import com.example.models.*
-import com.example.models.dto.TypeCategoryCreateDto
 import com.example.models.request.categories.ColorCategoryRequest
 import com.example.service.storage.StorageService
 import com.example.utils.*
-import com.example.utils.Claim.USER_ID
 import com.example.utils.Constants.ADMIN_CLIENT
 import io.ktor.http.*
 import io.ktor.http.content.*

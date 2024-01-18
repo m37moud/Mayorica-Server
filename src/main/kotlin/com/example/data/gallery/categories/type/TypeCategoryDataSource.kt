@@ -1,12 +1,14 @@
-package com.example.data.gallery.categories
+package com.example.data.gallery.categories.type
 
 import com.example.models.TypeCategory
 import com.example.models.TypeCategoryInfo
 import com.example.models.dto.TypeCategoryDto
+import com.example.models.dto.TypeCategoryMenu
 import org.ktorm.schema.Column
 
 interface TypeCategoryDataSource {
     suspend fun getAllTypeCategory(): List<TypeCategory>
+    suspend fun getAllTypeCategoryMenu(): List<TypeCategoryMenu>
     suspend fun getNumberOfCategories(): Int
 
     suspend fun getAllTypeCategoryPageable(page: Int = 0, perPage: Int = 10): List<TypeCategory>

@@ -1,6 +1,6 @@
 package com.example.route.client_admin_side
 
-import com.example.data.gallery.categories.TypeCategoryDataSource
+import com.example.data.gallery.categories.type.TypeCategoryDataSource
 import com.example.mapper.toEntity
 import com.example.models.MyResponsePageable
 import com.example.models.dto.TypeCategoryCreateDto
