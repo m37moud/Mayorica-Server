@@ -37,109 +37,28 @@ fun Route.sizeCategoryAdminRoute(){
     //post size category //api/v1/admin-client/category/size/create
     post(CREATE_SIZE_CATEGORY) {
         logger.debug { "POST /$CREATE_SIZE_CATEGORY" }
-        val multiPart = receiveMultipart<SizeCategoryCreateDto>(imageValidator)
-        val userId = extractAdminId()
-        val generateNewName = generateSafeFileName(multiPart.fileName)
-        val url = "${multiPart.baseUrl}categories/images/${generateNewName}"
-        val imageUrl = multiPart.image?.let { img ->
-            storageService.saveCategoryImages(
-                fileName = generateNewName,
-                fileUrl = url, fileBytes = img
-            )
-        }
-        val sizeCategoryDto = multiPart.data.copy(sizeImageUrl = imageUrl!!)
-        val createdCategory = sizeCategoryDataSource
-            .addSizeCategory(sizeCategoryDto.toEntity(userId))
-        respondWithSuccessfullyResult(
-            statusCode = HttpStatusCode.OK,
-            result = createdCategory,
-            message = "Size Category inserted successfully ."
-        )
-
-        /**
-         *
-         */
-
-        var typeCategoryId: Int? = null
-        var size: String? = null
-        var fileName: String? = null
-        var fileBytes: ByteArray? = null
-
 
         try {
-
-
-            val sizeCategory = typeCategoryDataSource.getTypeCategoryByName(size!!)
-            if (sizeCategory == null) {
-                imageUrl = try {
-                    storageService.saveCategoryImages(
-                        fileName = fileName!!,
-                        fileUrl = url!!,
-                        fileBytes = fileBytes!!
-                    )
-                } catch (e: Exception) {
-                    storageService.deleteCategoryImages(fileName = fileName!!)
-                    call.respond(
-                        status = HttpStatusCode.InternalServerError,
-                        message = MyResponse(
-                            success = false,
-                            message = e.message ?: "Error happened while uploading Image.",
-                            data = null
-                        )
-                    )
-                    return@post
-                }
-                SizeCategory(
-                    typeCategoryId = typeCategoryId!!,
-                    size = size!!,
-                    sizeImage = imageUrl!!,
-                    userAdminID = userId!!,
-                    createdAt = LocalDateTime.now().toDatabaseString(),
-                    updatedAt = LocalDateTime.now().toDatabaseString()
-                ).apply {
-                    val result = sizeCategoryDataSource.createSizeCategory(this)
-                    if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = true,
-                                message = "Size Category inserted successfully .",
-                                data = this
-                            )
-                        )
-                        return@post
-                    } else {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "Size Category inserted failed .",
-                                data = null
-                            )
-                        )
-                        return@post
-                    }
-                }
-
-
-            } else {
-                call.respond(
-                    HttpStatusCode.OK, MyResponse(
-                        success = false,
-                        message = "Size Category inserted before .",
-                        data = null
-                    )
+            val multiPart = receiveMultipart<SizeCategoryCreateDto>(imageValidator)
+            val userId = extractAdminId()
+            val generateNewName = generateSafeFileName(multiPart.fileName)
+            val url = "${multiPart.baseUrl}categories/images/${generateNewName}"
+            val imageUrl = multiPart.image?.let { img ->
+                storageService.saveCategoryImages(
+                    fileName = generateNewName,
+                    fileUrl = url, fileBytes = img
                 )
-                return@post
             }
-        } catch (exc: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = exc.message ?: "Creation Failed .",
-                    data = null
-                )
+            val sizeCategoryDto = multiPart.data.copy(sizeImageUrl = imageUrl!!)
+            val createdCategory = sizeCategoryDataSource
+                .addSizeCategory(sizeCategoryDto.toEntity(userId))
+            respondWithSuccessfullyResult(
+                statusCode = HttpStatusCode.OK,
+                result = createdCategory,
+                message = "Size Category inserted successfully ."
             )
-            return@post
+        } catch (exc: Exception) {
+            throw ErrorException(exc.message ?: "Creation Failed .")
         }
 
 

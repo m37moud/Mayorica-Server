@@ -1,7 +1,14 @@
 package com.example.data.gallery.categories.size
 
+import com.example.database.table.AdminUserEntity
 import com.example.database.table.SizeCategoryEntity
+import com.example.database.table.TypeCategoryEntity
 import com.example.models.SizeCategory
+import com.example.models.SizeCategoryInfo
+import com.example.models.dto.SizeCategoryDto
+import com.example.utils.AlreadyExistsException
+import com.example.utils.ErrorException
+import com.example.utils.NotFoundException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
@@ -11,6 +18,7 @@ import org.ktorm.dsl.*
 import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
+
 @Singleton
 class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSource {
 
@@ -78,15 +86,47 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
         }
     }
 
-    override suspend fun createSizeCategory(sizeCategory: SizeCategory): Int {
+    override suspend fun getSizeCategoryByNameDto(categorySizeName: String): SizeCategoryDto? {
+        logger.debug { "getSizeCategoryByNameDto: $categorySizeName" }
+
+        return withContext(Dispatchers.IO) {
+            val result = db.from(SizeCategoryEntity)
+                .innerJoin(AdminUserEntity, on = TypeCategoryEntity.userAdminID eq AdminUserEntity.id)
+                .innerJoin(TypeCategoryEntity, on = SizeCategoryEntity.typeCategoryId eq TypeCategoryEntity.id)
+
+                .select(
+                    SizeCategoryEntity.id,
+                    AdminUserEntity.username,
+                    TypeCategoryEntity.typeName,
+                    SizeCategoryEntity.size,
+                    SizeCategoryEntity.sizeImage,
+                    SizeCategoryEntity.createdAt,
+                    SizeCategoryEntity.updatedAt
+                )
+                .where { SizeCategoryEntity.size eq categorySizeName }
+
+                .map { rowToSizeCategoryDto(it) }
+                .firstOrNull()
+            result
+        }
+    }
+
+    override suspend fun addSizeCategory(sizeCategory: SizeCategoryInfo): SizeCategoryDto {
+        if (getSizeCategoryByName(sizeCategory.sizeName) != null) throw AlreadyExistsException("this Category inserted before .")
+        if (createSizeCategory(sizeCategory) < 0) throw ErrorException("Failed to create New Size Category .")
+        return getSizeCategoryByNameDto(sizeCategory.sizeName)
+            ?: throw NotFoundException("failed to get The Category after created.")
+    }
+
+    override suspend fun createSizeCategory(sizeCategory: SizeCategoryInfo): Int {
         logger.debug { "createSizeCategory: $sizeCategory" }
 
         return withContext(Dispatchers.IO) {
             val result = db.insert(SizeCategoryEntity) {
-                set(it.typeCategoryId, sizeCategory.typeCategoryId)
-                set(it.size, sizeCategory.size)
-                set(it.sizeImage, sizeCategory.sizeImage)
-                set(it.userAdminID, sizeCategory.userAdminID)
+                set(it.typeCategoryId, sizeCategory.typeId)
+                set(it.size, sizeCategory.sizeName)
+                set(it.sizeImage, sizeCategory.sizeImageUrl)
+                set(it.userAdminID, sizeCategory.userAdminId)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
             }
@@ -168,4 +208,28 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
         }
     }
 
+    private fun rowToSizeCategoryDto(row: QueryRowSet?): SizeCategoryDto? {
+        return if (row == null)
+            null
+        else {
+            val id = row[SizeCategoryEntity.id] ?: -1
+            val adminUserName = row[AdminUserEntity.username] ?: ""
+            val typeCategoryName = row[TypeCategoryEntity.typeName] ?: ""
+            val size = row[SizeCategoryEntity.size] ?: ""
+            val sizeImage = row[SizeCategoryEntity.sizeImage] ?: ""
+            val createdAt = row[SizeCategoryEntity.createdAt] ?: ""
+            val updatedAt = row[SizeCategoryEntity.updatedAt] ?: ""
+
+            SizeCategoryDto(
+                id = id,
+                adminUserName = adminUserName,
+                typeCategoryName = typeCategoryName,
+                size = size,
+                sizeImage = sizeImage,
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString()
+
+            )
+        }
+    }
 }

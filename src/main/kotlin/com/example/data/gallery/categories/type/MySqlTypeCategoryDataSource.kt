@@ -7,6 +7,7 @@ import com.example.models.dto.TypeCategoryDto
 import com.example.models.dto.TypeCategoryMenu
 import com.example.utils.AlreadyExistsException
 import com.example.utils.ErrorException
+import com.example.utils.NotFoundException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
@@ -185,10 +186,10 @@ class MySqlTypeCategoryDataSource(private val db: Database) : TypeCategoryDataSo
     }
 
     override suspend fun addTypeCategory(typeCategory: TypeCategoryInfo): TypeCategoryDto {
-        if (getTypeCategoryByName(typeCategory.typeName) != null) throw AlreadyExistsException("Type Category inserted before .")
+        if (getTypeCategoryByName(typeCategory.typeName) != null) throw AlreadyExistsException("this Category inserted before .")
         if (createTypeCategory(typeCategory) < 0) throw ErrorException("Failed to create New Type Category .")
         return getTypeCategoryByNameDto(typeCategory.typeName)
-            ?: throw ErrorException("Type Category inserted failed .")
+            ?: throw NotFoundException("failed to get The Category after created.")
     }
 
     override suspend fun createTypeCategory(typeCategory: TypeCategoryInfo): Int {
