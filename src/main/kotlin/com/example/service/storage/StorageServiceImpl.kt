@@ -200,7 +200,7 @@ class StorageServiceImpl(
             if (checkOperation(path)) {
                 Files.deleteIfExists(Path.of(path))
             } else
-                throw DeleteImageException("Failed To Upload Image")
+                throw DeleteImageException("Failed To Delete Image")
 
         }
     }
