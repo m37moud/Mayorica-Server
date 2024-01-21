@@ -6,6 +6,7 @@ import com.example.database.table.TypeCategoryEntity
 import com.example.models.SizeCategory
 import com.example.models.SizeCategoryInfo
 import com.example.models.dto.SizeCategoryDto
+import com.example.models.dto.TypeCategoryMenu
 import com.example.utils.AlreadyExistsException
 import com.example.utils.ErrorException
 import com.example.utils.NotFoundException
@@ -22,6 +23,24 @@ private val logger = KotlinLogging.logger {}
 
 @Singleton
 class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSource {
+    override suspend fun getAllTypeCategoryMenu(): List<TypeCategoryMenu> {
+        logger.debug { "getAllTypeCategoryMenu" }
+        return withContext(Dispatchers.IO) {
+            val result = db.from(TypeCategoryEntity)
+                .select(
+                    TypeCategoryEntity.id,
+                    TypeCategoryEntity.typeName
+                )
+                .mapNotNull {
+                    TypeCategoryMenu(
+                        typeId = it[TypeCategoryEntity.id] ?: -1,
+                        typeName = it[TypeCategoryEntity.typeName] ?: ""
+                    )
+                }
+            result
+        }
+
+    }
 
     override suspend fun getAllSizeCategory(): List<SizeCategory> {
         logger.debug { "getAllSizeCategory" }
@@ -56,7 +75,7 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
     }
 
     override suspend fun getNumberOfCategories(): Int {
-       logger.debug { "getAllTypeCategory" }
+        logger.debug { "getAllTypeCategory" }
 
         return withContext(Dispatchers.IO) {
             val typeCategoriesList = db.from(TypeCategoryEntity)
@@ -97,7 +116,7 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
         query: String?,
         page: Int,
         perPage: Int,
-        byTypeCategoryId:String?,
+        byTypeCategoryId: Int?,
         sortField: Column<*>,
         sortDirection: Int
     ): List<SizeCategoryDto> {
@@ -123,12 +142,12 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
                         sortField.asc()
                     else
                         sortField.desc()
-                )  .whereWithConditions {
+                ).whereWithConditions {
                     if (!query.isNullOrEmpty()) {
                         it += (SizeCategoryEntity.size like "%${query}%")
                     }
-                    if (!byTypeCategoryId.isNullOrEmpty()){
-                        it += (SizeCategoryEntity.typeCategoryId eq (byTypeCategoryId.toIntOrNull() ?: -1))
+                    if (byTypeCategoryId != null) {
+                        it += (SizeCategoryEntity.typeCategoryId eq byTypeCategoryId)
                     }
 
                 }

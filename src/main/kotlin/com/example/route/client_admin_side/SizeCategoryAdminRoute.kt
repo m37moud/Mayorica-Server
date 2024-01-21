@@ -19,6 +19,7 @@ import org.koin.ktor.ext.inject
 private const val CATEGORIES = "${ADMIN_CLIENT}/categories"
 private const val CATEGORY = "$ADMIN_CLIENT/category"
 private const val SIZE_CATEGORIES = "$CATEGORIES/size"
+private const val SIZE_CATEGORIES_TYPE_MENU = "$SIZE_CATEGORIES/typeMenu"
 private const val SIZE_CATEGORIES_PAGEABLE = "$SIZE_CATEGORIES-pageable"
 
 private const val SIZE_CATEGORY = "$CATEGORY/size"
@@ -33,9 +34,6 @@ fun Route.sizeCategoryAdminRoute() {
     val storageService: StorageService by inject()
     val imageValidator: ImageValidator by inject()
     authenticate {
-        /**
-         * create new category
-         */
         //post size category //api/v1/admin-client/category/size/create
         post(CREATE_SIZE_CATEGORY) {
             logger.debug { "POST /$CREATE_SIZE_CATEGORY" }
@@ -78,7 +76,7 @@ fun Route.sizeCategoryAdminRoute() {
                 )
 
             } catch (exc: Exception) {
-                throw UnknownErrorException(exc.message ?: "Failed ")
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
             }
         }
         //get all size category //api/v1/admin-client/categories/size-pageable
@@ -93,7 +91,7 @@ fun Route.sizeCategoryAdminRoute() {
                             query = categoryOption.query,
                             page = categoryOption.page!!,
                             perPage = categoryOption.perPage!!,
-                            byTypeCategoryId = categoryOption.byTypeCategoryId!!,
+                            byTypeCategoryId = categoryOption.byTypeCategoryId,
                             sortField = categoryOption.sortFiled!!,
                             sortDirection = categoryOption.sortDirection!!
                         )
@@ -110,7 +108,7 @@ fun Route.sizeCategoryAdminRoute() {
                 )
 
             } catch (exc: Exception) {
-                throw UnknownErrorException(exc.message ?: "Failed ")
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
             }
         }
         //get size category //api/v1/admin-client/category/size/{id}
@@ -132,7 +130,7 @@ fun Route.sizeCategoryAdminRoute() {
 
 
             } catch (exc: Exception) {
-                throw UnknownErrorException(exc.message ?: "Failed ")
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
 
             }
         }
@@ -149,7 +147,7 @@ fun Route.sizeCategoryAdminRoute() {
                     logger.debug { "check if ($newName) the new name if not repeat" }
                     val checkCategoryName = sizeCategoryDataSource.getSizeCategoryByName(newName)
                     val oldImageName = tempType.sizeImage.substringAfterLast("/")
-                    val responseFileName =multiPart.fileName
+                    val responseFileName = multiPart.fileName
                     logger.debug { "check oldImage ($oldImageName) and response (${responseFileName}) image new name if not repeat" }
 
                     if (checkCategoryName != null && oldImageName == multiPart.fileName) {
@@ -194,11 +192,10 @@ fun Route.sizeCategoryAdminRoute() {
                 } ?: throw MissingParameterException("Missing parameters .")
 
             } catch (exc: Exception) {
-                throw UnknownErrorException(exc.message ?: "Failed ")
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
 
             }
         }
-
         //delete size category //api/v1/admin-client/category/size/delete/{id}
         delete("$DELETE_SIZE_CATEGORY/{id}") {
             try {
@@ -222,9 +219,25 @@ fun Route.sizeCategoryAdminRoute() {
                 } ?: throw MissingParameterException("Missing parameters .")
 
             } catch (exc: Exception) {
-                throw UnknownErrorException(exc.message ?: "Failed ")
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
 
             }
+        }
+        //get all size category //api/v1/admin-client/categories/size/typeMenu
+
+        get(SIZE_CATEGORIES_TYPE_MENU) {
+            logger.debug { "GET ALL /$SIZE_CATEGORIES_TYPE_MENU" }
+            try {
+                val typeMenu = sizeCategoryDataSource.getAllTypeCategoryMenu()
+                if (typeMenu.isEmpty()) throw NotFoundException("size categories is empty")
+                respondWithSuccessfullyResult(
+                    message = "get all type menu categories successfully",
+                    result = typeMenu
+                )
+            } catch (e: Exception) {
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+            }
+
         }
 
     }

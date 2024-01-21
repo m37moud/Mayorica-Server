@@ -23,14 +23,8 @@ import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 private const val CATEGORIES = "$ADMIN_CLIENT/categories"
-private const val SIZE_CATEGORIES = "$CATEGORIES/size"
 private const val COLOR_CATEGORIES = "$CATEGORIES/color"
 private const val CATEGORY = "$ADMIN_CLIENT/category"
-private const val TYPE_CATEGORY = "$CATEGORY/type"
-private const val SIZE_CATEGORY = "$CATEGORY/size"
-private const val CREATE_SIZE_CATEGORY = "$SIZE_CATEGORY/create"
-private const val UPDATE_SIZE_CATEGORY = "$SIZE_CATEGORY/update"
-private const val DELETE_SIZE_CATEGORY = "$SIZE_CATEGORY/delete"
 private const val COLOR_CATEGORY = "$CATEGORY/color"
 private const val CREATE_COLOR_CATEGORY = "$COLOR_CATEGORY/create"
 private const val UPDATE_COLOR_CATEGORY = "$COLOR_CATEGORY/update"
@@ -39,8 +33,6 @@ private const val DELETE_COLOR_CATEGORY = "$COLOR_CATEGORY/delete"
 private val logger = KotlinLogging.logger {}
 
 fun Route.categoriesAdminRoute() {
-    val typeCategoryDataSource: TypeCategoryDataSource by inject()
-    val sizeCategoryDataSource: SizeCategoryDataSource by inject()
     val colorCategoryDataSource: ColorCategoryDataSource by inject()
     val storageService: StorageService by inject()
     val imageValidator: ImageValidator by inject()
@@ -461,7 +453,7 @@ fun Route.categoriesAdminRoute() {
         //get color category //api/v1/admin-client/category/color/{id}
         get("$COLOR_CATEGORY/{id}") {
             try {
-                logger.debug { "get /$TYPE_CATEGORY/{id}" }
+                logger.debug { "get /$COLOR_CATEGORY/{id}" }
                 val id = call.parameters["id"]?.toIntOrNull()
                 id?.let {
                     colorCategoryDataSource.getColorCategoryById(it)?.let { colorCategory ->

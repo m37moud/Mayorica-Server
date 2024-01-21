@@ -8,6 +8,7 @@ import com.example.models.dto.TypeCategoryMenu
 import org.ktorm.schema.Column
 
 interface SizeCategoryDataSource {
+    suspend fun getAllTypeCategoryMenu(): List<TypeCategoryMenu>
     //size category
     suspend fun getAllSizeCategory(): List<SizeCategory>
     suspend fun getAllSizeCategoryDto(): List<SizeCategoryDto>
@@ -24,7 +25,7 @@ interface SizeCategoryDataSource {
         query: String?,
         page: Int = 0,
         perPage: Int = 10,
-        byTypeCategoryId: String?,
+        byTypeCategoryId: Int?,
         sortField: Column<*>,
         sortDirection: Int
     ): List<SizeCategoryDto>

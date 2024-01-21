@@ -8,7 +8,7 @@ import org.ktorm.schema.Column
 data class SizeCategoryOptions(
     val page: Int?,
     val perPage: Int?,
-    val byTypeCategoryId: String?,
+    val byTypeCategoryId: Int?,
     val query: String?,
     val sortFiled: Column<*>?,
     val sortDirection: Int?,
@@ -20,7 +20,7 @@ fun getSizeCategoryOptions(parameters: Parameters): SizeCategoryOptions {
     val perPage = parameters["perPage"]?.toIntOrNull() ?: 10
 
     val query = parameters["query"]?.trim()
-    val byTypeCategoryId = parameters["typeId"]?.trim()
+    val byTypeCategoryId = parameters["typeId"]?.toIntOrNull()
     val sortFiled = when (parameters["sort_by"] ?: "date") {
         "name" -> TypeCategoryEntity.typeName
         "date" -> TypeCategoryEntity.createdAt
