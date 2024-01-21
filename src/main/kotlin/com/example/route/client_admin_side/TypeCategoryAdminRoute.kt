@@ -4,7 +4,7 @@ import com.example.data.gallery.categories.type.TypeCategoryDataSource
 import com.example.mapper.toEntity
 import com.example.models.MyResponsePageable
 import com.example.models.dto.TypeCategoryCreateDto
-import com.example.models.options.getRestaurantOptions
+import com.example.models.options.getTypeCategoryOptions
 import com.example.service.storage.StorageService
 import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
@@ -74,12 +74,12 @@ fun Route.typeCategoryAdminRoute() {
                 throw UnknownErrorException(exc.message ?: "Failed ")
             }
         }
-        //get all type category //api/v1/admin-client/categories/type
+        //get all type category //api/v1/admin-client/categories/type-pageable
         get(TYPE_CATEGORIES_PAGEABLE) {
             try {
                 // QueryParams: type categories?page=1&perPage=10
                 val params = call.request.queryParameters
-                val categoryOption = getRestaurantOptions(params)
+                val categoryOption = getTypeCategoryOptions(params)
                 val typeCategoriesList =
                     typeCategoryDataSource
                         .getAllTypeCategoryPageable(
@@ -113,7 +113,7 @@ fun Route.typeCategoryAdminRoute() {
                 val id = call.parameters["id"]?.toIntOrNull()
 
                 id?.let {
-                    typeCategoryDataSource.getTypeCategoryById(it)?.let { typeCategory ->
+                    typeCategoryDataSource.getTypeCategoryByIdDto(it)?.let { typeCategory ->
 
                         respondWithSuccessfullyResult(
                             statusCode = HttpStatusCode.OK,
@@ -193,6 +193,7 @@ fun Route.typeCategoryAdminRoute() {
 
             }
         }
+
         //delete type category //api/v1/admin-client/category/type/delete/{id}
         delete("$DELETE_TYPE_CATEGORY/{id}") {
             try {

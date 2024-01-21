@@ -15,6 +15,7 @@ import mu.KotlinLogging
 import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import org.ktorm.schema.Column
 import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
@@ -30,6 +31,38 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
                 .select()
                 .mapNotNull { rowToSizeCategory(it) }
             typeCategoriesList
+        }
+    }
+
+    override suspend fun getAllSizeCategoryDto(): List<SizeCategoryDto> {
+        logger.debug { "getAllSizeCategoryDto" }
+        return withContext(Dispatchers.IO) {
+            val result = db.from(SizeCategoryEntity)
+                .innerJoin(AdminUserEntity, on = SizeCategoryEntity.userAdminID eq AdminUserEntity.id)
+                .innerJoin(TypeCategoryEntity, on = SizeCategoryEntity.typeCategoryId eq TypeCategoryEntity.id)
+                .select(
+                    SizeCategoryEntity.id,
+                    AdminUserEntity.username,
+                    TypeCategoryEntity.typeName,
+                    SizeCategoryEntity.size,
+                    SizeCategoryEntity.sizeImage,
+                    SizeCategoryEntity.createdAt,
+                    SizeCategoryEntity.updatedAt
+                )
+                .mapNotNull { rowToSizeCategoryDto(it) }
+            result
+        }
+
+    }
+
+    override suspend fun getNumberOfCategories(): Int {
+       logger.debug { "getAllTypeCategory" }
+
+        return withContext(Dispatchers.IO) {
+            val typeCategoriesList = db.from(TypeCategoryEntity)
+                .select()
+                .mapNotNull { rowToSizeCategory(it) }
+            typeCategoriesList.size
         }
     }
 
@@ -60,6 +93,50 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
         }
     }
 
+    override suspend fun getAllSizeCategoryPageable(
+        query: String?,
+        page: Int,
+        perPage: Int,
+        byTypeCategoryId:String?,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<SizeCategoryDto> {
+        logger.debug { "getAllSizeCategoryPageable: $page, $perPage" }
+        val myLimit = if (perPage > 100) 100 else perPage
+        val myOffset = (page * perPage)
+        return withContext(Dispatchers.IO) {
+            val result = db.from(SizeCategoryEntity)
+                .innerJoin(AdminUserEntity, on = SizeCategoryEntity.userAdminID eq AdminUserEntity.id)
+                .innerJoin(TypeCategoryEntity, on = SizeCategoryEntity.typeCategoryId eq TypeCategoryEntity.id)
+                .select(
+                    SizeCategoryEntity.id,
+                    AdminUserEntity.username,
+                    TypeCategoryEntity.typeName,
+                    SizeCategoryEntity.size,
+                    SizeCategoryEntity.sizeImage,
+                    SizeCategoryEntity.createdAt,
+                    SizeCategoryEntity.updatedAt
+                )
+                .limit(myLimit).offset(myOffset)
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )  .whereWithConditions {
+                    if (!query.isNullOrEmpty()) {
+                        it += (SizeCategoryEntity.size like "%${query}%")
+                    }
+                    if (!byTypeCategoryId.isNullOrEmpty()){
+                        it += (SizeCategoryEntity.typeCategoryId eq (byTypeCategoryId.toIntOrNull() ?: -1))
+                    }
+
+                }
+                .mapNotNull { rowToSizeCategoryDto(it) }
+            result
+        }
+    }
+
     override suspend fun getSizeCategoryById(categorySizeId: Int): SizeCategory? {
         logger.debug { "getSizeCategoryById: $categorySizeId" }
         return withContext(Dispatchers.IO) {
@@ -67,6 +144,29 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
                 .select()
                 .where { SizeCategoryEntity.id eq categorySizeId }
                 .map { rowToSizeCategory(it) }
+                .firstOrNull()
+            sizeCategory
+        }
+
+    }
+
+    override suspend fun getSizeCategoryByIdDto(categorySizeId: Int): SizeCategoryDto? {
+        logger.debug { "getSizeCategoryByIdDto: $categorySizeId" }
+        return withContext(Dispatchers.IO) {
+            val sizeCategory = db.from(SizeCategoryEntity)
+                .innerJoin(AdminUserEntity, on = SizeCategoryEntity.userAdminID eq AdminUserEntity.id)
+                .innerJoin(TypeCategoryEntity, on = SizeCategoryEntity.typeCategoryId eq TypeCategoryEntity.id)
+                .select(
+                    SizeCategoryEntity.id,
+                    AdminUserEntity.username,
+                    TypeCategoryEntity.typeName,
+                    SizeCategoryEntity.size,
+                    SizeCategoryEntity.sizeImage,
+                    SizeCategoryEntity.createdAt,
+                    SizeCategoryEntity.updatedAt
+                )
+                .where { SizeCategoryEntity.id eq categorySizeId }
+                .map { rowToSizeCategoryDto(it) }
                 .firstOrNull()
             sizeCategory
         }
@@ -91,7 +191,7 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
 
         return withContext(Dispatchers.IO) {
             val result = db.from(SizeCategoryEntity)
-                .innerJoin(AdminUserEntity, on = TypeCategoryEntity.userAdminID eq AdminUserEntity.id)
+                .innerJoin(AdminUserEntity, on = SizeCategoryEntity.userAdminID eq AdminUserEntity.id)
                 .innerJoin(TypeCategoryEntity, on = SizeCategoryEntity.typeCategoryId eq TypeCategoryEntity.id)
 
                 .select(
@@ -134,18 +234,18 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
         }
     }
 
-    override suspend fun updateSizeCategory(sizeCategory: SizeCategory): Int {
+    override suspend fun updateSizeCategory(id: Int, sizeCategory: SizeCategoryInfo): Int {
         logger.debug { "updateSizeCategory: $sizeCategory" }
 
         return withContext(Dispatchers.IO) {
             val result = db.update(SizeCategoryEntity) {
-                set(it.typeCategoryId, sizeCategory.typeCategoryId)
-                set(it.size, sizeCategory.size)
-                set(it.userAdminID, sizeCategory.userAdminID)
+                set(it.typeCategoryId, sizeCategory.typeId)
+                set(it.size, sizeCategory.sizeName)
+                set(it.userAdminID, sizeCategory.userAdminId)
 
                 set(it.updatedAt, LocalDateTime.now())
                 where {
-                    it.id eq sizeCategory.id
+                    it.id eq id
                 }
             }
             result
@@ -172,7 +272,7 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
         }
     }
 
-    override suspend fun saveAllSizeCategory(sizeCategories: Iterable<SizeCategory>): Int {
+    override suspend fun saveAllSizeCategory(sizeCategories: Iterable<SizeCategoryInfo>): Int {
         logger.debug { "saveAllSizeCategory: $sizeCategories" }
         return withContext(Dispatchers.IO) {
             var result = 0

@@ -15,25 +15,30 @@ interface SizeCategoryDataSource {
 
 
     suspend fun getAllSizeCategoryByTypeId(typeCategoryId: Int): List<SizeCategory>
-    suspend fun getAllSizeCategoryPageable(page: Int = 0, perPage: Int = 10): List<SizeCategory>
+    suspend fun getAllSizeCategoryPageable(
+        page: Int = 0,
+        perPage: Int = 10
+    ): List<SizeCategory>
+
     suspend fun getAllSizeCategoryPageable(
         query: String?,
         page: Int = 0,
         perPage: Int = 10,
-        byTypeCategoryId:Int,
+        byTypeCategoryId: String?,
         sortField: Column<*>,
         sortDirection: Int
     ): List<SizeCategoryDto>
 
     suspend fun getSizeCategoryById(categorySizeId: Int): SizeCategory?
+    suspend fun getSizeCategoryByIdDto(categorySizeId: Int): SizeCategoryDto?
     suspend fun getSizeCategoryByName(categorySizeName: String): SizeCategory?
     suspend fun getSizeCategoryByNameDto(categorySizeName: String): SizeCategoryDto?
     suspend fun addSizeCategory(sizeCategory: SizeCategoryInfo): SizeCategoryDto
     suspend fun createSizeCategory(sizeCategory: SizeCategoryInfo): Int
 
-    suspend fun updateSizeCategory(sizeCategory: SizeCategory): Int
+    suspend fun updateSizeCategory(id: Int, sizeCategory: SizeCategoryInfo): Int
     suspend fun deleteSizeCategory(categorySizeId: Int): Int
     suspend fun deleteAllSizeCategory(): Int
-    suspend fun saveAllSizeCategory(sizeCategories: Iterable<SizeCategory>): Int
+    suspend fun saveAllSizeCategory(sizeCategories: Iterable<SizeCategoryInfo>): Int
 
 }

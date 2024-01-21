@@ -11,6 +11,7 @@ fun Route.configureDashboardClient() {
     productAdminRoute()
     categoriesAdminRoute()
     typeCategoryAdminRoute()
+    sizeCategoryAdminRoute()
     /**
      * about us
      */

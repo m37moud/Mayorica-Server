@@ -5,21 +5,22 @@ import com.example.utils.MissingParameterException
 import io.ktor.http.*
 import org.ktorm.schema.Column
 
-data class TypeCategoryOptions(
+data class SizeCategoryOptions(
     val page: Int?,
     val perPage: Int?,
+    val byTypeCategoryId: String?,
     val query: String?,
     val sortFiled: Column<*>?,
     val sortDirection: Int?,
+)
 
-    )
-
-fun getTypeCategoryOptions(parameters: Parameters): TypeCategoryOptions {
+fun getSizeCategoryOptions(parameters: Parameters): SizeCategoryOptions {
     val tempPage = parameters["page"]?.toIntOrNull() ?: 0
     val page = if (tempPage > 0) tempPage - 1 else 0
     val perPage = parameters["perPage"]?.toIntOrNull() ?: 10
 
     val query = parameters["query"]?.trim()
+    val byTypeCategoryId = parameters["typeId"]?.trim()
     val sortFiled = when (parameters["sort_by"] ?: "date") {
         "name" -> TypeCategoryEntity.typeName
         "date" -> TypeCategoryEntity.createdAt
@@ -35,5 +36,5 @@ fun getTypeCategoryOptions(parameters: Parameters): TypeCategoryOptions {
 
         }
     }
-    return TypeCategoryOptions(page, perPage, query, sortFiled, sortDirection)
+    return SizeCategoryOptions(page, perPage, byTypeCategoryId, query, sortFiled, sortDirection)
 }

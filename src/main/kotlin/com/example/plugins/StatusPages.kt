@@ -5,7 +5,9 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
+import mu.KotlinLogging
 
+val logger = KotlinLogging.logger {  }
 fun Application.configureStatusPages() {
     install(StatusPages) {
         handleStatusPageExceptions()
@@ -44,6 +46,7 @@ private inline fun <reified T : Throwable> StatusPagesConfig.respondWithErrorCod
 ) {
     exception<T> { call, t ->
         println("Status Code = ${t.message}")
+        logger.error { "An unknown error occurred $t" }
 
         val reasons = t.message?.split(",") ?: emptyList()
         println("Status reasons = $reasons")
