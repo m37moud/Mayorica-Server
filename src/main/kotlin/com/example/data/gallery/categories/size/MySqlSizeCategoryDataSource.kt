@@ -230,6 +230,19 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
         }
     }
 
+    override suspend fun getSizeCategoryByNameAndTypeId(categorySizeName: String, typeId: Int): SizeCategory? {
+        logger.debug { "getSizeCategoryByNameAndTypeId: $categorySizeName , typeId = $typeId" }
+
+        return withContext(Dispatchers.IO) {
+            val sizeCategory = db.from(SizeCategoryEntity)
+                .select()
+                .where { (SizeCategoryEntity.size eq categorySizeName) and (SizeCategoryEntity.typeCategoryId eq typeId) }
+                .map { rowToSizeCategory(it) }
+                .firstOrNull()
+            sizeCategory
+        }
+    }
+
     override suspend fun addSizeCategory(sizeCategory: SizeCategoryInfo): SizeCategoryDto {
         if (getSizeCategoryByName(sizeCategory.sizeName) != null) throw AlreadyExistsException("this Category inserted before .")
         if (createSizeCategory(sizeCategory) < 0) throw ErrorException("Failed to create New Size Category .")
@@ -260,6 +273,7 @@ class MySqlSizeCategoryDataSource(private val db: Database) : SizeCategoryDataSo
             val result = db.update(SizeCategoryEntity) {
                 set(it.typeCategoryId, sizeCategory.typeId)
                 set(it.size, sizeCategory.sizeName)
+                set(it.sizeImage, sizeCategory.sizeImageUrl)
                 set(it.userAdminID, sizeCategory.userAdminId)
 
                 set(it.updatedAt, LocalDateTime.now())

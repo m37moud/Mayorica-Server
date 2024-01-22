@@ -34,6 +34,8 @@ interface SizeCategoryDataSource {
     suspend fun getSizeCategoryByIdDto(categorySizeId: Int): SizeCategoryDto?
     suspend fun getSizeCategoryByName(categorySizeName: String): SizeCategory?
     suspend fun getSizeCategoryByNameDto(categorySizeName: String): SizeCategoryDto?
+    suspend fun getSizeCategoryByNameAndTypeId(categorySizeName: String,typeId:Int): SizeCategory?
+
     suspend fun addSizeCategory(sizeCategory: SizeCategoryInfo): SizeCategoryDto
     suspend fun createSizeCategory(sizeCategory: SizeCategoryInfo): Int
 

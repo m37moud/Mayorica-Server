@@ -1,5 +1,6 @@
 package com.example.models.options
 
+import com.example.database.table.SizeCategoryEntity
 import com.example.database.table.TypeCategoryEntity
 import com.example.utils.MissingParameterException
 import io.ktor.http.*
@@ -22,8 +23,8 @@ fun getSizeCategoryOptions(parameters: Parameters): SizeCategoryOptions {
     val query = parameters["query"]?.trim()
     val byTypeCategoryId = parameters["typeId"]?.toIntOrNull()
     val sortFiled = when (parameters["sort_by"] ?: "date") {
-        "name" -> TypeCategoryEntity.typeName
-        "date" -> TypeCategoryEntity.createdAt
+        "name" -> SizeCategoryEntity.size
+        "date" -> SizeCategoryEntity.createdAt
         else -> {
             throw MissingParameterException("invalid parameter for sort_by chose between (name & date)")
         }

@@ -142,36 +142,39 @@ fun Route.sizeCategoryAdminRoute() {
                 val userId = extractAdminId()
                 call.parameters["id"]?.toIntOrNull()?.let { typeId ->
                     val tempType = sizeCategoryDataSource.getSizeCategoryById(typeId)
-                        ?: throw NotFoundException("no type category found .")
+                        ?: throw NotFoundException("no size category found .")
                     val newName = multiPart.data.sizeName
                     logger.debug { "check if ($newName) the new name if not repeat" }
                     val checkCategoryName = sizeCategoryDataSource.getSizeCategoryByName(newName)
+                    val checkCategoryNameInSameTypeCategory =
+                        sizeCategoryDataSource.getSizeCategoryByNameAndTypeId(newName, multiPart.data.typeCategoryId)
                     val oldImageName = tempType.sizeImage.substringAfterLast("/")
                     val responseFileName = multiPart.fileName
                     logger.debug { "check oldImage ($oldImageName) and response (${responseFileName}) image new name if not repeat" }
 
-                    if (checkCategoryName != null && oldImageName == multiPart.fileName) {
+                    if (checkCategoryNameInSameTypeCategory != null && oldImageName == multiPart.fileName) {
                         throw AlreadyExistsException("that name ($newName) is already found ")
                     }
                     /**
                      * get old image url to delete
                      */
                     logger.debug { "oldImageName is  : $oldImageName" }
-                    logger.debug { "try to delete old icon from storage first extract oldImageName " }
+                    logger.debug { "try to delete old Image from storage first extract oldImageName " }
 
                     storageService.deleteCategoryImages(oldImageName)
 
-                    logger.info { "old icon is deleted successfully from storage" }
+                    logger.info { "old Image is deleted successfully from storage" }
                     logger.debug { "try to save new icon in storage" }
 
 
                     val generateNewName = generateSafeFileName(responseFileName)
-                    val url = "${multiPart.baseUrl}categories/icons/${generateNewName}"
+                    val url = "${multiPart.baseUrl}categories/images/${generateNewName}"
 
                     val imageUrl = multiPart.image?.let { img ->
                         storageService.saveCategoryImages(
                             fileName = generateNewName,
-                            fileUrl = url, fileBytes = img
+                            fileUrl = url,
+                            fileBytes = img
                         )
                     }
                     val typeCategoryDto = multiPart.data.copy(sizeImageUrl = imageUrl!!)

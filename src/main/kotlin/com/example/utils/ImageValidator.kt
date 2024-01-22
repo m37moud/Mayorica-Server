@@ -7,7 +7,7 @@ import org.koin.core.annotation.Singleton
 class ImageValidator {
     fun isValid(name: String?) : Boolean {
         val extension = name?.substringAfterLast(".", "")
-        val isImage = extension?.let { it in listOf("jpg", "jpeg", "png") } ?: false
+        val isImage = extension?.let { it in listOf("jpg", "jpeg", "png","webp") } ?: false
         return if (isImage) true else throw Exception("Invalid File")
     }
 }

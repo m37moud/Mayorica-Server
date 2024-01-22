@@ -168,7 +168,8 @@ fun Route.typeCategoryAdminRoute() {
                     val imageUrl = multiPart.image?.let { img ->
                         storageService.saveCategoryIcons(
                             fileName = generateNewName,
-                            fileUrl = url, fileBytes = img
+                            fileUrl = url,
+                            fileBytes = img
                         )
                     }
                     val typeCategoryDto = multiPart.data.copy(iconUrl = imageUrl!!)
