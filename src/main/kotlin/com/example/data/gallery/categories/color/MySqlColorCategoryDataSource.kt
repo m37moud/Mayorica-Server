@@ -109,7 +109,7 @@ class MySqlColorCategoryDataSource(private val db: Database) : ColorCategoryData
                 )
                 .whereWithConditions {
                     if (!query.isNullOrEmpty()) {
-                        it += (TypeCategoryEntity.typeName like "%${query}%")
+                        it += (ColorCategoryEntity.color like "%${query}%")
                     }
                     if (!byColor.isNullOrEmpty()) {
 

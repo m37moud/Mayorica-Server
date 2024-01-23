@@ -133,7 +133,7 @@ fun Route.colorCategoryAdminRoute() {
                     val checkCategory =
                         colorCategoryDataSource.getColorCategoryByNameDto(colorCategoryRequest.colorName)
                     if (checkCategory != null) {
-                        throw AlreadyExistsException("that name ($checkCategory) is already found ")
+                        throw AlreadyExistsException("that name (${colorCategoryRequest.colorName}) is already found ")
                     }
 
                     colorCategoryDataSource

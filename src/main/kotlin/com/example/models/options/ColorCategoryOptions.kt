@@ -1,5 +1,6 @@
 package com.example.models.options
 
+import com.example.database.table.ColorCategoryEntity
 import com.example.database.table.SizeCategoryEntity
 import com.example.utils.MissingParameterException
 import io.ktor.http.*
@@ -22,8 +23,8 @@ fun getColorCategoryOptions(parameters: Parameters): ColorCategoryOptions {
     val query = parameters["query"]?.trim()
     val byColor = parameters["colorValue"]?.trim()
     val sortFiled = when (parameters["sort_by"] ?: "date") {
-        "name" -> SizeCategoryEntity.size
-        "date" -> SizeCategoryEntity.createdAt
+        "name" -> ColorCategoryEntity.color
+        "date" -> ColorCategoryEntity.createdAt
         else -> {
             throw MissingParameterException("invalid parameter for sort_by chose between (name & date)")
         }
