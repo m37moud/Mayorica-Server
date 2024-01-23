@@ -5,7 +5,7 @@ import com.example.models.request.ceramic_provider.CeramicProviderRequest
 import com.example.utils.toDatabaseString
 import java.time.LocalDateTime
 
-fun CeramicProviderRequest.toModelCreate(userAdminId : Int) = CeramicProvider(
+fun CeramicProviderRequest.toEntity(userAdminId : Int) = CeramicProvider(
     userAdminID = userAdminId,
     name = this.name,
     latitude = this.latitude,

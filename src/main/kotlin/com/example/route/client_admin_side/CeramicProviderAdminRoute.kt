@@ -3,7 +3,7 @@ package com.example.route.client_admin_side
 import com.example.data.ceramic_provider.CeramicProviderDataSource
 import com.example.database.table.CeramicProviderEntity
 import com.example.mapper.toModel
-import com.example.mapper.toModelCreate
+import com.example.mapper.toEntity
 import com.example.models.MyResponsePageable
 import com.example.models.dto.ProviderCreateDto
 import com.example.models.request.ceramic_provider.CeramicProviderRequest
@@ -365,7 +365,7 @@ fun Route.providerAdminClient() {
                     return@post
                 }
                 if (provider == null) {
-                    val result = ceramicProvider.addCeramicProvider(providerRequest.toModelCreate(userId!!))
+                    val result = ceramicProvider.addCeramicProvider(providerRequest.toEntity(userId!!))
                     if (result > 0) {
                         val createdProvider = ceramicProvider.getCeramicProviderByNameDto(providerRequest.name)
                         call.respond(

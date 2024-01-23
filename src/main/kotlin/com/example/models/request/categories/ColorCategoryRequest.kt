@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ColorCategoryRequest(
-    val color: String,
+    val colorName: String,
+    val colorValue: String,
 
     )

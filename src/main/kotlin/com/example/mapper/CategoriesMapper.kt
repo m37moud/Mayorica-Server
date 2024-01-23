@@ -9,7 +9,7 @@ import com.example.models.request.categories.TypeCategoryRequest
 import com.example.utils.toDatabaseString
 import java.time.LocalDateTime
 
-fun TypeCategoryRequest.toModelCreate(userAdminId: Int) = TypeCategory(
+fun TypeCategoryRequest.toEntity(userAdminId: Int) = TypeCategory(
     typeName = this.name,
     typeIcon = this.typeIcon,
     userAdminID = userAdminId,
@@ -17,7 +17,7 @@ fun TypeCategoryRequest.toModelCreate(userAdminId: Int) = TypeCategory(
     updatedAt = LocalDateTime.now().toDatabaseString()
 )
 
-fun SizeCategoryRequest.toModelCreate(userAdminId: Int) = SizeCategory(
+fun SizeCategoryRequest.toEntity(userAdminId: Int) = SizeCategory(
     typeCategoryId = this.typeCategoryId,
     size = this.size,
     userAdminID = userAdminId,
@@ -25,12 +25,14 @@ fun SizeCategoryRequest.toModelCreate(userAdminId: Int) = SizeCategory(
     updatedAt = ""
 )
 
-fun ColorCategoryRequest.toModelCreate(userAdminId: Int) = ColorCategory(
-    color = this.color,
-    userAdminID = userAdminId,
-    createdAt = LocalDateTime.now().toDatabaseString(),
-    updatedAt = ""
-)
+fun ColorCategoryRequest.toEntity(userAdminId: Int) =
+    ColorCategory(
+        colorName = this.colorName,
+        colorValue = this.colorValue,
+        userAdminID = userAdminId,
+        createdAt = LocalDateTime.now().toDatabaseString(),
+        updatedAt = ""
+    )
 
 fun TypeCategoryRequest.toModelUpdate(userAdminId: Int) = TypeCategory(
     typeName = this.name,
@@ -43,13 +45,6 @@ fun TypeCategoryRequest.toModelUpdate(userAdminId: Int) = TypeCategory(
 fun SizeCategoryRequest.toModelUpdate(userAdminId: Int) = SizeCategory(
     typeCategoryId = this.typeCategoryId,
     size = this.size,
-    userAdminID = userAdminId,
-    createdAt = LocalDateTime.now().toDatabaseString(),
-    updatedAt = LocalDateTime.now().toDatabaseString()
-)
-
-fun ColorCategoryRequest.toModelUpdate(userAdminId: Int) = ColorCategory(
-    color = this.color,
     userAdminID = userAdminId,
     createdAt = LocalDateTime.now().toDatabaseString(),
     updatedAt = LocalDateTime.now().toDatabaseString()

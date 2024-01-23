@@ -9,9 +9,9 @@ fun Route.configureDashboardClient() {
     ordersAdminRoute()
     providerAdminClient()
     productAdminRoute()
-    categoriesAdminRoute()
     typeCategoryAdminRoute()
     sizeCategoryAdminRoute()
+    colorCategoryAdminRoute()
     /**
      * about us
      */

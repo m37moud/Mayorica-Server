@@ -9,6 +9,7 @@ import org.ktorm.schema.varchar
 object ColorCategoryEntity :Table<Nothing>("t_color_category") {
     val id = int("id").primaryKey()
     val color = varchar("color")
+    val colorValue = varchar("colorValue")
     val userAdminID = int("admin_id")
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
