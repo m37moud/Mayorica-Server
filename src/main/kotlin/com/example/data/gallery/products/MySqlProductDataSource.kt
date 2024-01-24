@@ -572,8 +572,9 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
             val productName = row[ProductEntity.productName] ?: ""
 
             val imageProduct = row[ProductEntity.image] ?: ""
-            val createdAt = row[ProductEntity.createdAt]?.toDatabaseString() ?: ""
-            val updatedAt = row[ProductEntity.updatedAt]?.toDatabaseString() ?: ""
+            val createdAt = row[ProductEntity.createdAt] ?: ""
+            val updatedAt = row[ProductEntity.updatedAt] ?: ""
+            val deleted = row[ProductEntity.deleted] ?: false
 
             ProductDto(
                 id = id,
@@ -583,8 +584,9 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                 colorCategoryName = color,
                 productName = productName,
                 image = imageProduct,
-                createdAt = createdAt,
-                updatedAt = updatedAt
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString(),
+                deleted = deleted
 
             )
         }
