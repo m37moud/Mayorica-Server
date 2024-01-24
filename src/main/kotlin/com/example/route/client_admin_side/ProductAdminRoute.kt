@@ -1,31 +1,22 @@
 package com.example.route.client_admin_side
 
 import com.example.data.gallery.products.ProductDataSource
-import com.example.database.table.ProductEntity
 import com.example.mapper.toEntity
-import com.example.models.Product
 import com.example.models.MyResponsePageable
 import com.example.models.dto.CeramicCreateDto
-import com.example.models.dto.SizeCategoryCreateDto
 import com.example.models.options.getCeramicProductOptions
 
 import com.example.service.storage.StorageService
 import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
-import com.example.utils.Constants.ENDPOINT
 import com.example.utils.NotFoundException
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.plugins.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
 import org.koin.ktor.ext.inject
-import java.time.LocalDateTime
 
 
 /**
@@ -159,17 +150,17 @@ fun Route.productAdminRoute() {
                 logger.debug { "get /$UPDATE_SINGLE_PRODUCT/{id}" }
                 val multiPart = receiveMultipart<CeramicCreateDto>(imageValidator)
                 val userId = extractAdminId()
-                call.parameters["id"]?.toIntOrNull()?.let { typeId ->
-                    val tempType = productDataSource.getProductById(typeId)
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+                    val tempProduct = productDataSource.getProductById(id)
                         ?: throw NotFoundException("no ceramic product found .")
                     val newName = multiPart.data.productName
                     logger.debug { "check if ($newName) the new name if not repeat" }
-                    val checkCategoryName = productDataSource.getProductByName(newName)
-                    val oldImageName = tempType.image.substringAfterLast("/")
+                    val checkProduct = productDataSource.getProductByName(newName)
+                    val oldImageName = tempProduct.image.substringAfterLast("/")
                     val responseFileName = multiPart.fileName
                     logger.debug { "check oldImage ($oldImageName) and response (${responseFileName}) image new name if not repeat" }
 
-                    if (checkCategoryName != null && oldImageName == multiPart.fileName) {
+                    if (checkProduct != null && oldImageName == multiPart.fileName) {
                         throw AlreadyExistsException("that name ($newName) is already found ")
                     }
                     /**
@@ -194,14 +185,16 @@ fun Route.productAdminRoute() {
                             fileBytes = img
                         )
                     }
-                    val typeCategoryDto = multiPart.data.copy(productImageUrl = imageUrl!!)
+                    val typeCategoryDto = multiPart.data
+                        .copy(productImageUrl = imageUrl!!)
                     logger.debug { "try to save ceramic product info in db" }
 
                     productDataSource
-                        .updateProduct(typeId, typeCategoryDto.toEntity(userId))
+                        .updateProduct(id, typeCategoryDto.toEntity(userId))
                     logger.debug { "ceramic product info save successfully in db" }
 
-                    val updatedCategory = productDataSource.getProductByNameDto(newName)
+                    val updatedCategory = productDataSource
+                        .getProductByNameDto(newName)
                         ?: throw NotFoundException("ceramic product name ($newName) is not found ")
 
                     respondWithSuccessfullyResult(
