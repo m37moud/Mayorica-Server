@@ -189,7 +189,7 @@ fun Route.sizeCategoryAdminRoute() {
 
                     respondWithSuccessfullyResult(
                         result = updatedCategory,
-                        message = "type category updated successfully ."
+                        message = "size category updated successfully ."
                     )
 
                 } ?: throw MissingParameterException("Missing parameters .")

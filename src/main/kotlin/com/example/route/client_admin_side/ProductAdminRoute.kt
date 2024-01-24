@@ -2,16 +2,18 @@ package com.example.route.client_admin_side
 
 import com.example.data.gallery.products.ProductDataSource
 import com.example.database.table.ProductEntity
+import com.example.mapper.toEntity
 import com.example.models.Product
 import com.example.models.MyResponsePageable
+import com.example.models.dto.CeramicCreateDto
+import com.example.models.dto.SizeCategoryCreateDto
+import com.example.models.options.getCeramicProductOptions
 
 import com.example.service.storage.StorageService
+import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.Constants.ENDPOINT
-import com.example.utils.MyResponse
-import com.example.utils.generateSafeFileName
-import com.example.utils.isImageContentType
-import com.example.utils.toDatabaseString
+import com.example.utils.NotFoundException
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -35,6 +37,7 @@ import java.time.LocalDateTime
  */
 
 private const val ALL_PRODUCTS = "$ADMIN_CLIENT/products"
+private const val ALL_PRODUCTS_PAGEABLE = "$ALL_PRODUCTS-pageable"
 private const val SEARCH_PRODUCTS = "$ALL_PRODUCTS/search"
 private const val SINGLE_PRODUCT = "$ADMIN_CLIENT/product"
 private const val CREATE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/create"
@@ -43,171 +46,208 @@ private const val DELETE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/delete"
 
 private val logger = KotlinLogging.logger {}
 
-fun Route.productAdminRoute(
-//    productDataSource: ProductDataSource,
-//    storageService: StorageService
-) {
+fun Route.productAdminRoute() {
     val productDataSource: ProductDataSource by inject()
     val storageService: StorageService by inject()
+    val imageValidator: ImageValidator by inject()
 
     authenticate {
+        //post products //api/v1/admin-client/products/create
+        post(CREATE_SINGLE_PRODUCT) {
+            logger.debug { "POST /$CREATE_SINGLE_PRODUCT" }
 
-        // get the products --> get /api/v1/admin-client/products/ (token required)
-        get(ALL_PRODUCTS) {
-            call.request.queryParameters["page"]?.toIntOrNull()?.let {
-                val page = if (it > 0) it-1 else 0
-                val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
-                val type = call.request.queryParameters["type"]?.toIntOrNull() ?: -1
-                val size = call.request.queryParameters["size"]?.toIntOrNull() ?: -1
-                val color = call.request.queryParameters["color"]?.toIntOrNull() ?: -1
-                val sortField = when (call.request.queryParameters["sort_by"] ?: "date") {
-                    "name" -> ProductEntity.productName
-                    "date" -> ProductEntity.createdAt
-                    else -> {
-                        return@get call.respond(
-                            status = HttpStatusCode.BadRequest,
-                            message = MyResponse(
-                                success = false,
-                                message = "invalid parameter for sort_by chose between (name & date)",
-                                data = null
-                            )
-                        )
-                    }
+            try {
+                val multiPart = receiveMultipart<CeramicCreateDto>(imageValidator)
+                val userId = extractAdminId()
+                val generateNewName = generateSafeFileName(multiPart.fileName)
+                val url = "${multiPart.baseUrl}products/${generateNewName}"
+                val imageUrl = multiPart.image?.let { img ->
+                    storageService.saveProductImage(
+                        fileName = generateNewName,
+                        fileUrl = url,
+                        fileBytes = img
+                    )
                 }
-                val sortDirection = when (call.request.queryParameters["sort_direction"] ?: "dec") {
-                    "dec" -> -1
-                    "asc" -> 1
-                    else -> {
-                        return@get call.respond(
-                            status = HttpStatusCode.BadRequest,
-                            message = MyResponse(
-                                success = false,
-                                message = "invalid parameter for sort_direction chose between (dec & asc)",
-                                data = null
-                            )
-                        )
-                    }
-                }
+                val ceramicProductDto = multiPart.data.copy(productImageUrl = imageUrl!!)
+                val createdCategory = productDataSource
+                    .addCeramicProduct(ceramicProductDto.toEntity(userId))
 
-                logger.debug { "GET ALL /$ALL_PRODUCTS?page=$page&perPage=$perPage" }
-                val productList = try {
-//                    productDataSource.getAllProductPageable(page = page, perPage = perPage)
-                    productDataSource.getAllProductPageableByCategories(
-                        page = page, perPage = perPage,
-                        categoryType = type,
-                        categorySize = size,
-                        categoryColor = color,
-                        sortField = sortField,
-                        sortDirection = sortDirection
-                    )
-                } catch (exc: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = exc.message ?: "Failed ",
-                            data = null
-                        )
-                    )
-                    return@get
-                }
-                if (productList.isNotEmpty()) {
-                    call.respond(
-                        HttpStatusCode.OK, MyResponse(
-                            success = true,
-                            message = "get all products successfully",
-                            data = MyResponsePageable(page = page, perPage = perPage, data = productList)
-                        )
-                    )
-
-
-                } else {
-                    call.respond(
-                        HttpStatusCode.OK, MyResponse(
-                            success = false,
-                            message = "no product is found.",
-                            data = null
-                        )
-                    )
-                }
-            } ?: run {
-                val type = call.request.queryParameters["type"]?.toIntOrNull() ?: -1
-                val size = call.request.queryParameters["size"]?.toIntOrNull() ?: -1
-                val color = call.request.queryParameters["color"]?.toIntOrNull() ?: -1
-                val sortField = when (call.request.queryParameters["sort_by"] ?: "date") {
-                    "name" -> ProductEntity.productName
-                    "date" -> ProductEntity.createdAt
-                    else -> {
-                        return@get call.respond(
-                            status = HttpStatusCode.BadRequest,
-                            message = MyResponse(
-                                success = false,
-                                message = "invalid parameter for sort_by chose between (name & date)",
-                                data = null
-                            )
-                        )
-                    }
-                }
-                val sortDirection = when (call.request.queryParameters["sort_direction"] ?: "dec") {
-                    "dec" -> -1
-                    "asc" -> 1
-                    else -> {
-                        return@get call.respond(
-                            status = HttpStatusCode.BadRequest,
-                            message = MyResponse(
-                                success = false,
-                                message = "invalid parameter for sort_direction chose between (dec & asc)",
-                                data = null
-                            )
-                        )
-                    }
-                }
-                logger.debug { "GET ALL /$ALL_PRODUCTS" }
-
-                val productList = try {
-//                    productDataSource.getAllProduct()
-                    productDataSource.getAllProductByCategories(
-                        categoryType = type,
-                        categorySize = size,
-                        categoryColor = color,
-                        sortField = sortField,
-                        sortDirection = sortDirection
-                    )
-                } catch (exc: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = exc.message ?: "Failed ",
-                            data = null
-                        )
-                    )
-                    return@get
-                }
-                if (productList.isNotEmpty()) {
-                    call.respond(
-                        HttpStatusCode.OK, MyResponse(
-                            success = true,
-                            message = "get all type categories successfully",
-                            data = productList
-                        )
-                    )
-
-
-                } else {
-                    call.respond(
-                        HttpStatusCode.OK, MyResponse(
-                            success = false,
-                            message = "type categories is empty",
-                            data = null
-                        )
-                    )
-                }
+                respondWithSuccessfullyResult(
+                    result = createdCategory,
+                    message = "ceramic product inserted successfully ."
+                )
+            } catch (exc: Exception) {
+                throw ErrorException(exc.message ?: "Creation Failed .")
             }
 
 
         }
-        // get the products --> get /api/v1/user-client/products/search
+        get(ALL_PRODUCTS) {
+            logger.debug { "GET ALL /$ALL_PRODUCTS" }
+            try {
+                val sizeCategoriesList = productDataSource.getAllProductDto()
+                if (sizeCategoriesList.isEmpty()) throw NotFoundException("size categories is empty")
+                respondWithSuccessfullyResult(
+                    message = "get all ceramic product successfully",
+                    result = sizeCategoriesList
+                )
+
+            } catch (exc: Exception) {
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
+            }
+
+        }
+        // get the products --> get /api/v1/admin-client/products-pageable (token required)
+        get(ALL_PRODUCTS_PAGEABLE) {
+            logger.debug { "GET ALL /$ALL_PRODUCTS_PAGEABLE" }
+
+            try {
+                val params = call.request.queryParameters
+                val ceramicOption = getCeramicProductOptions(params)
+                val ceramicList =
+                    productDataSource
+                        .getAllProductPageable(
+                            query = ceramicOption.query,
+                            page = ceramicOption.page!!,
+                            perPage = ceramicOption.perPage!!,
+                            sortField = ceramicOption.sortFiled!!,
+                            sortDirection = ceramicOption.sortDirection!!
+                        )
+                if (ceramicList.isEmpty()) throw NotFoundException("no product is found.")
+                val numberOfProducts = productDataSource.getNumberOfProduct()
+                respondWithSuccessfullyResult(
+                    statusCode = HttpStatusCode.OK,
+                    result = MyResponsePageable(
+                        page = ceramicOption.page + 1,
+                        perPage = numberOfProducts,
+                        data = ceramicList
+                    ),
+                    message = "get all ceramic products successfully"
+                )
+            } catch (e: Exception) {
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+            }
+
+
+        }
+        //delete product //api/v1/admin-client/product/{id}
+        get("$SINGLE_PRODUCT/{id}") {
+            try {
+                logger.debug { "get /$SINGLE_PRODUCT/{id}" }
+                call.parameters["id"]?.toIntOrNull()?.let {
+                    productDataSource.getProductByIdDto(it)?.let { ceramicProduct ->
+
+                        respondWithSuccessfullyResult(
+                            statusCode = HttpStatusCode.OK,
+                            result = ceramicProduct,
+                            message = "ceramic product is found ."
+                        )
+                    } ?: throw NotFoundException("no ceramic product found .")
+
+
+                } ?: throw MissingParameterException("Missing parameters .")
+
+
+            } catch (exc: Exception) {
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
+
+            }
+        }
+        //put size category //api/v1/admin-client/category/size/update/{id}
+        put("$UPDATE_SINGLE_PRODUCT/{id}") {
+            try {
+                logger.debug { "get /$UPDATE_SINGLE_PRODUCT/{id}" }
+                val multiPart = receiveMultipart<CeramicCreateDto>(imageValidator)
+                val userId = extractAdminId()
+                call.parameters["id"]?.toIntOrNull()?.let { typeId ->
+                    val tempType = productDataSource.getProductById(typeId)
+                        ?: throw NotFoundException("no ceramic product found .")
+                    val newName = multiPart.data.productName
+                    logger.debug { "check if ($newName) the new name if not repeat" }
+                    val checkCategoryName = productDataSource.getProductByName(newName)
+                    val oldImageName = tempType.image.substringAfterLast("/")
+                    val responseFileName = multiPart.fileName
+                    logger.debug { "check oldImage ($oldImageName) and response (${responseFileName}) image new name if not repeat" }
+
+                    if (checkCategoryName != null && oldImageName == multiPart.fileName) {
+                        throw AlreadyExistsException("that name ($newName) is already found ")
+                    }
+                    /**
+                     * get old image url to delete
+                     */
+                    logger.debug { "oldImageName is  : $oldImageName" }
+                    logger.debug { "try to delete old Image from storage first extract oldImageName " }
+
+                    storageService.deleteProductImage(oldImageName)
+
+                    logger.info { "old Image is deleted successfully from storage" }
+                    logger.debug { "try to save new icon in storage" }
+
+
+                    val generateNewName = generateSafeFileName(responseFileName)
+                    val url = "${multiPart.baseUrl}products/${generateNewName}"
+
+                    val imageUrl = multiPart.image?.let { img ->
+                        storageService.saveProductImage(
+                            fileName = generateNewName,
+                            fileUrl = url,
+                            fileBytes = img
+                        )
+                    }
+                    val typeCategoryDto = multiPart.data.copy(productImageUrl = imageUrl!!)
+                    logger.debug { "try to save ceramic product info in db" }
+
+                    productDataSource
+                        .updateProduct(typeId, typeCategoryDto.toEntity(userId))
+                    logger.debug { "ceramic product info save successfully in db" }
+
+                    val updatedCategory = productDataSource.getProductByNameDto(newName)
+                        ?: throw NotFoundException("ceramic product name ($newName) is not found ")
+
+                    respondWithSuccessfullyResult(
+                        result = updatedCategory,
+                        message = "ceramic product updated successfully ."
+                    )
+
+                } ?: throw MissingParameterException("Missing parameters .")
+
+            } catch (exc: Exception) {
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
+
+            }
+        }
+        //delete product //api/v1/admin-client/product/delete/{id}
+        delete("$DELETE_SINGLE_PRODUCT/{id}") {
+            try {
+                logger.debug { "get /$DELETE_SINGLE_PRODUCT/{id}" }
+                call.parameters["id"]?.toIntOrNull()?.let {
+                    productDataSource.getProductByIdDto(it)?.let { ceramicProduct ->
+                        val oldImageName = ceramicProduct.image.substringAfterLast("/")
+                        logger.debug { "try to delete oldImageName $oldImageName" }
+
+                        storageService.deleteProductImage(fileName = oldImageName)
+
+                        productDataSource.deleteProduct(it)
+
+                        respondWithSuccessfullyResult(
+                            result = true,
+                            message = "ceramic product deleted successfully ."
+                        )
+
+                    }
+
+                } ?: throw MissingParameterException("Missing parameters .")
+
+            } catch (exc: Exception) {
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
+
+            }
+        }
+
+
+        /**
+         * old
+         */
         get(SEARCH_PRODUCTS) {
 
             call.request.queryParameters["product_name"]?.let { name ->
@@ -230,311 +270,6 @@ fun Route.productAdminRoute(
             } ?: call.respond(
                 status = HttpStatusCode.BadRequest,
                 message = MyResponse(success = false, message = "Missing Some Fields", data = null)
-            )
-
-        }
-        // post the product --> POST /api/v1/admin-client/product/create (token required)
-        post(CREATE_SINGLE_PRODUCT) {
-            logger.debug { "post /$CREATE_SINGLE_PRODUCT" }
-
-            val multiPart = call.receiveMultipart()
-            var typeCategoryId: Int? = null
-            var sizeCategoryId: Int? = null
-            var colorCategoryId: Int? = null
-            var productName: String? = null
-            var deleted = false
-            var fileName: String? = null
-            var fileBytes: ByteArray? = null
-            var url: String? = null
-            var imageUrl: String? = null
-            val principal = call.principal<JWTPrincipal>()
-
-            val userAdminId = try {
-                principal?.getClaim("userId", String::class)?.toIntOrNull()
-            } catch (e: Exception) {
-//                logger.runCatching { "post /$e" }
-                call.respond(
-                    status = HttpStatusCode.Conflict, message = MyResponse(
-                        success = false,
-                        message = e.message ?: "Error with authentication",
-                        data = null
-                    )
-                )
-                return@post
-            }
-            try {
-                val baseUrl =
-                    call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "$ENDPOINT/image/"
-                multiPart.forEachPart { part ->
-                    when (part) {
-                        is PartData.FormItem -> {
-                            // to read parameters that we sent with the image
-                            when (part.name) {
-                                "typeCategoryId" -> {
-                                    typeCategoryId = part.value.toIntOrNull()
-                                }
-
-                                "sizeCategoryId" -> {
-                                    sizeCategoryId = part.value.toIntOrNull()
-                                }
-
-                                "colorCategoryId" -> {
-                                    colorCategoryId = part.value.toIntOrNull()
-                                }
-
-                                "productName" -> {
-                                    productName = part.value
-                                }
-
-                                "deleted" -> {
-                                    deleted = part.value.toBoolean()
-                                }
-
-                            }
-
-                        }
-
-                        is PartData.FileItem -> {
-                            if (!isImageContentType(part.contentType.toString())) {
-                                call.respond(
-                                    message = MyResponse(
-                                        success = false,
-                                        message = "Invalid file format",
-                                        data = null
-                                    ), status = HttpStatusCode.BadRequest
-                                )
-                                part.dispose()
-                                return@forEachPart
-
-                            }
-                            fileName = generateSafeFileName(part.originalFileName as String)
-//                            imageUrl = "$baseUrl$fileName"
-                            fileBytes = part.streamProvider().readBytes()
-                            url = "${baseUrl}products/${fileName}"
-
-
-                        }
-
-                        else -> {}
-
-                    }
-                    part.dispose()
-                }
-
-                val isProduct = productDataSource.getProductByName(productName!!)
-                if (isProduct == null) {
-                    try {
-                        imageUrl = storageService.saveProductImage(
-                            fileName = fileName!!,
-                            fileUrl = url!!,
-                            fileBytes = fileBytes!!
-                        )
-                        if (!imageUrl.isNullOrEmpty()) {
-                            Product(
-                                typeCategoryId = typeCategoryId!!,
-                                sizeCategoryId = sizeCategoryId!!,
-                                colorCategoryId = colorCategoryId!!,
-                                userAdminID = userAdminId!!,
-                                productName = productName!!,
-                                image = imageUrl,
-                                createdAt = LocalDateTime.now().toDatabaseString(),
-                                updatedAt = "",
-                                deleted = deleted
-                            ).apply {
-
-                                val isInserted = productDataSource.createProduct(this)
-                                if (isInserted > 0) {
-                                    call.respond(
-                                        status = HttpStatusCode.Created,
-                                        message = MyResponse(
-                                            success = true,
-                                            message = "product inserted successfully",
-                                            data = this
-                                        )
-                                    )
-                                    return@post
-                                } else {
-                                    call.respond(
-                                        status = HttpStatusCode.OK,
-                                        message = MyResponse(
-                                            success = false,
-                                            message = "product insert failed",
-                                            data = null
-                                        )
-                                    )
-                                    return@post
-                                }
-                            }
-                        } else {
-                            storageService.deleteProductImage(fileName = fileName!!)
-                            call.respond(
-                                status = HttpStatusCode.Conflict,
-                                message = MyResponse(
-                                    success = false,
-                                    message = "some Error happened while uploading .",
-                                    data = null
-                                )
-                            )
-                            return@post
-                        }
-
-                    } catch (ex: Exception) {
-                        // something went wrong with the image part, delete the file
-                        storageService.deleteProductImage(fileName = fileName!!)
-                        ex.printStackTrace()
-                        call.respond(
-                            status = HttpStatusCode.InternalServerError, message = MyResponse(
-                                success = false,
-                                message = ex.message ?: "Error happened while uploading .",
-                                data = null
-                            )
-                        )
-                        return@post
-                    }
-
-                } else {
-                    call.respond(
-                        status = HttpStatusCode.OK,
-                        message = MyResponse(
-                            success = false,
-                            message = "this product is found",
-                            data = null
-                        )
-                    )
-                    return@post
-                }
-
-
-            } catch (ex: Exception) {
-                storageService.deleteProductImage(fileName = fileName!!)
-                ex.printStackTrace()
-                call.respond(
-                    status = HttpStatusCode.InternalServerError, message = MyResponse(
-                        success = false,
-                        message = ex.message ?: "Error happened",
-                        data = null
-                    )
-                )
-                return@post
-            }
-
-
-        }
-        // get the product --> get /api/v1/admin-client/product/{id} (token required)
-        get("$SINGLE_PRODUCT/{id}") {
-            logger.debug { "get /$SINGLE_PRODUCT" }
-            call.parameters["id"]?.toIntOrNull()?.let { id ->
-
-                try {
-                    productDataSource.getProductById(id)?.let { product ->
-                        call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
-                                success = true,
-                                message = "get product successfully",
-                                data = product
-                            )
-                        )
-                    } ?: call.respond(
-                        status = HttpStatusCode.OK,
-                        message = MyResponse(
-                            success = false,
-                            message = "Product Not Found",
-                            data = null
-                        )
-                    )
-                } catch (e: Exception) {
-                    logger.error { "Exception /${e.stackTrace}" }
-                    call.respond(
-                        status = HttpStatusCode.Conflict,
-                        message = MyResponse(
-                            success = false,
-                            message = e.message ?: "Failed",
-                            data = null
-                        )
-                    )
-
-                }
-
-            } ?: call.respond(
-                status = HttpStatusCode.BadRequest,
-                message = MyResponse(
-                    success = false,
-                    message = "Missing Parameters",
-                    data = null
-                )
-            )
-        }
-        // delete the product --> delete /api/v1/admin-client/product/delete/{id} (token required)
-        delete("$DELETE_SINGLE_PRODUCT/{id}") {
-            logger.debug { "delete /$CREATE_SINGLE_PRODUCT" }
-            call.parameters["id"]?.toIntOrNull()?.let { id ->
-                productDataSource.getProductById(productId = id)?.let {
-                    val isDeletedImage = try {
-                        storageService.deleteProductImage(fileName = it.image.substringAfterLast("/"))
-                    } catch (e: Exception) {
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            MyResponse(
-                                success = false,
-                                message = e.message ?: "Failed to delete image",
-                                data = null
-                            )
-                        )
-                        return@delete
-                    }
-                    if (isDeletedImage) {
-                        val deleteResult =
-                            productDataSource.deleteProduct(productId = id)
-                        if (deleteResult > 0) {
-                            call.respond(
-                                HttpStatusCode.OK,
-                                MyResponse(
-                                    success = true,
-                                    message = "product deleted successfully .",
-                                    data = null
-                                )
-                            )
-                        } else {
-                            call.respond(
-                                HttpStatusCode.OK,
-                                MyResponse(
-                                    success = false,
-                                    message = " product deleted failed .",
-                                    data = null
-                                )
-                            )
-                        }
-
-                    } else {
-                        call.respond(
-                            HttpStatusCode.Conflict,
-                            MyResponse(
-                                success = false,
-                                message = "Failed to delete image",
-                                data = null
-                            )
-                        )
-
-                    }
-
-
-                } ?: call.respond(
-                    HttpStatusCode.OK,
-                    MyResponse(
-                        success = false,
-                        message = " news deleted failed .",
-                        data = null
-                    )
-                )
-
-            } ?: call.respond(
-                status = HttpStatusCode.BadRequest,
-                message = MyResponse(
-                    success = false,
-                    message = "Missing parameters",
-                    data = null
-                )
             )
 
         }

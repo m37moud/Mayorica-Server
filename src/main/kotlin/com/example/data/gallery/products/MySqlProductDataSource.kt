@@ -1,8 +1,13 @@
 package com.example.data.gallery.products
 
 import com.example.database.table.*
+import com.example.models.CeramicProductInfo
 import com.example.models.Product
+import com.example.models.dto.ProductDto
 import com.example.models.response.ProductResponse
+import com.example.utils.AlreadyExistsException
+import com.example.utils.ErrorException
+import com.example.utils.NotFoundException
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,14 +19,51 @@ import org.ktorm.schema.Column
 import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
+
 @Singleton
 class MySqlProductDataSource(private val db: Database) : ProductDataSource {
+    override suspend fun getNumberOfProduct(): Int {
+        logger.debug { "getNumberOfProduct: called" }
+
+        return withContext(Dispatchers.IO) {
+            val productList = db.from(ProductEntity)
+                .select()
+                .orderBy(ProductEntity.createdAt.asc())
+                .mapNotNull { rowToProduct(it) }
+            productList.size
+        }
+    }
+
     override suspend fun getAllProduct(): List<Product> {
         return withContext(Dispatchers.IO) {
             val productList = db.from(ProductEntity)
                 .select()
                 .orderBy(ProductEntity.createdAt.asc())
                 .mapNotNull { rowToProduct(it) }
+            productList
+        }
+    }
+
+    override suspend fun getAllProductDto(): List<ProductDto> {
+        return withContext(Dispatchers.IO) {
+            val productList = db.from(ProductEntity)
+                .innerJoin(AdminUserEntity, on = ProductEntity.userAdminID eq AdminUserEntity.id)
+                .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)
+                .innerJoin(SizeCategoryEntity, on = ProductEntity.sizeCategoryId eq SizeCategoryEntity.id)
+                .innerJoin(ColorCategoryEntity, on = ProductEntity.colorCategoryId eq ColorCategoryEntity.id)
+                .select(
+                    ProductEntity.id,
+                    AdminUserEntity.username,
+                    TypeCategoryEntity.typeName,
+                    SizeCategoryEntity.size,
+                    ColorCategoryEntity.color,
+                    ProductEntity.productName,
+                    ProductEntity.image,
+                    ProductEntity.createdAt,
+                    ProductEntity.updatedAt
+                )
+                .orderBy(ProductEntity.createdAt.asc())
+                .mapNotNull { rowToProductDto(it) }
             productList
         }
     }
@@ -158,6 +200,52 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
     }
 
+    override suspend fun getAllProductPageable(
+        query: String?,
+        page: Int,
+        perPage: Int,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<ProductDto> {
+        logger.debug { "getAllProductPageable /$page $perPage" }
+        val myLimit = if (perPage > 100) 100 else perPage
+        val myOffset = (page * perPage)
+        return withContext(Dispatchers.IO) {
+
+            val productList = db.from(ProductEntity)
+                .innerJoin(AdminUserEntity, on = ProductEntity.userAdminID eq AdminUserEntity.id)
+                .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)
+                .innerJoin(SizeCategoryEntity, on = ProductEntity.sizeCategoryId eq SizeCategoryEntity.id)
+                .innerJoin(ColorCategoryEntity, on = ProductEntity.colorCategoryId eq ColorCategoryEntity.id)
+                .select(
+                    ProductEntity.id,
+                    AdminUserEntity.username,
+                    TypeCategoryEntity.typeName,
+                    SizeCategoryEntity.size,
+                    ColorCategoryEntity.color,
+                    ProductEntity.productName,
+                    ProductEntity.image,
+                    ProductEntity.createdAt,
+                    ProductEntity.updatedAt
+                )
+                .limit(myLimit)
+                .offset(myOffset)
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+                .whereWithConditions {
+                    if (!query.isNullOrEmpty()) {
+                        it += (ProductEntity.productName like "%${query}%")
+                    }
+                }
+                .mapNotNull { rowToProductDto(it) }
+            productList
+        }
+    }
+
     override suspend fun getAllProductPageableByCategories(
         page: Int, perPage: Int,
         categoryType: Int,
@@ -249,6 +337,33 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
             product
         }
     }
+
+    override suspend fun getProductByIdDto(productId: Int): ProductDto? {
+        logger.debug { "getProductByIdDto" }
+        return withContext(Dispatchers.IO) {
+            val product = db.from(ProductEntity)
+                .innerJoin(AdminUserEntity, on = ProductEntity.userAdminID eq AdminUserEntity.id)
+                .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)
+                .innerJoin(SizeCategoryEntity, on = ProductEntity.sizeCategoryId eq SizeCategoryEntity.id)
+                .innerJoin(ColorCategoryEntity, on = ProductEntity.colorCategoryId eq ColorCategoryEntity.id)
+                .select(
+                    ProductEntity.id,
+                    AdminUserEntity.username,
+                    TypeCategoryEntity.typeName,
+                    SizeCategoryEntity.size,
+                    ColorCategoryEntity.color,
+                    ProductEntity.productName,
+                    ProductEntity.image,
+                    ProductEntity.createdAt,
+                    ProductEntity.updatedAt
+                )
+                .where { ProductEntity.id eq productId }
+                .map { rowToProductDto(it) }
+                .firstOrNull()
+            product
+        }
+    }
+
     override suspend fun getProductResponseById(productId: Int): ProductResponse? {
         return withContext(Dispatchers.IO) {
             val product = db.from(ProductEntity)
@@ -284,6 +399,31 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
     }
 
+    override suspend fun getProductByNameDto(productName: String): ProductDto? {
+        return withContext(Dispatchers.IO) {
+            val product = db.from(ProductEntity)
+                .innerJoin(AdminUserEntity, on = ProductEntity.userAdminID eq AdminUserEntity.id)
+                .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)
+                .innerJoin(SizeCategoryEntity, on = ProductEntity.sizeCategoryId eq SizeCategoryEntity.id)
+                .innerJoin(ColorCategoryEntity, on = ProductEntity.colorCategoryId eq ColorCategoryEntity.id)
+                .select(
+                    ProductEntity.id,
+                    AdminUserEntity.username,
+                    TypeCategoryEntity.typeName,
+                    SizeCategoryEntity.size,
+                    ColorCategoryEntity.color,
+                    ProductEntity.productName,
+                    ProductEntity.image,
+                    ProductEntity.createdAt,
+                    ProductEntity.updatedAt
+                )
+                .where { ProductEntity.productName eq productName }
+                .map { rowToProductDto(it) }
+                .firstOrNull()
+            product
+        }
+    }
+
     override suspend fun searchProductByName(productName: String): List<Product?> {
         return withContext(Dispatchers.IO) {
             val product = db.from(ProductEntity)
@@ -295,36 +435,44 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
     }
 
-    override suspend fun createProduct(product: Product): Int {
+    override suspend fun addCeramicProduct(product: CeramicProductInfo): ProductDto {
+        if (getProductByName(product.productName) != null) throw AlreadyExistsException("this Category inserted before .")
+        if (createProduct(product) < 0) throw ErrorException("Failed to create New Size Category .")
+        return getProductByNameDto(product.productName)
+            ?: throw NotFoundException("failed to get Ceramic Product after created.")
+
+    }
+
+    override suspend fun createProduct(product: CeramicProductInfo): Int {
         return withContext(Dispatchers.IO) {
             val result = db.insert(ProductEntity) {
                 set(it.typeCategoryId, product.typeCategoryId)
                 set(it.sizeCategoryId, product.sizeCategoryId)
                 set(it.colorCategoryId, product.colorCategoryId)
-                set(it.userAdminID, product.userAdminID)
+                set(it.userAdminID, product.userAdminId)
                 set(it.productName, product.productName)
-                set(it.image, product.image)
+                set(it.image, product.productImageUrl)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
-                set(it.deleted, product.deleted)
+                set(it.deleted, false)
             }
             result
         }
     }
 
-    override suspend fun updateProduct(product: Product): Int {
+    override suspend fun updateProduct(id: Int, product: CeramicProductInfo): Int {
         return withContext(Dispatchers.IO) {
             val result = db.update(ProductEntity) {
                 set(it.typeCategoryId, product.typeCategoryId)
                 set(it.sizeCategoryId, product.sizeCategoryId)
                 set(it.colorCategoryId, product.colorCategoryId)
-                set(it.userAdminID, product.userAdminID)
+                set(it.userAdminID, product.userAdminId)
                 set(it.productName, product.productName)
-                set(it.image, product.image)
+                set(it.image, product.productImageUrl)
                 set(it.updatedAt, LocalDateTime.now())
-                set(it.deleted, product.deleted)
+                set(it.deleted, false)
                 where {
-                    it.id eq product.id
+                    it.id eq id
                 }
             }
             result
@@ -345,7 +493,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         return@withContext db.deleteAll(ProductEntity)
     }
 
-    override suspend fun saveAllProduct(productList: Iterable<Product>) = withContext(Dispatchers.IO) {
+    override suspend fun saveAllProduct(productList: Iterable<CeramicProductInfo>) = withContext(Dispatchers.IO) {
         var result = 0
         productList.forEach { result = createProduct(it) }
         return@withContext result
@@ -403,6 +551,37 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                 typeCategoryName = typeCategory,
                 sizeCategoryName = size,
                 colorCategoryName = color,
+                image = imageProduct,
+                createdAt = createdAt,
+                updatedAt = updatedAt
+
+            )
+        }
+    }
+
+    private fun rowToProductDto(row: QueryRowSet?): ProductDto? {
+        return if (row == null) {
+            null
+        } else {
+
+            val id = row[ProductEntity.id] ?: -1
+            val adminUserName = row[AdminUserEntity.username] ?: ""
+            val typeCategory = row[TypeCategoryEntity.typeName] ?: ""
+            val size = row[SizeCategoryEntity.size] ?: ""
+            val color = row[ColorCategoryEntity.color] ?: ""
+            val productName = row[ProductEntity.productName] ?: ""
+
+            val imageProduct = row[ProductEntity.image] ?: ""
+            val createdAt = row[ProductEntity.createdAt]?.toDatabaseString() ?: ""
+            val updatedAt = row[ProductEntity.updatedAt]?.toDatabaseString() ?: ""
+
+            ProductDto(
+                id = id,
+                adminUserName = adminUserName,
+                typeCategoryName = typeCategory,
+                sizeCategoryName = size,
+                colorCategoryName = color,
+                productName = productName,
                 image = imageProduct,
                 createdAt = createdAt,
                 updatedAt = updatedAt
