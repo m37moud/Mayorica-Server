@@ -3,7 +3,10 @@ package com.example.data.gallery.products
 import com.example.database.table.*
 import com.example.models.CeramicProductInfo
 import com.example.models.Product
+import com.example.models.dto.ColorCategoryMenu
 import com.example.models.dto.ProductDto
+import com.example.models.dto.SizeCategoryMenu
+import com.example.models.dto.TypeCategoryMenu
 import com.example.models.response.ProductResponse
 import com.example.utils.AlreadyExistsException
 import com.example.utils.ErrorException
@@ -22,6 +25,66 @@ private val logger = KotlinLogging.logger {}
 
 @Singleton
 class MySqlProductDataSource(private val db: Database) : ProductDataSource {
+
+    override suspend fun getAllTypeCategoryMenu(): List<TypeCategoryMenu> {
+        logger.debug { "getAllTypeCategoryMenu" }
+        return withContext(Dispatchers.IO) {
+            val result = db.from(TypeCategoryEntity)
+                .select(
+                    TypeCategoryEntity.id,
+                    TypeCategoryEntity.typeName
+                )
+                .mapNotNull {
+                    TypeCategoryMenu(
+                        typeId = it[TypeCategoryEntity.id] ?: -1,
+                        typeName = it[TypeCategoryEntity.typeName] ?: ""
+                    )
+                }
+            result
+        }
+
+    }
+    override suspend fun getAllSizeCategoryMenu(): List<SizeCategoryMenu> {
+        logger.debug { "getAllSizeCategoryMenu" }
+        return withContext(Dispatchers.IO) {
+            val result = db.from(SizeCategoryEntity)
+                .select(
+                    SizeCategoryEntity.id,
+                    SizeCategoryEntity.size
+                )
+                .mapNotNull {
+                    SizeCategoryMenu(
+                        sizeId = it[SizeCategoryEntity.id] ?: -1,
+                        sizeName = it[SizeCategoryEntity.size] ?: ""
+                    )
+                }
+            result
+        }
+
+    }
+    override suspend fun getAllColorCategoryMenu(): List<ColorCategoryMenu> {
+        logger.debug { "getAllTypeCategoryMenu" }
+        return withContext(Dispatchers.IO) {
+            val result = db.from(ColorCategoryEntity)
+                .select(
+                    ColorCategoryEntity.id,
+                    ColorCategoryEntity.color,
+                    ColorCategoryEntity.colorValue,
+                )
+                .mapNotNull {
+                    ColorCategoryMenu(
+                        colorId = it[ColorCategoryEntity.id] ?: -1,
+                        colorName = it[ColorCategoryEntity.color] ?: "",
+                        colorValue = it[ColorCategoryEntity.colorValue] ?: "",
+                    )
+                }
+            result
+        }
+
+    }
+
+
+
     override suspend fun getNumberOfProduct(): Int {
         logger.debug { "getNumberOfProduct: called" }
 

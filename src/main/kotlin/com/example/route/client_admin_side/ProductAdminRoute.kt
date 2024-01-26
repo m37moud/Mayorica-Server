@@ -34,6 +34,10 @@ private const val SINGLE_PRODUCT = "$ADMIN_CLIENT/product"
 private const val CREATE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/create"
 private const val UPDATE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/update"
 private const val DELETE_SINGLE_PRODUCT = "$SINGLE_PRODUCT/delete"
+private const val PRODUCTS_TYPE_MENU = "$ALL_PRODUCTS/typeMenu"
+private const val PRODUCTS_SIZE_MENU = "$ALL_PRODUCTS/sizeMenu"
+private const val PRODUCTS_COLOR_MENU = "$ALL_PRODUCTS/colorMenu"
+
 
 private val logger = KotlinLogging.logger {}
 
@@ -235,6 +239,61 @@ fun Route.productAdminRoute() {
                 throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
 
             }
+        }
+
+        //get product type menu //api/v1/admin-client/products/typeMenu
+        get(PRODUCTS_TYPE_MENU) {
+            logger.debug { "GET ALL /$PRODUCTS_TYPE_MENU" }
+            try {
+                val typeMenu = productDataSource.getAllTypeCategoryMenu()
+                if (typeMenu.isEmpty()) throw NotFoundException("type menu is empty")
+                logger.debug { "GET ALL /$PRODUCTS_TYPE_MENU sizeMenu = $typeMenu" }
+
+                respondWithSuccessfullyResult(
+                    message = "get all type menu categories successfully",
+                    result = typeMenu
+                )
+            } catch (e: Exception) {
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+            }
+
+        }
+
+        //get product size menu //api/v1/admin-client/products/sizeMenu
+        get(PRODUCTS_SIZE_MENU) {
+            logger.debug { "GET ALL /$PRODUCTS_SIZE_MENU" }
+            try {
+                val sizeMenu = productDataSource.getAllSizeCategoryMenu()
+
+                if (sizeMenu.isEmpty()) throw NotFoundException("size menu is empty")
+                logger.debug { "GET ALL /$PRODUCTS_SIZE_MENU sizeMenu = $sizeMenu" }
+
+                respondWithSuccessfullyResult(
+                    message = "get all size menu categories successfully",
+                    result = sizeMenu
+                )
+            } catch (e: Exception) {
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+            }
+
+        }
+        //get product color menu //api/v1/admin-client/products/sizeMenu
+        get(PRODUCTS_COLOR_MENU) {
+            logger.debug { "GET ALL /$PRODUCTS_COLOR_MENU" }
+            try {
+                val colorMenu = productDataSource.getAllColorCategoryMenu()
+
+                if (colorMenu.isEmpty()) throw NotFoundException("color menu is empty")
+                logger.debug { "GET ALL /$PRODUCTS_COLOR_MENU sizeMenu = $colorMenu" }
+
+                respondWithSuccessfullyResult(
+                    message = "get all color menu categories successfully",
+                    result = colorMenu
+                )
+            } catch (e: Exception) {
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+            }
+
         }
 
 

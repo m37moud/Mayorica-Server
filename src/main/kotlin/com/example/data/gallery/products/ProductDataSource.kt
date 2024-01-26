@@ -4,12 +4,21 @@ import com.example.database.table.ProductEntity
 import com.example.models.CeramicProductInfo
 import com.example.models.Product
 import com.example.models.TypeCategory
+import com.example.models.dto.ColorCategoryMenu
 import com.example.models.dto.ProductDto
+import com.example.models.dto.SizeCategoryMenu
+import com.example.models.dto.TypeCategoryMenu
 import com.example.models.response.ProductResponse
 import org.ktorm.schema.Column
 import kotlin.reflect.KProperty1
 
 interface ProductDataSource {
+
+    suspend fun getAllTypeCategoryMenu(): List<TypeCategoryMenu>
+    suspend fun getAllSizeCategoryMenu(): List<SizeCategoryMenu>
+    suspend fun getAllColorCategoryMenu(): List<ColorCategoryMenu>
+
+
     suspend fun getNumberOfProduct(): Int
 
     suspend fun getAllProduct(): List<Product>

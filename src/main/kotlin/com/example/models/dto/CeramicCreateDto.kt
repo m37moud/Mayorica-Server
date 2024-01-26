@@ -1,5 +1,8 @@
 package com.example.models.dto
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class CeramicCreateDto(
     val typeCategoryId: Int,
     val sizeCategoryId: Int,

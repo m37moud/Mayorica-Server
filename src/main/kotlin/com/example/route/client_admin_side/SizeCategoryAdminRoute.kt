@@ -226,13 +226,13 @@ fun Route.sizeCategoryAdminRoute() {
 
             }
         }
-        //get all size category //api/v1/admin-client/categories/size/typeMenu
 
+        //get all size category //api/v1/admin-client/categories/size/typeMenu
         get(SIZE_CATEGORIES_TYPE_MENU) {
             logger.debug { "GET ALL /$SIZE_CATEGORIES_TYPE_MENU" }
             try {
                 val typeMenu = sizeCategoryDataSource.getAllTypeCategoryMenu()
-                if (typeMenu.isEmpty()) throw NotFoundException("size categories is empty")
+                if (typeMenu.isEmpty()) throw NotFoundException("type menu is empty")
                 respondWithSuccessfullyResult(
                     message = "get all type menu categories successfully",
                     result = typeMenu
