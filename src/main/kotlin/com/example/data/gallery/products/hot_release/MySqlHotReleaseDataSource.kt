@@ -135,15 +135,15 @@ class MySqlHotReleaseDataSource(private val db: Database) : HotReleaseDataSource
             val id = row[HotReleaseProductEntity.id] ?: -1
             val productId = row[HotReleaseProductEntity.productId] ?: -1
             val userAdminId = row[HotReleaseProductEntity.userAdminID] ?: -1
-            val createdAt = row[HotReleaseProductEntity.createdAt]?.toDatabaseString() ?: ""
-            val updatedAt = row[HotReleaseProductEntity.updatedAt]?.toDatabaseString() ?: ""
+            val createdAt = row[HotReleaseProductEntity.createdAt] ?: ""
+            val updatedAt = row[HotReleaseProductEntity.updatedAt] ?: ""
 
             HotReleaseProduct(
                 id = id,
                 productId = productId,
                 userAdminId = userAdminId,
-                createdAt = createdAt,
-                updatedAt = updatedAt
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString(),
 
             )
         }

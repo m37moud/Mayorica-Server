@@ -2,6 +2,7 @@ package com.example.data.gallery.products
 
 import com.example.database.table.*
 import com.example.models.CeramicProductInfo
+import com.example.models.HotReleaseProduct
 import com.example.models.Product
 import com.example.models.dto.ColorCategoryMenu
 import com.example.models.dto.ProductDto
@@ -44,6 +45,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
 
     }
+
     override suspend fun getAllSizeCategoryMenu(): List<SizeCategoryMenu> {
         logger.debug { "getAllSizeCategoryMenu" }
         return withContext(Dispatchers.IO) {
@@ -62,6 +64,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
 
     }
+
     override suspend fun getAllColorCategoryMenu(): List<ColorCategoryMenu> {
         logger.debug { "getAllTypeCategoryMenu" }
         return withContext(Dispatchers.IO) {
@@ -82,7 +85,6 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
 
     }
-
 
 
     override suspend fun getNumberOfProduct(): Int {
@@ -462,6 +464,27 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
     }
 
+    override suspend fun checkIfProductExist(
+        productName: String,
+        typeId: Int,
+        sizeId: Int,
+        colorId: Int,
+    ): Product? {
+        return withContext(Dispatchers.IO) {
+            val product = db.from(ProductEntity)
+                .select()
+                .where {
+                    (ProductEntity.productName eq productName) and
+                            (ProductEntity.typeCategoryId eq typeId) and
+                            (ProductEntity.sizeCategoryId eq sizeId) and
+                            (ProductEntity.colorCategoryId eq colorId)
+                }
+                .map { rowToProduct(it) }
+                .firstOrNull()
+            product
+        }
+    }
+
     override suspend fun getProductByNameDto(productName: String): ProductDto? {
         return withContext(Dispatchers.IO) {
             val product = db.from(ProductEntity)
@@ -499,7 +522,13 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
     }
 
     override suspend fun addCeramicProduct(product: CeramicProductInfo): ProductDto {
-        if (getProductByName(product.productName) != null) throw AlreadyExistsException("this Category inserted before .")
+        if (checkIfProductExist(
+                productName = product.productName,
+                typeId = product.typeCategoryId,
+                sizeId = product.sizeCategoryId,
+                colorId = product.colorCategoryId,
+            ) != null
+        ) throw AlreadyExistsException("this Category inserted before .")
         if (createProduct(product) < 0) throw ErrorException("Failed to create New Size Category .")
         return getProductByNameDto(product.productName)
             ?: throw NotFoundException("failed to get Ceramic Product after created.")
@@ -562,6 +591,18 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         return@withContext result
     }
 
+    private suspend fun checkProductIsHot(productId: Int): HotReleaseProduct? {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(HotReleaseProductEntity)
+                .select()
+                .where {
+                    HotReleaseProductEntity.productId eq productId
+                }
+                .map { rowToHotReleaseProduct(it) }
+                .firstOrNull()
+            result
+        }
+    }
 
     private fun rowToProduct(row: QueryRowSet?): Product? {
         return if (row == null)
@@ -622,7 +663,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
     }
 
-    private fun rowToProductDto(row: QueryRowSet?): ProductDto? {
+    private suspend fun rowToProductDto(row: QueryRowSet?): ProductDto? {
         return if (row == null) {
             null
         } else {
@@ -638,6 +679,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
             val createdAt = row[ProductEntity.createdAt] ?: ""
             val updatedAt = row[ProductEntity.updatedAt] ?: ""
             val deleted = row[ProductEntity.deleted] ?: false
+            val isHot: Boolean = checkProductIsHot(id) != null
 
             ProductDto(
                 id = id,
@@ -649,10 +691,33 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                 image = imageProduct,
                 createdAt = createdAt.toString(),
                 updatedAt = updatedAt.toString(),
-                deleted = deleted
+                deleted = deleted,
+                isHot = isHot
 
             )
         }
     }
+
+    private fun rowToHotReleaseProduct(row: QueryRowSet?): HotReleaseProduct? {
+        return if (row == null) {
+            null
+        } else {
+            val id = row[HotReleaseProductEntity.id] ?: -1
+            val productId = row[HotReleaseProductEntity.productId] ?: -1
+            val userAdminId = row[HotReleaseProductEntity.userAdminID] ?: -1
+            val createdAt = row[HotReleaseProductEntity.createdAt] ?: ""
+            val updatedAt = row[HotReleaseProductEntity.updatedAt] ?: ""
+
+            HotReleaseProduct(
+                id = id,
+                productId = productId,
+                userAdminId = userAdminId,
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString(),
+
+                )
+        }
+    }
+
 
 }

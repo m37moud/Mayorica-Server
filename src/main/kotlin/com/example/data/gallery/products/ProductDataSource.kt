@@ -93,6 +93,12 @@ interface ProductDataSource {
     suspend fun getProductByIdDto(productId: Int): ProductDto?
     suspend fun getProductResponseById(productId: Int): ProductResponse?
     suspend fun getProductByName(productName: String): Product?
+    suspend fun checkIfProductExist(
+        productName: String,
+        typeId: Int,
+        sizeId: Int,
+        colorId: Int,
+    ): Product?
     suspend fun getProductByNameDto(productName: String): ProductDto?
     suspend fun searchProductByName(productName: String): List<Product?>
     suspend fun addCeramicProduct(product: CeramicProductInfo): ProductDto

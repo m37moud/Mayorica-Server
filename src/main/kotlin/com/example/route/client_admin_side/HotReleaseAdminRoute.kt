@@ -6,9 +6,8 @@ import com.example.data.gallery.products.hot_release.HotReleaseDataSource
 import com.example.database.table.HotReleaseProductEntity
 import com.example.database.table.ProductEntity
 import com.example.models.HotReleaseProduct
-import com.example.utils.Constants
+import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
-import com.example.utils.MyResponse
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -25,10 +24,7 @@ private const val DELETE_HOT_RELEASE_PRODUCT = "${HOT_RELEASE_PRODUCT}/delete"
 
 private val logger = KotlinLogging.logger {}
 
-fun Route.hotReleaseAdminRoute(
-//    hotReleaseDataSource: HotReleaseDataSource,
-//    productDataSource: ProductDataSource
-) {
+fun Route.hotReleaseAdminRoute() {
     val hotReleaseDataSource: HotReleaseDataSource by inject()
     val productDataSource: ProductDataSource by inject()
 
@@ -37,7 +33,7 @@ fun Route.hotReleaseAdminRoute(
         get(HOT_RELEASE_PRODUCTS) {
             logger.debug { "get $HOT_RELEASE_PRODUCTS" }
             try {
-                val limit  = call.request.queryParameters["limit"]?.toIntOrNull() ?: 5
+                val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 5
 
                 val productList = hotReleaseDataSource.getAllHotReleaseProduct(limit)
                 if (productList.isNotEmpty()) {
@@ -80,138 +76,54 @@ fun Route.hotReleaseAdminRoute(
         post("$ADD_HOT_RELEASE_PRODUCT/{id}") {
             call.parameters["id"]?.toIntOrNull()?.let { id ->
                 logger.debug { "post $ADD_HOT_RELEASE_PRODUCT/$id" }
-                val principal = call.principal<JWTPrincipal>()
-                val userAdminId = try {
-                    principal?.getClaim("userId", String::class)?.toIntOrNull()
-                } catch (e: Exception) {
-                    call.respond(
-                        status = HttpStatusCode.Conflict,
-                        message = MyResponse(
-                            success = false,
-                            message = e.message ?: "Error with authentication",
-                            data = null
-                        )
-                    )
-                    return@post
-                }
+
+                val userAdminId = extractAdminId()
 
                 try {
                     productDataSource.getProductById(productId = id)?.let {
                         // if product in hot release table dont insert and return post
                         hotReleaseDataSource.getHotReleaseProduct(id)?.let {
-                            call.respond(
-                                status = HttpStatusCode.OK,
-                                message = MyResponse(
-                                    success = false,
-                                    message = "Hot Release Product added before",
-                                    data = null
-                                )
-                            )
-                            return@post
+                            throw AlreadyExistsException("Hot Release Product added before")
                         }
-                        val hotProduct = HotReleaseProduct(productId = id, userAdminId =userAdminId!!)
+                        val hotProduct = HotReleaseProduct(productId = id, userAdminId = userAdminId!!)
                         val result = hotReleaseDataSource.addHotReleaseProduct(hotProduct)
-                        if (result > 0) {
-                            call.respond(
-                                status = HttpStatusCode.OK,
-                                message = MyResponse(
-                                    success = true,
-                                    message = "Hot Release Product Insert successfully",
-                                    data = null
-                                )
-                            )
+                        if (result < 0)
+                            throw ErrorException("Hot Release Product Insert Failed")
 
-                        } else {
-                            call.respond(
-                                status = HttpStatusCode.OK,
-                                message = MyResponse(
-                                    success = false,
-                                    message = "Hot Release Product Insert Failed",
-                                    data = null
-                                )
-                            )
-
-                        }
-                    } ?: call.respond(
-                        status = HttpStatusCode.NotFound,
-                        message = MyResponse(
-                            success = false,
-                            message = "this product is not found please add it first then add to hot release",
-                            data = null
+                        respondWithSuccessfullyResult(
+                            result = true,
+                            message = "Hot Release Product Insert successfully"
                         )
-                    )
+                    }
+                        ?: throw NotFoundException("this product is not found please add it first then add to hot release")
 
 
                 } catch (e: Exception) {
-                    logger.error { "${e.stackTrace ?: "failed"}" }
-                    call.respond(
-                        status = HttpStatusCode.Conflict,
-                        message = MyResponse(
-                            success = false,
-                            message = e.message ?: "failed",
-                            data = null
-                        )
-                    )
-                    return@post
+                    logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
+                    throw ErrorException(e.message ?: "An unknown error occurred")
 
                 }
 
-            } ?: call.respond(
-                status = HttpStatusCode.Conflict, message = MyResponse(
-                    success = false, message = "Missing parameters",
-                    data = null
-                )
-            )
+            } ?: throw MissingParameterException("Missing parameters .")
         }
         //delete request -> api/v1/admin-client/hot_release_product/delete
-        delete(DELETE_HOT_RELEASE_PRODUCT) {
+        delete("$DELETE_HOT_RELEASE_PRODUCT/{id}") {
             call.parameters["id"]?.toIntOrNull()?.let { id ->
                 logger.debug { "delete $DELETE_HOT_RELEASE_PRODUCT/$id" }
                 try {
                     val result = hotReleaseDataSource.deleteHotReleaseProduct(productId = id)
-                    if (result > 0) {
-                        call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
-                                success = true,
-                                message = "Hot Release Product deleted successfully",
-                                data = null
-                            )
-                        )
+                    if (result < 0)throw ErrorException("Hot Release Product Delete Failed")
 
-                    } else {
-                        call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
-                                success = false,
-                                message = "Hot Release Product delete Failed",
-                                data = null
-                            )
-                        )
-
-                    }
-                } catch (e: Exception) {
-
-                    logger.error { "delete ${e.stackTrace ?: "failed"}" }
-                    call.respond(
-                        status = HttpStatusCode.Conflict,
-                        message = MyResponse(
-                            success = false,
-                            message = e.message ?: "failed ",
-                            data = null
-                        )
+                    respondWithSuccessfullyResult(
+                        result = true,
+                        message = "Hot Release Product deleted successfully"
                     )
-                    return@delete
+
+                } catch (e: Exception) {
+                    logger.error { "delete ${e.stackTrace ?: "An unknown error occurred"}" }
+                    throw ErrorException(e.message ?: "An unknown error occurred")
                 }
 
-            } ?: call.respond(
-                status = HttpStatusCode.Conflict,
-                message = MyResponse(
-                    success = false,
-                    message = "Missing parameters",
-                    data = null
-                )
-            )
-        }
+            } ?: throw MissingParameterException("Missing parameters .")        }
     }
 }

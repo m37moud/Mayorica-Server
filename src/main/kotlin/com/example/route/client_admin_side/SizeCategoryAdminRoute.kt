@@ -145,7 +145,7 @@ fun Route.sizeCategoryAdminRoute() {
                         ?: throw NotFoundException("no size category found .")
                     val newName = multiPart.data.sizeName
                     logger.debug { "check if ($newName) the new name if not repeat" }
-                    val checkCategoryName = sizeCategoryDataSource.getSizeCategoryByName(newName)
+//                    val checkCategoryName = sizeCategoryDataSource.getSizeCategoryByName(newName)
                     val checkCategoryNameInSameTypeCategory =
                         sizeCategoryDataSource.getSizeCategoryByNameAndTypeId(newName, multiPart.data.typeCategoryId)
                     val oldImageName = tempType.sizeImage.substringAfterLast("/")

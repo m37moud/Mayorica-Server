@@ -1,5 +1,6 @@
 package com.example.models.options
 
+import com.example.database.table.ProductEntity
 import com.example.database.table.SizeCategoryEntity
 import com.example.utils.MissingParameterException
 import io.ktor.http.*
@@ -20,8 +21,8 @@ fun getCeramicProductOptions(parameters: Parameters): CeramicProductOptions {
 
     val query = parameters["query"]?.trim()
     val sortFiled = when (parameters["sort_by"] ?: "date") {
-        "name" -> SizeCategoryEntity.size
-        "date" -> SizeCategoryEntity.createdAt
+        "name" -> ProductEntity.productName
+        "date" -> ProductEntity.createdAt
         else -> {
             throw MissingParameterException("invalid parameter for sort_by chose between (name & date)")
         }

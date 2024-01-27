@@ -159,12 +159,21 @@ fun Route.productAdminRoute() {
                         ?: throw NotFoundException("no ceramic product found .")
                     val newName = multiPart.data.productName
                     logger.debug { "check if ($newName) the new name if not repeat" }
-                    val checkProduct = productDataSource.getProductByName(newName)
+//                    val checkProduct = productDataSource.getProductByName(newName)
                     val oldImageName = tempProduct.image.substringAfterLast("/")
                     val responseFileName = multiPart.fileName
                     logger.debug { "check oldImage ($oldImageName) and response (${responseFileName}) image new name if not repeat" }
+                    val isSameName = tempProduct.productName == multiPart.data.productName
+                    val isSameTypeMenu = tempProduct.typeCategoryId == multiPart.data.typeCategoryId
+                    val isSameSizeMenu = tempProduct.sizeCategoryId == multiPart.data.sizeCategoryId
+                    val isSameColorMenu = tempProduct.colorCategoryId == multiPart.data.colorCategoryId
 
-                    if (checkProduct != null && oldImageName == multiPart.fileName) {
+                    if (
+                        isSameName && isSameTypeMenu &&
+                        isSameSizeMenu && isSameColorMenu &&
+                        oldImageName == multiPart.fileName
+                    ) {
+
                         throw AlreadyExistsException("that name ($newName) is already found ")
                     }
                     /**
@@ -236,7 +245,7 @@ fun Route.productAdminRoute() {
                 } ?: throw MissingParameterException("Missing parameters .")
 
             } catch (exc: Exception) {
-                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred")
 
             }
         }
