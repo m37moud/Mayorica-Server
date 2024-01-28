@@ -61,6 +61,10 @@ interface ProductDataSource {
         query: String?,
         page: Int,
         perPage: Int,
+        byTypeCategoryId: Int?,
+        bySizeCategoryId: Int?,
+
+
         sortField: Column<*>,
         sortDirection: Int
     ): List<ProductDto>

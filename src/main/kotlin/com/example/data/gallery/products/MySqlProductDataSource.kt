@@ -269,6 +269,8 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         query: String?,
         page: Int,
         perPage: Int,
+        byTypeCategoryId: Int?,
+        bySizeCategoryId: Int?,
         sortField: Column<*>,
         sortDirection: Int
     ): List<ProductDto> {
@@ -304,6 +306,12 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                 .whereWithConditions {
                     if (!query.isNullOrEmpty()) {
                         it += (ProductEntity.productName like "%${query}%")
+                    }
+                    if (byTypeCategoryId != null) {
+                        it += (ProductEntity.typeCategoryId eq byTypeCategoryId)
+                    }
+                    if (bySizeCategoryId != null) {
+                        it += (ProductEntity.sizeCategoryId eq bySizeCategoryId)
                     }
                 }
                 .mapNotNull { rowToProductDto(it) }

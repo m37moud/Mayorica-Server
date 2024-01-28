@@ -105,6 +105,9 @@ fun Route.productAdminRoute() {
                             query = ceramicOption.query,
                             page = ceramicOption.page!!,
                             perPage = ceramicOption.perPage!!,
+                            byTypeCategoryId = ceramicOption.byTypeCategoryId,
+                            bySizeCategoryId = ceramicOption.bySizeCategoryId,
+
                             sortField = ceramicOption.sortFiled!!,
                             sortDirection = ceramicOption.sortDirection!!
                         )

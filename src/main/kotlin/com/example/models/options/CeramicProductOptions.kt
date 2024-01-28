@@ -10,6 +10,8 @@ data class CeramicProductOptions(
     val page: Int?,
     val perPage: Int?,
     val query: String?,
+    val byTypeCategoryId: Int?,
+    val bySizeCategoryId: Int?,
     val sortFiled: Column<*>?,
     val sortDirection: Int?,
 )
@@ -20,6 +22,9 @@ fun getCeramicProductOptions(parameters: Parameters): CeramicProductOptions {
     val perPage = parameters["perPage"]?.toIntOrNull() ?: 10
 
     val query = parameters["query"]?.trim()
+    val byTypeCategoryId = parameters["typeId"]?.toIntOrNull()
+    val bySizeCategoryId = parameters["sizeId"]?.toIntOrNull()
+
     val sortFiled = when (parameters["sort_by"] ?: "date") {
         "name" -> ProductEntity.productName
         "date" -> ProductEntity.createdAt
@@ -35,5 +40,5 @@ fun getCeramicProductOptions(parameters: Parameters): CeramicProductOptions {
 
         }
     }
-    return CeramicProductOptions(page, perPage, query, sortFiled, sortDirection)
+    return CeramicProductOptions(page, perPage, query, byTypeCategoryId, bySizeCategoryId, sortFiled, sortDirection)
 }
