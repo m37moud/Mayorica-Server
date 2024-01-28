@@ -12,6 +12,7 @@ data class CeramicProductOptions(
     val query: String?,
     val byTypeCategoryId: Int?,
     val bySizeCategoryId: Int?,
+    val isHot: Boolean?,
     val sortFiled: Column<*>?,
     val sortDirection: Int?,
 )
@@ -24,6 +25,7 @@ fun getCeramicProductOptions(parameters: Parameters): CeramicProductOptions {
     val query = parameters["query"]?.trim()
     val byTypeCategoryId = parameters["typeId"]?.toIntOrNull()
     val bySizeCategoryId = parameters["sizeId"]?.toIntOrNull()
+    val isHot = parameters["isHot"]?.toBoolean()
 
     val sortFiled = when (parameters["sort_by"] ?: "date") {
         "name" -> ProductEntity.productName
@@ -40,5 +42,14 @@ fun getCeramicProductOptions(parameters: Parameters): CeramicProductOptions {
 
         }
     }
-    return CeramicProductOptions(page, perPage, query, byTypeCategoryId, bySizeCategoryId, sortFiled, sortDirection)
+    return CeramicProductOptions(
+        page,
+        perPage,
+        query,
+        byTypeCategoryId,
+        bySizeCategoryId,
+        isHot,
+        sortFiled,
+        sortDirection
+    )
 }

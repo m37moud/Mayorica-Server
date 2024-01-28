@@ -46,7 +46,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
 
     }
 
-    override suspend fun getAllSizeCategoryMenu(): List<SizeCategoryMenu> {
+    override suspend fun getAllSizeCategoryMenu(typeId: Int?): List<SizeCategoryMenu> {
         logger.debug { "getAllSizeCategoryMenu" }
         return withContext(Dispatchers.IO) {
             val result = db.from(SizeCategoryEntity)
@@ -54,6 +54,11 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                     SizeCategoryEntity.id,
                     SizeCategoryEntity.size
                 )
+                .whereWithConditions {
+                    if (typeId != null) {
+                        it += (SizeCategoryEntity.typeCategoryId eq typeId)
+                    }
+                }
                 .mapNotNull {
                     SizeCategoryMenu(
                         sizeId = it[SizeCategoryEntity.id] ?: -1,
@@ -271,6 +276,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         perPage: Int,
         byTypeCategoryId: Int?,
         bySizeCategoryId: Int?,
+        isHot: Boolean?,
         sortField: Column<*>,
         sortDirection: Int
     ): List<ProductDto> {
@@ -315,7 +321,14 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                     }
                 }
                 .mapNotNull { rowToProductDto(it) }
-            productList
+            val hotProducts = productList.filter { it.isHot } ?: emptyList()
+            if (isHot != null)
+                if (isHot)
+                    productList.filter { it.isHot }
+                else
+                    productList.filter { !it.isHot }
+            else
+                productList
         }
     }
 

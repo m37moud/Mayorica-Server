@@ -15,7 +15,7 @@ import kotlin.reflect.KProperty1
 interface ProductDataSource {
 
     suspend fun getAllTypeCategoryMenu(): List<TypeCategoryMenu>
-    suspend fun getAllSizeCategoryMenu(): List<SizeCategoryMenu>
+    suspend fun getAllSizeCategoryMenu(typeId: Int?): List<SizeCategoryMenu>
     suspend fun getAllColorCategoryMenu(): List<ColorCategoryMenu>
 
 
@@ -63,7 +63,7 @@ interface ProductDataSource {
         perPage: Int,
         byTypeCategoryId: Int?,
         bySizeCategoryId: Int?,
-
+        isHot: Boolean?,
 
         sortField: Column<*>,
         sortDirection: Int

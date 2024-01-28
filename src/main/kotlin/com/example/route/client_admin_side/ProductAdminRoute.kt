@@ -107,7 +107,7 @@ fun Route.productAdminRoute() {
                             perPage = ceramicOption.perPage!!,
                             byTypeCategoryId = ceramicOption.byTypeCategoryId,
                             bySizeCategoryId = ceramicOption.bySizeCategoryId,
-
+                            isHot = ceramicOption.isHot,
                             sortField = ceramicOption.sortFiled!!,
                             sortDirection = ceramicOption.sortDirection!!
                         )
@@ -272,12 +272,13 @@ fun Route.productAdminRoute() {
         }
 
         //get product size menu //api/v1/admin-client/products/sizeMenu
-        get(PRODUCTS_SIZE_MENU) {
+        get("$PRODUCTS_SIZE_MENU/{id}") {
             logger.debug { "GET ALL /$PRODUCTS_SIZE_MENU" }
             try {
-                val sizeMenu = productDataSource.getAllSizeCategoryMenu()
+               val typeId = call.parameters["id"]?.toIntOrNull()
+                val sizeMenu = productDataSource.getAllSizeCategoryMenu(typeId)
 
-                if (sizeMenu.isEmpty()) throw NotFoundException("size menu is empty")
+//                if (sizeMenu.isEmpty()) throw NotFoundException("size menu is empty")
                 logger.debug { "GET ALL /$PRODUCTS_SIZE_MENU sizeMenu = $sizeMenu" }
 
                 respondWithSuccessfullyResult(
