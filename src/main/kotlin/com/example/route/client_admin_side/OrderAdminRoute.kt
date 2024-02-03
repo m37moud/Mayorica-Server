@@ -6,6 +6,7 @@ import com.example.data.order.OrderStatusDataSource
 import com.example.models.request.order.UserOrderStatusRequest
 import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.MyResponse
+import com.example.utils.extractAdminId
 import com.example.utils.toDatabaseString
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -22,11 +23,7 @@ const val ORDER_RESPONSE = "${ADMIN_CLIENT}/orders"
 const val ORDER_STATUE_RESPONSE = "${ADMIN_CLIENT}/statue"
 private val logger = KotlinLogging.logger {}
 
-fun Route.ordersAdminRoute(
-//    orderDataSource: OrderDataSource,
-//    orderStatusDataSource: OrderStatusDataSource,
-//    userDataSource: UserDataSource
-) {
+fun Route.ordersAdminRoute() {
     val orderDataSource: OrderDataSource by inject()
     val orderStatusDataSource: OrderStatusDataSource by inject()
     val userDataSource: UserDataSource by inject()
@@ -38,21 +35,8 @@ fun Route.ordersAdminRoute(
         route(ORDER_RESPONSE) {
             get{
                 logger.debug { "get /$ORDER_RESPONSE" }
-                val principal = call.principal<JWTPrincipal>()
-                val userId = try {
-                    principal?.getClaim("userId", String::class)?.toIntOrNull()
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "Failed ",
-                            data = null
-                        )
-                    )
-                    return@get
-                }
-                val isAdmin = userDataSource.isAdmin(userId!!)
+                val userId = extractAdminId()
+                val isAdmin = userDataSource.isAdmin(userId)
                 if (isAdmin) {
                     try {
 

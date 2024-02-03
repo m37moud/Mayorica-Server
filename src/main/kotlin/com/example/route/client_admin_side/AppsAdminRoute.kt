@@ -318,7 +318,7 @@ fun Route.appsAdminRoute() {
          */
         //get all -> api/v1/admin-client/user-app/{id}
         get("$USER_APP/{id}") {
-            logger.debug { "get youtube Links $USER_APP/{id}" }
+            logger.debug { "get user App Client $USER_APP/{id}" }
             call.parameters["id"]?.toIntOrNull()?.let { id ->
                 try {
                     val link = appsUserDataSource.getAppInfo(appId = id)
@@ -370,7 +370,7 @@ fun Route.appsAdminRoute() {
         }
         //post  -> api/v1/admin-client/user-app/create
         post(CREATE_USER_APP) {
-            logger.debug { "create new user app $CREATE_ADMIN_APP" }
+            logger.debug { "create new user app $CREATE_USER_APP" }
 
             val appRequest = try {
                 call.receive<AppsModel>()
@@ -385,6 +385,7 @@ fun Route.appsAdminRoute() {
                 )
                 return@post
             }
+            logger.debug { "appRequest $appRequest" }
 
 
 

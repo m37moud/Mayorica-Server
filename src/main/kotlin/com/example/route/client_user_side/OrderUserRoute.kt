@@ -39,10 +39,7 @@ private val logger = KotlinLogging.logger {}
 }
 }
  */
-fun Route.userOrderRequest(
-//    orderDataSource: OrderDataSource,
-//    orderStatusDataSource: OrderStatusDataSource
-) {
+fun Route.userOrderRequest() {
     val orderDataSource: OrderDataSource by inject()
 
     // create a user order --> POST/api/v1/user-client/order-request/create
@@ -53,7 +50,7 @@ fun Route.userOrderRequest(
             call.receive<UserOrderRequest>()
         } catch (exc: Exception) {
             call.respond(
-                HttpStatusCode.OK,
+                HttpStatusCode.Conflict,
                 MyResponse(
                     success = false,
                     message = "Missing Some Fields",
@@ -132,7 +129,7 @@ fun Route.userOrderRequest(
 
         } catch (exc: Exception) {
             call.respond(
-                HttpStatusCode.OK,
+                HttpStatusCode.Conflict,
                 MyResponse(
                     success = false,
                     message = exc.message ?: "create order Failed.",
@@ -146,10 +143,7 @@ fun Route.userOrderRequest(
 
 }
 
-fun Route.getUserOrderClient(
-//    orderDataSource: OrderDataSource,
-//    orderStatusDataSource: OrderStatusDataSource
-) {
+fun Route.getUserOrderClient() {
     val orderDataSource: OrderDataSource by inject()
     val orderStatusDataSource: OrderStatusDataSource by inject()
 
