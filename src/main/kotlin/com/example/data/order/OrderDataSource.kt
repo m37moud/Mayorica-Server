@@ -1,7 +1,9 @@
 package com.example.data.order
 
 import com.example.models.UserOrder
+import com.example.models.UserOrderDto
 import com.example.models.UserOrderStatus
+import org.ktorm.schema.Column
 import java.time.LocalDateTime
 
 interface OrderDataSource {
@@ -9,6 +11,15 @@ interface OrderDataSource {
      * authenticate is required
      */
     suspend fun getAllOrder(): List<UserOrder>
+    suspend fun getAllCustomerOrderPageable(
+        query: String?,
+        page: Int,
+        perPage: Int,
+        byApproveStatue: Int?,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<UserOrderDto>
+
     suspend fun getOrderById(id: Int): UserOrder?
     suspend fun getOrderByDate(createdDate: LocalDateTime): UserOrder?
     suspend fun getOrderByName(name: String): UserOrder?

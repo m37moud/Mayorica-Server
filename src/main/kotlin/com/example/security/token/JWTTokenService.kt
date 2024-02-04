@@ -133,6 +133,7 @@ class JWTTokenService(
                 .withIssuer(issuer)
                 .build()
         } catch (e: Exception) {
+            logger.debug { "jwt error ${e.message}" }
             null
         }
     }

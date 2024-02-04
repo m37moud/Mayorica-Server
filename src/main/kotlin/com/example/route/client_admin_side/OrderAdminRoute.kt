@@ -20,7 +20,8 @@ import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 const val ORDER_RESPONSE = "${ADMIN_CLIENT}/orders"
-const val ORDER_STATUE_RESPONSE = "${ADMIN_CLIENT}/statue"
+const val ORDER_RESPONSE_PAGEABLE = "-pageable"
+const val ORDER_STATUE_RESPONSE = "/statue"
 private val logger = KotlinLogging.logger {}
 
 fun Route.ordersAdminRoute() {
@@ -33,7 +34,7 @@ fun Route.ordersAdminRoute() {
     authenticate {
         // Get the orders info --> GET /api/v1/admin-client/orders (with token)
         route(ORDER_RESPONSE) {
-            get{
+            get {
                 logger.debug { "get /$ORDER_RESPONSE" }
                 val userId = extractAdminId()
                 val isAdmin = userDataSource.isAdmin(userId)
@@ -82,29 +83,23 @@ fun Route.ordersAdminRoute() {
 
 
             }
-            get("/statue/{id}") {
+
+            get(ORDER_RESPONSE_PAGEABLE) {
+                logger.debug { "GET ALL /$ORDER_RESPONSE_PAGEABLE" }
+                val params = call.request.queryParameters
+
+
+            }
+            get("$ORDER_STATUE_RESPONSE/{id}") {
                 logger.debug { "get /$ORDER_STATUE_RESPONSE/{id}" }
-                val principal = call.principal<JWTPrincipal>()
-                val userId = try {
-                    principal?.getClaim("userId", String::class)?.toIntOrNull()
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "Failed ",
-                            data = null
-                        )
-                    )
-                    return@get
-                }
-                val isAdmin = userDataSource.isAdmin(userId!!)
+                val userId = extractAdminId()
+                val isAdmin = userDataSource.isAdmin(userId)
                 if (isAdmin) {
                     val id = call.parameters["id"]?.toIntOrNull()
                     try {
 
                         id?.let {
-                            orderStatusDataSource.getOrderStatusByRequestUserId(it)?.run {
+                            orderStatusDataSource.getOrderStatusByRequestUserIdDto(it)?.run {
                                 call.respond(
                                     HttpStatusCode.OK, MyResponse(
                                         success = true,
@@ -156,20 +151,7 @@ fun Route.ordersAdminRoute() {
             put("/statue/{id}") {
 
                 logger.debug { "put /$ORDER_RESPONSE/{id}" }
-                val principal = call.principal<JWTPrincipal>()
-                val userAdminId = try {
-                    principal?.getClaim("userId", String::class)?.toIntOrNull()
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "Failed ",
-                            data = null
-                        )
-                    )
-                    return@put
-                }
+                val userAdminId = extractAdminId()
                 val isAdmin = userDataSource.isAdmin(userAdminId!!)
                 if (isAdmin) {
                     val id = call.parameters["id"]?.toIntOrNull()

@@ -1,8 +1,8 @@
 package com.example.data.order
 
-import com.example.database.table.UserOrderEntity
-import com.example.database.table.UserOrderStatusEntity
+import com.example.database.table.*
 import com.example.models.UserOrder
+import com.example.models.UserOrderDto
 import com.example.models.UserOrderStatus
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +25,43 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                     UserOrderStatusEntity.requestUser_id eq requestUserId
                 }.map {
                     rowToUserOrderStatus(it)
+                }.firstOrNull()
+            userOrderStatus
+        }
+    }
+
+    override suspend fun getOrderStatusByRequestUserIdDto(requestUserId: Int): UserOrderDto? {
+        return withContext(Dispatchers.IO) {
+            val userOrderStatus = db.from(UserOrderStatusEntity)
+                .innerJoin(AdminUserEntity, on = UserOrderStatusEntity.approveByAdminId eq AdminUserEntity.id)
+                .innerJoin(UserOrderEntity, on = UserOrderStatusEntity.requestUser_id eq UserOrderEntity.id)
+                .select(
+                    UserOrderStatusEntity.id,
+                    UserOrderEntity.id,
+                    AdminUserEntity.username,
+                    UserOrderEntity.full_name,
+                    UserOrderEntity.id_number,
+                    UserOrderEntity.orderNumber,
+                    UserOrderEntity.department,
+                    UserOrderEntity.latitude,
+                    UserOrderEntity.longitude,
+                    UserOrderEntity.country,
+                    UserOrderEntity.governorate,
+                    UserOrderEntity.address,
+                    UserOrderStatusEntity.approve_state,
+                    UserOrderStatusEntity.totalAmount,
+                    UserOrderStatusEntity.takenAmount,
+                    UserOrderStatusEntity.availableAmount,
+                    UserOrderStatusEntity.note,
+                    UserOrderStatusEntity.approveDate,
+                    UserOrderStatusEntity.approveUpdateDate,
+
+
+                    )
+                .where {
+                    UserOrderStatusEntity.requestUser_id eq requestUserId
+                }.map {
+                    rowToUserOrderStatueDto(it)
                 }.firstOrNull()
             userOrderStatus
         }
@@ -93,6 +130,56 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                 row[UserOrderStatusEntity.availableAmount] ?: 0.0,
                 row[UserOrderStatusEntity.note] ?: "",
             )
+        }
+    }
+
+    private fun rowToUserOrderStatueDto(row: QueryRowSet?): UserOrderDto? {
+        return if (row == null) {
+            null
+        } else {
+            val id = row[UserOrderStatusEntity.id] ?: -1
+            val requestUserId = row[UserOrderEntity.id] ?: -1
+            val adminUserName = row[AdminUserEntity.username] ?: ""
+            val customerName = row[UserOrderEntity.full_name] ?: ""
+            val customerIdNumber = row[UserOrderEntity.id_number] ?: ""
+            val orderNumber = row[UserOrderEntity.orderNumber] ?: ""
+            val department = row[UserOrderEntity.department] ?: ""
+            val latitude = row[UserOrderEntity.latitude] ?: 0.0
+            val longitude = row[UserOrderEntity.longitude] ?: 0.0
+            val country = row[UserOrderEntity.country] ?: ""
+            val governorate = row[UserOrderEntity.governorate] ?: ""
+            val address = row[UserOrderEntity.address] ?: ""
+            val approveState = row[UserOrderStatusEntity.approve_state] ?: -1
+            val totalAmount = row[UserOrderStatusEntity.totalAmount] ?: 0.0
+            val takenAmount = row[UserOrderStatusEntity.takenAmount] ?: 0.0
+            val availableAmount = row[UserOrderStatusEntity.availableAmount] ?: 0.0
+            val note = row[UserOrderStatusEntity.note] ?: ""
+            val approveDate = row[UserOrderStatusEntity.approveDate] ?: ""
+            val approveUpdateDate = row[UserOrderStatusEntity.approveUpdateDate] ?: ""
+
+
+            UserOrderDto(
+                id = id,
+                requestUserId = requestUserId,
+                adminUserName = adminUserName,
+                fullName = customerName,
+                idNumber = customerIdNumber,
+                orderNumber = orderNumber,
+                department = department,
+                latitude = latitude,
+                longitude = longitude,
+                country = country,
+                governorate = governorate,
+                address = address,
+                approveState = approveState,
+                totalAmount = totalAmount,
+                takenAmount = takenAmount,
+                availableAmount = availableAmount,
+                note = note,
+                approveDate = approveDate.toString(),
+                approveUpdateDate = approveUpdateDate.toString(),
+
+                )
         }
     }
 }

@@ -1,15 +1,17 @@
 package com.example.data.order
 
-import com.example.database.table.UserOrderEntity
-import com.example.database.table.UserOrderStatusEntity
+import com.example.database.table.*
 import com.example.models.UserOrder
+import com.example.models.UserOrderDto
 import com.example.models.UserOrderStatus
+import com.example.models.dto.ProductDto
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import org.ktorm.schema.Column
 import java.time.LocalDateTime
 
 @Singleton
@@ -25,6 +27,16 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
         }
     }
 
+    override suspend fun getAllCustomerOrderPageable(
+        query: String?,
+        page: Int,
+        perPage: Int,
+        byApproveStatue: Int?,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<UserOrderDto> {
+        // TODO: handle this method
+    }
 
     override suspend fun getOrderById(id: Int): UserOrder? {
         return withContext(Dispatchers.IO) {
