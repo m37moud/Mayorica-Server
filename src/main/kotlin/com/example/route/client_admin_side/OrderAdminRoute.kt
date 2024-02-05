@@ -3,15 +3,14 @@ package com.example.route.client_admin_side
 import com.example.data.administrations.admin_user.UserDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
+import com.example.models.MyResponsePageable
+import com.example.models.options.getCustomerOrderOptions
 import com.example.models.request.order.UserOrderStatusRequest
+import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
-import com.example.utils.MyResponse
-import com.example.utils.extractAdminId
-import com.example.utils.toDatabaseString
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -20,7 +19,7 @@ import org.koin.ktor.ext.inject
 import java.time.LocalDateTime
 
 const val ORDER_RESPONSE = "${ADMIN_CLIENT}/orders"
-const val ORDER_RESPONSE_PAGEABLE = "-pageable"
+const val ORDER_RESPONSE_PAGEABLE = "$ORDER_RESPONSE-pageable"
 const val ORDER_STATUE_RESPONSE = "/statue"
 private val logger = KotlinLogging.logger {}
 
@@ -36,6 +35,9 @@ fun Route.ordersAdminRoute() {
         route(ORDER_RESPONSE) {
             get {
                 logger.debug { "get /$ORDER_RESPONSE" }
+
+                logger.debug { "GET ALL pageable /$ORDER_RESPONSE_PAGEABLE" }
+
                 val userId = extractAdminId()
                 val isAdmin = userDataSource.isAdmin(userId)
                 if (isAdmin) {
@@ -84,12 +86,7 @@ fun Route.ordersAdminRoute() {
 
             }
 
-            get(ORDER_RESPONSE_PAGEABLE) {
-                logger.debug { "GET ALL /$ORDER_RESPONSE_PAGEABLE" }
-                val params = call.request.queryParameters
 
-
-            }
             get("$ORDER_STATUE_RESPONSE/{id}") {
                 logger.debug { "get /$ORDER_STATUE_RESPONSE/{id}" }
                 val userId = extractAdminId()
@@ -236,6 +233,38 @@ fun Route.ordersAdminRoute() {
             }
 
         }
+        get(ORDER_RESPONSE_PAGEABLE) {
+            logger.debug { "GET ALL /$ORDER_RESPONSE_PAGEABLE" }
+            try {
+                val params = call.request.queryParameters
+                val orderOptions = getCustomerOrderOptions(parameters = params)
+                val customerOrders = orderStatusDataSource
+                    .getAllCustomerOrderPageable(
+                        query = orderOptions.query,
+                        page = orderOptions.page!!,
+                        perPage = orderOptions.perPage!!,
+                        byApproveStatue = orderOptions.byApproveStatue,
+                        sortField = orderOptions.sortFiled!!,
+                        sortDirection = orderOptions.sortDirection!!
+                    )
+                if (customerOrders.isEmpty()) throw NotFoundException("no order is found.")
+                val numberOfOrders = orderStatusDataSource.getNumberOfOrders()
+                respondWithSuccessfullyResult(
+                    result = MyResponsePageable(
+                        page = orderOptions.page + 1,
+                        perPage = numberOfOrders,
+                        data = customerOrders
+                    )
+                )
+
+            } catch (e: Exception) {
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+
+            }
+
+
+        }
+
     }
 }
 

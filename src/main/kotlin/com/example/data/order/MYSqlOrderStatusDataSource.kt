@@ -7,10 +7,14 @@ import com.example.models.UserOrderStatus
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mu.KotlinLogging
 import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import org.ktorm.schema.Column
 import java.time.LocalDateTime
+
+private val logger = KotlinLogging.logger { }
 
 @Singleton
 class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSource {
@@ -64,6 +68,74 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                     rowToUserOrderStatueDto(it)
                 }.firstOrNull()
             userOrderStatus
+        }
+    }
+
+    override suspend fun getNumberOfOrders(): Int {
+        logger.debug { "getNumberOfProduct" }
+        return withContext(Dispatchers.IO) {
+            val result = db.from(UserOrderStatusEntity)
+                .select()
+                .mapNotNull { rowToUserOrderStatus(it) }
+            result.size
+        }
+    }
+
+    override suspend fun getAllCustomerOrderPageable(
+        query: String?,
+        page: Int,
+        perPage: Int,
+        byApproveStatue: Int?,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<UserOrderDto> {
+        logger.debug { "getAllCustomerOrderPageable /page = $page perPage , perPage =$perPage" }
+        val myLimit = if (perPage > 100) 100 else perPage
+        val myOffset = (page * perPage)
+        return withContext(Dispatchers.IO) {
+            val result = db.from(UserOrderStatusEntity)
+                .innerJoin(AdminUserEntity, on = UserOrderStatusEntity.approveByAdminId eq AdminUserEntity.id)
+                .innerJoin(UserOrderEntity, on = UserOrderStatusEntity.requestUser_id eq UserOrderEntity.id)
+                .select(
+                    UserOrderStatusEntity.id,
+                    UserOrderEntity.id,
+                    AdminUserEntity.username,
+                    UserOrderEntity.full_name,
+                    UserOrderEntity.id_number,
+                    UserOrderEntity.orderNumber,
+                    UserOrderEntity.department,
+                    UserOrderEntity.latitude,
+                    UserOrderEntity.longitude,
+                    UserOrderEntity.country,
+                    UserOrderEntity.governorate,
+                    UserOrderEntity.address,
+                    UserOrderStatusEntity.approve_state,
+                    UserOrderStatusEntity.totalAmount,
+                    UserOrderStatusEntity.takenAmount,
+                    UserOrderStatusEntity.availableAmount,
+                    UserOrderStatusEntity.note,
+                    UserOrderStatusEntity.approveDate,
+                    UserOrderStatusEntity.approveUpdateDate,
+                )
+                .limit(myLimit)
+                .offset(myOffset)
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+                .whereWithConditions {
+                    if (!query.isNullOrEmpty()) {
+                        it += (UserOrderEntity.full_name like "%%${query}")
+                    }
+                    if (byApproveStatue != null) {
+                        it += (UserOrderEntity.approve_state eq byApproveStatue)
+                    }
+                }
+                .mapNotNull { rowToUserOrderStatueDto(it) }
+            result
+
         }
     }
 

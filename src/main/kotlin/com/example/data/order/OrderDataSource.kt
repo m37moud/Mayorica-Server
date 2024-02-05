@@ -11,14 +11,7 @@ interface OrderDataSource {
      * authenticate is required
      */
     suspend fun getAllOrder(): List<UserOrder>
-    suspend fun getAllCustomerOrderPageable(
-        query: String?,
-        page: Int,
-        perPage: Int,
-        byApproveStatue: Int?,
-        sortField: Column<*>,
-        sortDirection: Int
-    ): List<UserOrderDto>
+
 
     suspend fun getOrderById(id: Int): UserOrder?
     suspend fun getOrderByDate(createdDate: LocalDateTime): UserOrder?

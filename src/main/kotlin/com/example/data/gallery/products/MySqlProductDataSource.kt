@@ -321,7 +321,6 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                     }
                 }
                 .mapNotNull { rowToProductDto(it) }
-            val hotProducts = productList.filter { it.isHot } ?: emptyList()
             if (isHot != null)
                 if (isHot)
                     productList.filter { it.isHot }
