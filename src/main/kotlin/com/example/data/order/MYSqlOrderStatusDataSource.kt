@@ -19,6 +19,25 @@ private val logger = KotlinLogging.logger { }
 @Singleton
 class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSource {
 
+    suspend fun getAdminUserName(id: Int): String? {
+        logger.debug { "getAdminUserName : called" }
+        return withContext(Dispatchers.IO) {
+            val result = db.from(AdminUserEntity)
+                .select(
+                    AdminUserEntity.username
+                )
+                .where {
+                    AdminUserEntity.id eq id
+                }
+                .map {
+                    it[AdminUserEntity.username]
+                }
+                .firstOrNull()
+            result
+
+        }
+
+    }
 
     override suspend fun getOrderStatusByRequestUserId(requestUserId: Int): UserOrderStatus? {
         return withContext(Dispatchers.IO) {
@@ -37,12 +56,12 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
     override suspend fun getOrderStatusByRequestUserIdDto(requestUserId: Int): UserOrderDto? {
         return withContext(Dispatchers.IO) {
             val userOrderStatus = db.from(UserOrderStatusEntity)
-                .innerJoin(AdminUserEntity, on = UserOrderStatusEntity.approveByAdminId eq AdminUserEntity.id)
+//                .innerJoin(AdminUserEntity, on = UserOrderStatusEntity.approveByAdminId eq AdminUserEntity.id)
                 .innerJoin(UserOrderEntity, on = UserOrderStatusEntity.requestUser_id eq UserOrderEntity.id)
                 .select(
                     UserOrderStatusEntity.id,
                     UserOrderEntity.id,
-                    AdminUserEntity.username,
+                    UserOrderStatusEntity.approveByAdminId,
                     UserOrderEntity.full_name,
                     UserOrderEntity.id_number,
                     UserOrderEntity.orderNumber,
@@ -94,12 +113,12 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
         val myOffset = (page * perPage)
         return withContext(Dispatchers.IO) {
             val result = db.from(UserOrderStatusEntity)
-                .innerJoin(AdminUserEntity, on = UserOrderStatusEntity.approveByAdminId eq AdminUserEntity.id)
+//                .innerJoin(AdminUserEntity, on = UserOrderStatusEntity.approveByAdminId eq AdminUserEntity.id)
                 .innerJoin(UserOrderEntity, on = UserOrderStatusEntity.requestUser_id eq UserOrderEntity.id)
                 .select(
                     UserOrderStatusEntity.id,
                     UserOrderEntity.id,
-                    AdminUserEntity.username,
+                    UserOrderStatusEntity.approveByAdminId,
                     UserOrderEntity.full_name,
                     UserOrderEntity.id_number,
                     UserOrderEntity.orderNumber,
@@ -205,13 +224,13 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
         }
     }
 
-    private fun rowToUserOrderStatueDto(row: QueryRowSet?): UserOrderDto? {
+    private suspend fun rowToUserOrderStatueDto(row: QueryRowSet?): UserOrderDto? {
         return if (row == null) {
             null
         } else {
             val id = row[UserOrderStatusEntity.id] ?: -1
             val requestUserId = row[UserOrderEntity.id] ?: -1
-            val adminUserName = row[AdminUserEntity.username] ?: ""
+            val adminUserName = getAdminUserName(id = row[UserOrderStatusEntity.approveByAdminId] ?: -1) ?: ""
             val customerName = row[UserOrderEntity.full_name] ?: ""
             val customerIdNumber = row[UserOrderEntity.id_number] ?: ""
             val orderNumber = row[UserOrderEntity.orderNumber] ?: ""

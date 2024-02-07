@@ -66,3 +66,36 @@ fun generateApiKey(): String {
     return apiKey
 
 }
+
+fun generateContractNumber(): String {
+    /**
+     * Shout out to: https://www.baeldung.com/kotlin/random-alphanumeric-string for
+     * the great article.
+     * [charPool] =  numbers to choose from to create a 7 char string
+     */
+//    val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+    val charPool: List<Char> = ('0'..'9') + ('0'..'9')
+
+    /**
+     * [SecureRandom] generates a cryptographically strong random number generator (RNG).
+     * To get a random number, you call `nextInt` and pass a range. In this function,
+     * I'll use the [charPool] size, which will generate a random number from 0 to 62.
+     */
+    val random = SecureRandom()
+    val bytes = ByteArray(7)
+
+    /**
+     * this gives me something like: charPool[5] = 'f' or charPool[59] = '7'
+     */
+    val contractSecretNumber = (0 until bytes.size - 1)
+        .map { _ ->
+            charPool[random.nextInt(charPool.size)]
+        }.joinToString("")
+
+    /**
+     * this generates something like: 4653898
+     */
+    println(contractSecretNumber)
+    return contractSecretNumber
+
+}
