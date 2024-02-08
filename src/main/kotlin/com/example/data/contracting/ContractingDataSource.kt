@@ -8,7 +8,7 @@ interface ContractingDataSource {
     suspend fun getAcceptedTotalCustomerOrder(): Int
     suspend fun getContractSectionByIdDto(id: Int): ContractSectionDto?
 
-    suspend fun getContractSectionByName(name: String): ContractSection?
+    suspend fun getContractSectionByNameDto(name: String): ContractSectionDto?
 
     suspend fun getContractSectionPageable(
         query: String?,
@@ -22,6 +22,6 @@ interface ContractingDataSource {
 
     suspend fun createContractSection(contractSection: ContractSection): Int
     suspend fun updateContractSection(id: Int, contractSection: ContractSection): Int
-    suspend fun deleteContractSection(Id: Int): Int
+    suspend fun deleteContractSection(id: Int): Int
 
 }

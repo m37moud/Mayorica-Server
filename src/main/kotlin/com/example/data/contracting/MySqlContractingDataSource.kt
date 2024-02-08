@@ -1,11 +1,12 @@
 package com.example.data.contracting
 
-import com.example.database.table.AdminUserEntity
-import com.example.database.table.ColorCategoryEntity
-import com.example.database.table.ContractSectionEntity
-import com.example.database.table.UserOrderStatusEntity
+import com.example.database.table.*
 import com.example.models.ContractSection
 import com.example.models.dto.ContractSectionDto
+import com.example.utils.AlreadyExistsException
+import com.example.utils.ErrorException
+import com.example.utils.NotFoundException
+import com.example.utils.generateContractNumber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
@@ -13,6 +14,7 @@ import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import org.ktorm.schema.Column
+import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger { }
 
@@ -46,7 +48,7 @@ class MySqlContractingDataSource(private val db: Database) : ContractingDataSour
                     ContractSectionEntity.allowedTotalRequest,
                     AdminUserEntity.username,
                     ContractSectionEntity.createdAt,
-                    ColorCategoryEntity.updatedAt,
+                    ContractSectionEntity.updatedAt,
                 )
                 .where { ContractSectionEntity.id eq id }
                 .map { rowToContractSectionDto(it) }
@@ -55,8 +57,27 @@ class MySqlContractingDataSource(private val db: Database) : ContractingDataSour
         }
     }
 
-    override suspend fun getContractSectionByName(name: String): ContractSection? {
-        TODO("Not yet implemented")
+    override suspend fun getContractSectionByNameDto(name: String): ContractSectionDto? {
+        logger.debug { "getContractSectionByNameDto : called" }
+        return withContext(Dispatchers.IO) {
+            val result = db.from(ContractSectionEntity)
+                .innerJoin(AdminUserEntity, on = ContractSectionEntity.userAdminId eq AdminUserEntity.id)
+                .select(
+                    ContractSectionEntity.id,
+                    ContractSectionEntity.sectionName,
+                    ContractSectionEntity.orderNumber,
+                    ContractSectionEntity.allowedAmount,
+                    ContractSectionEntity.allowedTotalRequest,
+                    AdminUserEntity.username,
+                    ContractSectionEntity.createdAt,
+                    ContractSectionEntity.updatedAt,
+                )
+                .where { ContractSectionEntity.sectionName eq name }
+                .map { rowToContractSectionDto(it) }
+                .firstOrNull()
+            result
+
+        }
     }
 
     override suspend fun getContractSectionPageable(
@@ -69,23 +90,90 @@ class MySqlContractingDataSource(private val db: Database) : ContractingDataSour
         logger.debug { "getContractSectionPageable /page = $page perPage , perPage =$perPage" }
         val myLimit = if (perPage > 100) 100 else perPage
         val myOffset = (page * perPage)
-        TODO("Not yet implemented")
+        return withContext(Dispatchers.IO) {
+            val result = db.from(ContractSectionEntity)
+                .innerJoin(AdminUserEntity, on = ContractSectionEntity.userAdminId eq AdminUserEntity.id)
+                .select(
+                    ContractSectionEntity.id,
+                    ContractSectionEntity.sectionName,
+                    ContractSectionEntity.orderNumber,
+                    ContractSectionEntity.allowedAmount,
+                    ContractSectionEntity.allowedTotalRequest,
+                    AdminUserEntity.username,
+                    ContractSectionEntity.createdAt,
+                    ContractSectionEntity.updatedAt,
+                )
+                .limit(myLimit)
+                .offset(myOffset)
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+                .whereWithConditions {
+                    if (!query.isNullOrEmpty()) {
+                        it += (UserOrderEntity.full_name like "%%${query}")
+                    }
+                }
+                .mapNotNull { rowToContractSectionDto(it) }
+            result
+        }
     }
 
     override suspend fun addContractSection(contractSection: ContractSection): ContractSectionDto {
-        TODO("Not yet implemented")
+        logger.debug { "addContractSection : called" }
+        if (getContractSectionByNameDto(contractSection.sectionName) != null)
+            throw AlreadyExistsException("this Section inserted before .")
+        if (createContractSection(contractSection) < 0) throw ErrorException("Failed to create New Size Category .")
+        return getContractSectionByNameDto(contractSection.sectionName)
+            ?: throw NotFoundException("failed to get Section after created.")
+
     }
 
     override suspend fun createContractSection(contractSection: ContractSection): Int {
-        TODO("Not yet implemented")
+        logger.debug { "createContractSection : called" }
+        return withContext(Dispatchers.IO) {
+            val result = db.insert(ContractSectionEntity) {
+                set(it.sectionName, contractSection.sectionName)
+                set(it.orderNumber, generateContractNumber())
+                set(it.allowedAmount, contractSection.allowedAmount)
+                set(it.allowedTotalRequest, contractSection.allowedTotalRequest)
+                set(it.userAdminId, contractSection.userAdminId)
+                set(it.createdAt, LocalDateTime.now())
+                set(it.updatedAt, LocalDateTime.now())
+            }
+            result
+        }
     }
 
     override suspend fun updateContractSection(id: Int, contractSection: ContractSection): Int {
-        TODO("Not yet implemented")
+        logger.debug { "updateContractSection : called" }
+        return withContext(Dispatchers.IO) {
+            val result = db.update(ContractSectionEntity) {
+                set(it.sectionName, contractSection.sectionName)
+                set(it.allowedAmount, contractSection.allowedAmount)
+                set(it.allowedTotalRequest, contractSection.allowedTotalRequest)
+                set(it.userAdminId, contractSection.userAdminId)
+                set(it.updatedAt, LocalDateTime.now())
+
+                where {
+                    it.id eq id
+                }
+            }
+            result
+        }
+
     }
 
-    override suspend fun deleteContractSection(Id: Int): Int {
-        TODO("Not yet implemented")
+    override suspend fun deleteContractSection(id: Int): Int {
+        logger.debug { "deleteContractSection : called" }
+        return withContext(Dispatchers.IO) {
+            val result = db.delete(ContractSectionEntity) {
+                it.id eq id
+            }
+            result
+        }
     }
 
     private suspend fun rowToContractSectionDto(rowSet: QueryRowSet?): ContractSectionDto? {
@@ -97,7 +185,7 @@ class MySqlContractingDataSource(private val db: Database) : ContractingDataSour
                 sectionName = rowSet[ContractSectionEntity.sectionName] ?: "",
                 orderNumber = rowSet[ContractSectionEntity.orderNumber] ?: "",
                 allowedAmount = rowSet[ContractSectionEntity.allowedAmount] ?: 0.0,
-                totalRequest = getAcceptedTotalCustomerOrder() ,
+                totalRequest = getAcceptedTotalCustomerOrder(),
                 allowedTotalRequest = rowSet[ContractSectionEntity.allowedTotalRequest] ?: -1,
                 adminUserName = rowSet[AdminUserEntity.username] ?: "",
                 createdAt = rowSet[ColorCategoryEntity.createdAt]?.toString() ?: "",

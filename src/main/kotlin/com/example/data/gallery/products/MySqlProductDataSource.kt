@@ -548,8 +548,8 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                 sizeId = product.sizeCategoryId,
                 colorId = product.colorCategoryId,
             ) != null
-        ) throw AlreadyExistsException("this Category inserted before .")
-        if (createProduct(product) < 0) throw ErrorException("Failed to create New Size Category .")
+        ) throw AlreadyExistsException("this Ceramic Product inserted before .")
+        if (createProduct(product) < 0) throw ErrorException("Failed to create Ceramic Product .")
         return getProductByNameDto(product.productName)
             ?: throw NotFoundException("failed to get Ceramic Product after created.")
 
