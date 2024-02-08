@@ -89,57 +89,18 @@ fun Route.ordersAdminRoute() {
 
             get("$ORDER_STATUE_RESPONSE/{id}") {
                 logger.debug { "get /$ORDER_STATUE_RESPONSE/{id}" }
-                val userId = extractAdminId()
-                val isAdmin = userDataSource.isAdmin(userId)
-                if (isAdmin) {
-                    val id = call.parameters["id"]?.toIntOrNull()
-                    try {
-
-                        id?.let {
-                            orderStatusDataSource.getOrderStatusByRequestUserIdDto(it)?.run {
-                                call.respond(
-                                    HttpStatusCode.OK, MyResponse(
-                                        success = true,
-                                        message = "get orders successful .",
-                                        data = this
-                                    )
-                                )
-                            } ?: call.respond(
-                                HttpStatusCode.OK,
-                                MyResponse(
-                                    success = false,
-                                    message = "no orders is found .",
-                                    data = null
-                                )
+                val id = call.parameters["id"]?.toIntOrNull()
+                try {
+                    id?.let {
+                        orderStatusDataSource.getOrderStatusByRequestUserIdDto(it)?.let { order ->
+                            respondWithSuccessfullyResult(
+                                result = order,
+                                message = "get order successful ."
                             )
-                        } ?: call.respond(
-                            HttpStatusCode.BadRequest,
-                            MyResponse(
-                                success = false,
-                                message = "Missing parameter .",
-                                data = null
-                            )
-                        )
-
-                    } catch (e: Exception) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = false,
-                                message = e.message ?: "Conflict during get note",
-                                data = null
-                            )
-                        )
-                    }
-                } else {
-                    call.respond(
-                        HttpStatusCode.Forbidden, MyResponse(
-                            success = false,
-                            message = "not Authorize to show .",
-                            data = null
-                        )
-                    )
-                    return@get
+                        } ?: throw NotFoundException("order not found .")
+                    } ?: throw MissingParameterException("Missing parameters .")
+                } catch (e: Exception) {
+                    throw UnknownErrorException(e.message ?: "An Known Error Occurred  ")
                 }
 
 

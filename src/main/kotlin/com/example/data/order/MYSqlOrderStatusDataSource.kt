@@ -149,7 +149,7 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                         it += (UserOrderEntity.full_name like "%%${query}")
                     }
                     if (byApproveStatue != null) {
-                        it += (UserOrderEntity.approve_state eq byApproveStatue)
+                        it += (UserOrderStatusEntity.approve_state eq byApproveStatue)
                     }
                 }
                 .mapNotNull { rowToUserOrderStatueDto(it) }
