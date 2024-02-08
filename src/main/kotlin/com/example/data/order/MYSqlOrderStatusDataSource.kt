@@ -146,7 +146,9 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                 )
                 .whereWithConditions {
                     if (!query.isNullOrEmpty()) {
-                        it += (UserOrderEntity.full_name like "%%${query}")
+                        it += (UserOrderEntity.full_name like "%%${query}") or
+                                (UserOrderEntity.orderNumber like "%${query}%")
+
                     }
                     if (byApproveStatue != null) {
                         it += (UserOrderStatusEntity.approve_state eq byApproveStatue)

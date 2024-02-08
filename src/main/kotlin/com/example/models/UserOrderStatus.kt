@@ -28,10 +28,10 @@ data class UserOrderStatus(
             "your order is reviewing it take from one day to three days to approved"
         }
         2 -> {
-            "your order is Accepted it take from one day to three days to approved"
+            "your order is Accepted you Can Go To Nearest Ceramic Provider"
         }
         3 -> {
-            "your order is Rejected successfully it take from one day to three days to approved"
+            "Apologize your order is Rejected you Can Contact With Sales on 01148588723 for more Information"
         }
 
         else -> {
