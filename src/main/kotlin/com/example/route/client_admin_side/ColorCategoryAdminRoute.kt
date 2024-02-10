@@ -136,18 +136,25 @@ fun Route.colorCategoryAdminRoute() {
                         throw AlreadyExistsException("that name (${colorCategoryRequest.colorName}) is already found ")
                     }
 
-                    colorCategoryDataSource
+                    val updateResult = colorCategoryDataSource
                         .updateColorCategory(colorId, colorCategoryRequest.toEntity(userId))
-                    logger.debug { "category info save successfully in db" }
+                    if (updateResult > 0) {
+                        logger.debug { "category info save successfully in db" }
 
-                    val updatedCategory =
-                        colorCategoryDataSource.getColorCategoryByNameDto(colorCategoryRequest.colorName)
-                            ?: throw NotFoundException("category name (${colorCategoryRequest.colorName}) is not found ")
+                        val updatedCategory =
+                            colorCategoryDataSource.getColorCategoryByNameDto(colorCategoryRequest.colorName)
+                                ?: throw NotFoundException("category name (${colorCategoryRequest.colorName}) is not found ")
 
-                    respondWithSuccessfullyResult(
-                        result = updatedCategory,
-                        message = "color category updated successfully ."
-                    )
+                        respondWithSuccessfullyResult(
+                            result = updatedCategory,
+                            message = "color category updated successfully ."
+                        )
+                    }else{
+                        throw UnknownErrorException("update failed .")
+
+                    }
+
+
 
                 } ?: throw MissingParameterException("Missing parameters .")
 

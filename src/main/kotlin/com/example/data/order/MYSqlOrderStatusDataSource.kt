@@ -1,9 +1,9 @@
 package com.example.data.order
 
 import com.example.database.table.*
-import com.example.models.UserOrder
 import com.example.models.UserOrderDto
 import com.example.models.UserOrderStatus
+import com.example.models.UserOrderStatusRequestCreate
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -176,18 +176,38 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
 
     override suspend fun updateOrderStatus(
         requestUserId: Int,
-        userOrderStatus: UserOrderStatus
+        userOrderStatus: UserOrderStatusRequestCreate
+    ): Int {
+        return withContext(Dispatchers.IO) {
+            val result = db.useTransaction {
+                 updateCustomerOrderStatus(requestUserId, userOrderStatus)
+                updateCustomerOrder(requestUserId,userOrderStatus.approveState)
+            }
+            result
+        }
+    }
+
+    private suspend fun updateCustomerOrderStatus(
+        requestUserId: Int,
+        userOrderStatus: UserOrderStatusRequestCreate
     ): Int {
         return withContext(Dispatchers.IO) {
             val result = db.update(UserOrderStatusEntity) {
                 set(it.approve_state, userOrderStatus.approveState)
 //                set(it.approveDate, userOrderStatus.approveDate)
-                set(it.approveUpdateDate, LocalDateTime.now())
-                set(it.approveByAdminId, userOrderStatus.approveByAdminId)
                 set(it.totalAmount, userOrderStatus.totalAmount)
                 set(it.takenAmount, userOrderStatus.takenAmount)
-                set(it.availableAmount, userOrderStatus.availableAmount)
+                set(
+                    it.availableAmount,
+                    getAvailableAmount(
+                        total = userOrderStatus.totalAmount,
+                        taken = userOrderStatus.takenAmount
+                    )
+                )
                 set(it.note, userOrderStatus.note)
+                set(it.approveByAdminId, userOrderStatus.userAdminId)
+                set(it.approveUpdateDate, LocalDateTime.now())
+
                 where {
                     it.requestUser_id eq requestUserId
                 }
@@ -196,6 +216,24 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
 
             result
         }
+    }
+
+    private suspend fun updateCustomerOrder(id: Int, approveState: Int): Int {
+        return withContext(Dispatchers.IO) {
+            val result = db.update(UserOrderEntity) {
+                set(it.approve_state, approveState)
+                where {
+                    it.id eq id
+                }
+            }
+            result
+        }
+
+    }
+
+    private fun getAvailableAmount(total: Double, taken: Double): Double {
+        return total.minus(taken)
+
     }
 
     override suspend fun deleteOrderStatus(requestUserId: Int): Int {

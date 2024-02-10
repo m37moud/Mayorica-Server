@@ -2,6 +2,7 @@ package com.example.data.order
 
 import com.example.models.UserOrderDto
 import com.example.models.UserOrderStatus
+import com.example.models.UserOrderStatusRequestCreate
 import org.ktorm.schema.Column
 
 interface OrderStatusDataSource {
@@ -20,7 +21,7 @@ interface OrderStatusDataSource {
     suspend fun getAllOrderStatusByApprove(approveState: Int): List<UserOrderStatus>
     suspend fun updateOrderStatus(
         requestUserId: Int,
-        userOrderStatus: UserOrderStatus
+        userOrderStatus: UserOrderStatusRequestCreate
     ): Int
 
     suspend fun deleteOrderStatus(requestUserId: Int): Int

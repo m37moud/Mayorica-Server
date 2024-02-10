@@ -1,4 +1,4 @@
-package com.example.models
+package com.example.models.options
 
 import com.example.utils.toListOfIntOrNull
 import com.example.utils.toListOfStringOrNull
