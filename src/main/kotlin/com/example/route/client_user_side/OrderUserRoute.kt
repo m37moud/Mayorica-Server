@@ -67,9 +67,10 @@ fun Route.userOrderRequest() {
             val clientIP = call.request.origin.remoteAddress.toString()
 
             logger.debug { "$CREATE_ORDER_REQUEST clientIP = $clientIP" }
+            //change from getOrderByNameAndIdNumber
             val checkUserOrder =
-                orderDataSource.getOrderByNameAndIdNumber(
-                    userOrderRequest.fullName,
+                orderDataSource.getOrderByIdNumber(
+//                    userOrderRequest.fullName,
                     userOrderRequest.idNumber
                 )
             if (checkUserOrder == null) {
