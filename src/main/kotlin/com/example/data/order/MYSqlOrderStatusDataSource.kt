@@ -285,8 +285,8 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
             val takenAmount = row[UserOrderStatusEntity.takenAmount] ?: 0.0
             val availableAmount = row[UserOrderStatusEntity.availableAmount] ?: 0.0
             val note = row[UserOrderStatusEntity.note] ?: ""
-            val approveDate = row[UserOrderStatusEntity.approveDate] ?: ""
-            val approveUpdateDate = row[UserOrderStatusEntity.approveUpdateDate] ?: ""
+            val approveDate = row[UserOrderStatusEntity.approveDate]?.toString() ?: ""
+            val approveUpdateDate = row[UserOrderStatusEntity.approveUpdateDate]?.toString() ?: ""
 
 
             UserOrderDto(
