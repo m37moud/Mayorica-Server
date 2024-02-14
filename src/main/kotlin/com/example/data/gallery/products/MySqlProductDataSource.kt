@@ -9,10 +9,7 @@ import com.example.models.dto.ProductDto
 import com.example.models.dto.SizeCategoryMenu
 import com.example.models.dto.TypeCategoryMenu
 import com.example.models.response.ProductResponse
-import com.example.utils.AlreadyExistsException
-import com.example.utils.ErrorException
-import com.example.utils.NotFoundException
-import com.example.utils.toDatabaseString
+import com.example.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
@@ -572,8 +569,24 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
     }
 
+    override suspend fun checkProduct(product: CeramicProductInfo) {
+        return withContext(Dispatchers.IO){
+            val validTypeCategory = product.typeCategoryId > -1
+            val validSizeCategory = product.sizeCategoryId > -1
+            val validColorCategory = product.colorCategoryId > -1
+            if (!validTypeCategory)
+                throw UnknownErrorException("Invalid Type Category.")
+            if (!validSizeCategory)
+                throw UnknownErrorException("Invalid Size Category.")
+            if (!validColorCategory)
+                throw UnknownErrorException("Invalid Color Category.")
+
+        }
+    }
+
     override suspend fun updateProduct(id: Int, product: CeramicProductInfo): Int {
         return withContext(Dispatchers.IO) {
+
             val result = db.update(ProductEntity) {
                 set(it.typeCategoryId, product.typeCategoryId)
                 set(it.sizeCategoryId, product.sizeCategoryId)

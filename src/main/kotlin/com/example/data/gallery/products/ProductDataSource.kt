@@ -107,6 +107,7 @@ interface ProductDataSource {
     suspend fun searchProductByName(productName: String): List<Product?>
     suspend fun addCeramicProduct(product: CeramicProductInfo): ProductDto
     suspend fun createProduct(product: CeramicProductInfo): Int
+    suspend fun checkProduct(product: CeramicProductInfo)
     suspend fun updateProduct(id: Int, product: CeramicProductInfo): Int
     suspend fun deleteProduct(productId: Int): Int
     suspend fun deleteAllProduct(): Int

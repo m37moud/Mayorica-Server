@@ -162,6 +162,15 @@ fun Route.productAdminRoute() {
                         ?: throw NotFoundException("no ceramic product found .")
                     val newName = multiPart.data.productName
                     logger.debug { "check if ($newName) the new name if not repeat" }
+                    val validTypeCategory = multiPart.data.typeCategoryId > -1
+                    val validSizeCategory = multiPart.data.sizeCategoryId > -1
+                    val validColorCategory = multiPart.data.colorCategoryId > -1
+                    if (!validTypeCategory)
+                        throw UnknownErrorException("Invalid Type Category.")
+                    if (!validSizeCategory)
+                        throw UnknownErrorException("Invalid Size Category.")
+                    if (!validColorCategory)
+                        throw UnknownErrorException("Invalid Color Category.")
 //                    val checkProduct = productDataSource.getProductByName(newName)
                     val oldImageName = tempProduct.image.substringAfterLast("/")
                     val responseFileName = multiPart.fileName
@@ -170,6 +179,7 @@ fun Route.productAdminRoute() {
                     val isSameTypeMenu = tempProduct.typeCategoryId == multiPart.data.typeCategoryId
                     val isSameSizeMenu = tempProduct.sizeCategoryId == multiPart.data.sizeCategoryId
                     val isSameColorMenu = tempProduct.colorCategoryId == multiPart.data.colorCategoryId
+
 
                     if (
                         isSameName && isSameTypeMenu &&
@@ -205,18 +215,22 @@ fun Route.productAdminRoute() {
                         .copy(productImageUrl = imageUrl!!)
                     logger.debug { "try to save ceramic product info in db" }
 
-                    productDataSource
+                    val updateResult = productDataSource
                         .updateProduct(id, typeCategoryDto.toEntity(userId))
                     logger.debug { "ceramic product info save successfully in db" }
+                    if (updateResult > 0) {
+                        val updatedCategory = productDataSource
+                            .getProductByNameDto(newName)
+                            ?: throw NotFoundException("ceramic product name ($newName) is not found ")
 
-                    val updatedCategory = productDataSource
-                        .getProductByNameDto(newName)
-                        ?: throw NotFoundException("ceramic product name ($newName) is not found ")
+                        respondWithSuccessfullyResult(
+                            result = updatedCategory,
+                            message = "ceramic product updated successfully ."
+                        )
+                    } else {
+                        throw UnknownErrorException("update failed .")
 
-                    respondWithSuccessfullyResult(
-                        result = updatedCategory,
-                        message = "ceramic product updated successfully ."
-                    )
+                    }
 
                 } ?: throw MissingParameterException("Missing parameters .")
 
@@ -275,7 +289,7 @@ fun Route.productAdminRoute() {
         get("$PRODUCTS_SIZE_MENU/{id}") {
             logger.debug { "GET ALL /$PRODUCTS_SIZE_MENU" }
             try {
-               val typeId = call.parameters["id"]?.toIntOrNull()
+                val typeId = call.parameters["id"]?.toIntOrNull()
                 val sizeMenu = productDataSource.getAllSizeCategoryMenu(typeId)
 
 //                if (sizeMenu.isEmpty()) throw NotFoundException("size menu is empty")
