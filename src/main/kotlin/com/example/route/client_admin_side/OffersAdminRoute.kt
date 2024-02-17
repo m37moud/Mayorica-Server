@@ -1,11 +1,13 @@
 package com.example.route.client_admin_side
 
-import com.example.data.news.NewsDataSource
 import com.example.data.offers.OffersDataSource
-import com.example.models.Offers
+import com.example.models.MyResponsePageable
+import com.example.models.Offer
+import com.example.models.options.getOfferOptions
 import com.example.service.storage.StorageService
 import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
+import com.example.utils.NotFoundException
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -21,6 +23,7 @@ import java.time.LocalDateTime
 
 
 const val ALL_OFFERS = "${ADMIN_CLIENT}/offers"
+const val ALL_OFFERS_PAGEABLE = "${ALL_OFFERS}-pageable"
 const val SINGLE_OFFERS = "${ADMIN_CLIENT}/offer"
 const val CREATE_OFFERS = "${SINGLE_OFFERS}/create"
 const val UPDATE_OFFERS = "${SINGLE_OFFERS}/update"
@@ -32,15 +35,12 @@ private val logger = KotlinLogging.logger { }
 
 
 fun Route.offersAdminRoute(
-//    offersDataSource: OffersDataSource,
-//    storageService: StorageService
 ) {
     val offersDataSource: OffersDataSource by inject()
     val storageService: StorageService by inject()
 
     authenticate {
         //get all offers //api/v1/admin-client/offers
-
         get(ALL_OFFERS) {
             try {
 
@@ -80,6 +80,44 @@ fun Route.offersAdminRoute(
             }
 
         }
+
+        // get the offers as pageable --> get /api/v1/admin-client/offers-pageable (token required)
+        get(ALL_OFFERS_PAGEABLE) {
+            logger.debug { "GET ALL /$ALL_OFFERS_PAGEABLE" }
+
+            try {
+                val params = call.request.queryParameters
+                val offerOption = getOfferOptions(params)
+                val offerList =
+                    offersDataSource
+                        .getAllOffersPageable(
+                            query = offerOption.query,
+                            page = offerOption.page!!,
+                            perPage = offerOption.perPage!!,
+                            isHot = offerOption.isHot,
+                            sortField = offerOption.sortFiled!!,
+                            sortDirection = offerOption.sortDirection!!
+                        )
+                if (offerList.isEmpty()) throw NotFoundException("no offer is found.")
+                val numberOfOffers = offersDataSource.getNumberOfOffers()
+
+                respondWithSuccessfullyResult(
+                    result = MyResponsePageable(
+                        page = offerOption.page + 1,
+                        perPage = numberOfOffers,
+                        data = offerList
+                    ),
+                    message = "get all offers successfully"
+                )
+            } catch (e: Exception) {
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+            }
+
+
+        }
+
+
+
         //get offer //api/v1/admin-client/offer/{id}
         get("$SINGLE_OFFERS/{id}") {
             try {
@@ -234,7 +272,7 @@ fun Route.offersAdminRoute(
                             return@post
                         }
                     }
-                    Offers(
+                    Offer(
                         title = offerTitle!!,
                         offerDescription = offerDescription!!,
                         image = imageUrl,

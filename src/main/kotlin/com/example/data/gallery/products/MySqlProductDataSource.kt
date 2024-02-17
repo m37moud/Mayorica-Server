@@ -278,10 +278,10 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         sortDirection: Int
     ): List<ProductDto> {
         logger.debug { "getAllProductPageable /$page $perPage" }
-        val myLimit = if (perPage > 100) 100 else perPage
-        val myOffset = (page * perPage)
-        return withContext(Dispatchers.IO) {
 
+        return withContext(Dispatchers.IO) {
+            val myLimit = if (perPage > 100) 100 else perPage
+            val myOffset = (page * perPage)
             val productList = db.from(ProductEntity)
                 .innerJoin(AdminUserEntity, on = ProductEntity.userAdminID eq AdminUserEntity.id)
                 .innerJoin(TypeCategoryEntity, on = ProductEntity.typeCategoryId eq TypeCategoryEntity.id)

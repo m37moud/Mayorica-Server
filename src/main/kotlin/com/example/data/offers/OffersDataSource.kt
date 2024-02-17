@@ -1,18 +1,30 @@
 package com.example.data.offers
 
-import com.example.models.Offers
+import com.example.models.Offer
+import com.example.models.dto.OfferDto
+import org.ktorm.schema.Column
 
 interface OffersDataSource {
-    suspend fun getAllOffers(): List<Offers>
-    suspend fun getAllAvailableOffers(): List<Offers>
-    suspend fun getLastAvailableOffer(): Offers?
-    suspend fun getOffersById(id: Int): Offers?
-    suspend fun getOfferByTitle(title: String): Offers?
-    suspend fun getHotOffers(): Offers?
-    suspend fun getRandomHotOffers(): Offers?
+    suspend fun getNumberOfOffers(): Int
 
-    suspend fun addOffers(offers: Offers): Int
-    suspend fun updateOffers(offers: Offers): Int
+    suspend fun getAllOffers(): List<Offer>
+    suspend fun getAllOffersPageable(
+        query: String?,
+        page: Int,
+        perPage: Int,
+        isHot: Boolean?,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<OfferDto>
+    suspend fun getAllAvailableOffers(): List<Offer>
+    suspend fun getLastAvailableOffer(): Offer?
+    suspend fun getOffersById(id: Int): Offer?
+    suspend fun getOfferByTitle(title: String): Offer?
+    suspend fun getHotOffers(): Offer?
+    suspend fun getRandomHotOffers(): Offer?
+
+    suspend fun addOffers(offer: Offer): Int
+    suspend fun updateOffers(offer: Offer): Int
     suspend fun deleteOffers(id: Int): Int
     suspend fun deleteAllOffers(): Int
 }

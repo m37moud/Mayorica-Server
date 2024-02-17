@@ -1,9 +1,6 @@
 package com.example.route.client_user_side
 
-import com.example.data.news.NewsDataSource
 import com.example.data.offers.OffersDataSource
-import com.example.utils.Constants
-import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
 import io.ktor.http.*
@@ -14,7 +11,7 @@ import mu.KotlinLogging
 import org.koin.ktor.ext.inject
 
 
-private const val ALL_OFFERS = "${USER_CLIENT}/offers"
+private const val ALL_AVAILABLE_OFFERS = "${USER_CLIENT}/offers"
 private const val SINGLE_OFFERS = "${USER_CLIENT}/offer"
 private const val SINGLE_LAST_OFFERS = "${SINGLE_OFFERS}/last"
 private const val SINGLE_RANDOM_HOT_OFFERS = "${SINGLE_OFFERS}/random"
@@ -30,10 +27,10 @@ fun Route.offersUserRoute(
     val offersDataSource: OffersDataSource by inject()
 
     //get all offers //api/v1/user-client/offers
-    get(ALL_OFFERS) {
+    get(ALL_AVAILABLE_OFFERS) {
         try {
 
-            logger.debug { "GET ALL /${ALL_OFFERS}" }
+            logger.debug { "GET ALL /${ALL_AVAILABLE_OFFERS}" }
 
             val result = offersDataSource.getAllAvailableOffers()
             if (result.isNotEmpty()) {
