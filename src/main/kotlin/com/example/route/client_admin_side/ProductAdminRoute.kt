@@ -54,7 +54,7 @@ fun Route.productAdminRoute() {
             try {
                 val multiPart = receiveMultipart<CeramicCreateDto>(imageValidator)
                 val userId = extractAdminId()
-                val generateNewName = generateSafeFileName(multiPart.fileName)
+                val generateNewName = generateSafeFileName(multiPart.fileName!!)
                 val url = "${multiPart.baseUrl}products/${generateNewName}"
                 val imageUrl = multiPart.image?.let { img ->
                     storageService.saveProductImage(
@@ -64,11 +64,11 @@ fun Route.productAdminRoute() {
                     )
                 }
                 val ceramicProductDto = multiPart.data.copy(productImageUrl = imageUrl!!)
-                val createdCategory = productDataSource
+                val createdProduct = productDataSource
                     .addCeramicProduct(ceramicProductDto.toEntity(userId))
 
                 respondWithSuccessfullyResult(
-                    result = createdCategory,
+                    result = createdProduct,
                     message = "ceramic product inserted successfully ."
                 )
             } catch (exc: Exception) {
@@ -201,7 +201,7 @@ fun Route.productAdminRoute() {
                     logger.debug { "try to save new icon in storage" }
 
 
-                    val generateNewName = generateSafeFileName(responseFileName)
+                    val generateNewName = generateSafeFileName(responseFileName!!)
                     val url = "${multiPart.baseUrl}products/${generateNewName}"
 
                     val imageUrl = multiPart.image?.let { img ->

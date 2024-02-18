@@ -2,7 +2,11 @@ package com.example.data.offers
 
 import com.example.database.table.*
 import com.example.models.Offer
+import com.example.models.ProductOfferCreate
 import com.example.models.dto.OfferDto
+import com.example.utils.AlreadyExistsException
+import com.example.utils.ErrorException
+import com.example.utils.NotFoundException
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -24,7 +28,7 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
         return withContext(Dispatchers.IO) {
             val offersList = db.from(OffersEntity)
                 .select()
-                .mapNotNull { rowToOffers(it) }
+                .mapNotNull { rowToOffer(it) }
             offersList.size
         }
     }
@@ -34,7 +38,7 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
             val result = db.from(OffersEntity)
                 .select()
                 .orderBy(OffersEntity.createdAt.desc())
-                .mapNotNull { rowToOffers(it) }
+                .mapNotNull { rowToOffer(it) }
             result
         }
 
@@ -97,7 +101,7 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
                 .where {
                     OffersEntity.endedAt greaterEq LocalDateTime.now()
                 }
-                .mapNotNull { rowToOffers(it) }
+                .mapNotNull { rowToOffer(it) }
             result
         }
 
@@ -112,7 +116,7 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
                 .where {
                     OffersEntity.endedAt greaterEq LocalDateTime.now()
                 }
-                .mapNotNull { rowToOffers(it) }
+                .mapNotNull { rowToOffer(it) }
                 .firstOrNull()
             result
         }
@@ -128,7 +132,33 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
                 .where {
                     OffersEntity.id eq id
                 }
-                .map { rowToOffers(it) }
+                .map { rowToOffer(it) }
+                .firstOrNull()
+            result
+        }
+
+    }
+
+    override suspend fun getOffersByIdDto(id: Int): OfferDto? {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(OffersEntity)
+                .innerJoin(AdminUserEntity, on = OffersEntity.userAdminID eq AdminUserEntity.id)
+                .select(
+                    OffersEntity.id,
+                    AdminUserEntity.username,
+                    OffersEntity.title,
+                    OffersEntity.offerDescription,
+                    OffersEntity.image,
+                    OffersEntity.isHotOffer,
+                    OffersEntity.createdAt,
+                    OffersEntity.updatedAt,
+                    OffersEntity.endedAt,
+                )
+                .orderBy(OffersEntity.createdAt.desc())
+                .where {
+                    OffersEntity.id eq id
+                }
+                .map { rowToOfferDto(it) }
                 .firstOrNull()
             result
         }
@@ -143,7 +173,33 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
                 .where {
                     OffersEntity.title eq title
                 }
-                .map { rowToOffers(it) }
+                .map { rowToOffer(it) }
+                .firstOrNull()
+            result
+        }
+
+    }
+
+    override suspend fun getOfferByTitleDto(title: String): OfferDto? {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(OffersEntity)
+                .innerJoin(AdminUserEntity, on = OffersEntity.userAdminID eq AdminUserEntity.id)
+                .select(
+                    OffersEntity.id,
+                    AdminUserEntity.username,
+                    OffersEntity.title,
+                    OffersEntity.offerDescription,
+                    OffersEntity.image,
+                    OffersEntity.isHotOffer,
+                    OffersEntity.createdAt,
+                    OffersEntity.updatedAt,
+                    OffersEntity.endedAt,
+                )
+                .orderBy(OffersEntity.createdAt.desc())
+                .where {
+                    OffersEntity.title eq title
+                }
+                .map { rowToOfferDto(it) }
                 .firstOrNull()
             result
         }
@@ -158,7 +214,7 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
                 .where {
                     OffersEntity.isHotOffer eq true
                 }
-                .map { rowToOffers(it) }
+                .map { rowToOffer(it) }
                 .firstOrNull()
             result
         }
@@ -173,24 +229,35 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
                 .where {
                     (OffersEntity.isHotOffer eq true) and (OffersEntity.endedAt greaterEq LocalDateTime.now())
                 }
-                .map { rowToOffers(it) }
+                .map { rowToOffer(it) }
 
             result.randomOrNull()//[Random.nextInt(0, result.size - 1)]
         }
 
     }
 
-    override suspend fun addOffers(offer: Offer): Int {
+    override suspend fun addOffers(offer: ProductOfferCreate): OfferDto? {
+
+        if (getOfferByTitle(title = offer.offerTitle) != null)
+            throw AlreadyExistsException("this Offer inserted before .")
+        if (createOffers(offer) < 0)
+            throw ErrorException("Failed to create Offer .")
+        return getOfferByTitleDto(offer.offerTitle)
+            ?: throw NotFoundException("failed to get Offer after created.")
+
+    }
+
+    override suspend fun createOffers(offer: ProductOfferCreate): Int {
         return withContext(Dispatchers.IO) {
             val result = db.insert(OffersEntity) {
-                set(it.title, offer.title)
+                set(it.title, offer.offerTitle)
                 set(it.offerDescription, offer.offerDescription)
-                set(it.image, offer.image)
+                set(it.image, offer.offerImageUrl)
                 set(it.isHotOffer, offer.isHotOffer)
-                set(it.userAdminID, offer.userAdminID)
+                set(it.userAdminID, offer.userAdminId)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
-                val stringDate = offer.endedAt
+                val stringDate = offer.offerEndDate
                 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 val localDateTime = LocalDateTime.parse(stringDate, formatter)
                 set(it.endedAt, localDateTime)
@@ -200,22 +267,22 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
 
     }
 
-    override suspend fun updateOffers(offer: Offer): Int {
+    override suspend fun updateOffers(id: Int, offer: ProductOfferCreate): Int {
         return withContext(Dispatchers.IO) {
             val result = db.update(OffersEntity) {
-                set(it.title, offer.title)
+                set(it.title, offer.offerTitle)
                 set(it.offerDescription, offer.offerDescription)
-                set(it.image, offer.image)
+                set(it.image, offer.offerImageUrl)
                 set(it.isHotOffer, offer.isHotOffer)
-                set(it.userAdminID, offer.userAdminID)
+                set(it.userAdminID, offer.userAdminId)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
-                val stringDate = offer.endedAt
-                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss")
+                val stringDate = offer.offerEndDate
+                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 val localDateTime = LocalDateTime.parse(stringDate, formatter)
                 set(it.endedAt, localDateTime)
                 where {
-                    it.id eq offer.id
+                    it.id eq id
                 }
             }
             result
@@ -240,7 +307,7 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
 
     }
 
-    private fun rowToOffers(row: QueryRowSet?): Offer? {
+    private fun rowToOffer(row: QueryRowSet?): Offer? {
         return if (row == null) {
             null
         } else {

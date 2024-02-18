@@ -1,11 +1,11 @@
-package com.example.models.dto
+package com.example.models
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class ProductOfferCreateDto(
+data class ProductOfferCreate(
     val offerTitle: String,
     val offerDescription: String,
     val offerImageUrl: String?,
     val offerEndDate: String,
+    val isHotOffer: Boolean = false,
+    val userAdminId: Int,
+
 )

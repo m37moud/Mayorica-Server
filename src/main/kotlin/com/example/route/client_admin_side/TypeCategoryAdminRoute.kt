@@ -39,7 +39,7 @@ fun Route.typeCategoryAdminRoute() {
             logger.debug { "POST /$CREATE_TYPE_CATEGORY" }
             val multiPart = receiveMultipart<TypeCategoryCreateDto>(imageValidator)
             val userId = extractAdminId()
-            val generateNewName = generateSafeFileName(multiPart.fileName)
+            val generateNewName = generateSafeFileName(multiPart.fileName!!)
             val url = "${multiPart.baseUrl}categories/icons/${generateNewName}"
             val imageUrl = multiPart.image?.let { img ->
                 storageService.saveCategoryIcons(
@@ -162,7 +162,7 @@ fun Route.typeCategoryAdminRoute() {
                     logger.debug { "try to save new icon in storage" }
 
 
-                    val generateNewName = generateSafeFileName(responseFileName)
+                    val generateNewName = generateSafeFileName(responseFileName!!)
                     val url = "${multiPart.baseUrl}categories/icons/${generateNewName}"
 
                     val imageUrl = multiPart.image?.let { img ->

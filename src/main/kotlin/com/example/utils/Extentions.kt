@@ -98,12 +98,15 @@ suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.receiveMul
         logger.debug { "PartData headers = ${part.headers.names()}" }
         when (part) {
             is PartData.FileItem -> {
-                if (imageValidator.isValid(part.originalFileName)) {
-                    fileBytes = part.streamProvider().readBytes()
+                logger.debug { "PartData originalFileName = ${part.originalFileName}" }
+                val name = part.originalFileName
+                if (!name.isNullOrEmpty())
+                    if (imageValidator.isValid(part.originalFileName)) {
+                        fileBytes = part.streamProvider().readBytes()
 
-                    fileName = part.originalFileName as String
+                        fileName = part.originalFileName as String
 
-                }
+                    }
             }
 
             is PartData.FormItem -> {
@@ -119,7 +122,7 @@ suspend inline fun <reified T> PipelineContext<Unit, ApplicationCall>.receiveMul
         }
         part.dispose()
     }
-    return MultipartDto(data = data!!, image = fileBytes, baseUrl = baseUrl, fileName = fileName!!)
+    return MultipartDto(data = data!!, image = fileBytes, baseUrl = baseUrl, fileName = fileName)
 }
 
 fun String?.toListOfIntOrNull(): List<Int>? {

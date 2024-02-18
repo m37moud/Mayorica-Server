@@ -7,5 +7,5 @@ data class MultipartDto<T>(
     val data: T,
     val image: ByteArray? = null,
     val baseUrl: String,
-    val fileName: String,
+    val fileName: String?,
 )

@@ -1,8 +1,9 @@
 package com.example.route.client_admin_side
 
 import com.example.data.offers.OffersDataSource
+import com.example.mapper.toEntity
 import com.example.models.MyResponsePageable
-import com.example.models.Offer
+import com.example.models.dto.ProductOfferCreateDto
 import com.example.models.options.getOfferOptions
 import com.example.service.storage.StorageService
 import com.example.utils.*
@@ -19,7 +20,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
 import org.koin.ktor.ext.inject
-import java.time.LocalDateTime
 
 
 const val ALL_OFFERS = "${ADMIN_CLIENT}/offers"
@@ -38,6 +38,8 @@ fun Route.offersAdminRoute(
 ) {
     val offersDataSource: OffersDataSource by inject()
     val storageService: StorageService by inject()
+    val imageValidator: ImageValidator by inject()
+
 
     authenticate {
         //get all offers //api/v1/admin-client/offers
@@ -117,353 +119,166 @@ fun Route.offersAdminRoute(
         }
 
 
-
         //get offer //api/v1/admin-client/offer/{id}
         get("$SINGLE_OFFERS/{id}") {
             try {
                 logger.debug { "get /$SINGLE_OFFERS/{id}" }
-                val id = call.parameters["id"]?.toIntOrNull()
-                id?.let {
-                    offersDataSource.getOffersById(it)?.let { offer ->
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = "offer is found .",
-                                data = offer
-                            )
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+                    offersDataSource.getOffersByIdDto(id)?.let { offer ->
+                        respondWithSuccessfullyResult(
+                            result = offer,
+                            message = "offer is found ."
                         )
-                    } ?: call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = false,
-                            message = "no offer found .",
-                            data = null
-                        )
-                    )
-
-                } ?: call.respond(
-                    HttpStatusCode.BadRequest,
-                    MyResponse(
-                        success = false,
-                        message = "Missing parameters .",
-                        data = null
-                    )
-                )
+                    } ?: throw NotFoundException("no Offer found .")
+                } ?: throw MissingParameterException("Missing parameters .")
 
             } catch (exc: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = exc.message ?: "Failed ",
-                        data = null
-                    )
-                )
-                return@get
+                throw ErrorException(exc.message ?: "Some Thing Goes Wrong .")
             }
         }
         //post type category //api/v1/admin-client/offer/create
         post(CREATE_OFFERS) {
             logger.debug { "POST /$CREATE_OFFERS" }
-            val multiPart = call.receiveMultipart()
-            var offerTitle: String? = null
-            var offerDescription: String? = null
-            var offerEndedAt: String? = null
-            var isHotOffer: Boolean? = null
-            var fileName: String? = null
-            var fileBytes: ByteArray? = null
-            var url: String? = null
-            var imageUrl: String? = null
-            val principal = call.principal<JWTPrincipal>()
-            val userId = try {
-                principal?.getClaim("userId", String::class)?.toIntOrNull()
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Failed ",
-                        data = null
-                    )
-                )
-                return@post
-            }
+
             try {
+                val multiPart = receiveMultipart<ProductOfferCreateDto>(imageValidator)
+                val userId = extractAdminId()
+                val generateNewName = multiPart.fileName?.let { fileName ->
 
-                val baseUrl =
-                    call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "${Constants.ENDPOINT}/image/"
-                multiPart.forEachPart { part ->
-                    when (part) {
-                        is PartData.FormItem -> {
-                            // to read parameters that we sent with the image
-                            when (part.name) {
-                                "offerTitle" -> {
-                                    offerTitle = part.value
-                                }
-
-                                "offerDescription" -> {
-                                    offerDescription = part.value
-                                }
-
-                                "isHotOffer" -> {
-                                    isHotOffer = part.value.toBoolean()
-                                }
-
-                                "offerEndedAt" -> {
-                                    offerEndedAt = part.value
-                                }
-
-                            }
-
-                        }
-
-                        is PartData.FileItem -> {
-                            val isValid = part.originalFileName as String
-                            if (isValid.isNotEmpty()) {
-                                if (!isImageContentType(part.contentType.toString())) {
-                                    call.respond(
-                                        message = MyResponse(
-                                            success = false,
-                                            message = "Invalid file format",
-                                            data = null
-                                        ), status = HttpStatusCode.BadRequest
-                                    )
-                                    part.dispose()
-                                    return@forEachPart
-
-                                }
-                                fileName = generateSafeFileName(part.originalFileName as String)
-                                fileBytes = part.streamProvider().readBytes()
-                                url = "${baseUrl}offers/${fileName}"
-                            } else {
-                                fileName = null
-                            }
-                        }
-
-                        else -> {}
-
-                    }
-                    part.dispose()
+                    generateSafeFileName(fileName)
                 }
+                val url = "${multiPart.baseUrl}offers/${generateNewName}"
 
-                val typeCategory = offersDataSource.getOfferByTitle(offerTitle!!)
-                if (typeCategory == null) {
-
-                    if (!fileName.isNullOrEmpty()) {
-
-                        imageUrl = try {
-
-                            storageService.saveOfferImage(
-                                fileName = fileName!!,
-                                fileUrl = url!!,
-                                fileBytes = fileBytes!!
-                            )
-                        } catch (e: Exception) {
-                            storageService.deleteOfferImages(fileName = fileName!!)
-                            call.respond(
-                                status = HttpStatusCode.InternalServerError,
-                                message = MyResponse(
-                                    success = false,
-                                    message = e.message ?: "Error happened while uploading Image.",
-                                    data = null
-                                )
-                            )
-                            return@post
-                        }
-                    }
-                    Offer(
-                        title = offerTitle!!,
-                        offerDescription = offerDescription!!,
-                        image = imageUrl,
-                        isHotOffer = isHotOffer!!,
-                        userAdminID = userId!!,
-                        createdAt = LocalDateTime.now().toDatabaseString(),
-                        updatedAt = LocalDateTime.now().toDatabaseString(),
-                        endedAt = offerEndedAt!!
-                    ).apply {
-
-                        val result = offersDataSource.addOffers(this)
-
-                        if (result > 0) {
-                            call.respond(
-                                HttpStatusCode.OK, MyResponse(
-                                    success = true,
-                                    message = "Offer inserted successfully .",
-                                    data = this
-                                )
-                            )
-                            return@post
-                        } else {
-                            call.respond(
-                                HttpStatusCode.OK,
-                                MyResponse(
-                                    success = false,
-                                    message = "Offer inserted failed .",
-                                    data = null
-                                )
-                            )
-                            return@post
-                        }
-                    }
-
-//                    if (!imageUrl.isNullOrEmpty()) {
-//
-//                        Offers(
-//                            title = offerTitle!!,
-//                            offerDescription = offerDescription!!,
-//                            image = imageUrl,
-//                            isHotOffer = isHotOffer!!,
-//                            userAdminID = userId!!,
-//                            createdAt = LocalDateTime.now().toDatabaseString(),
-//                            updatedAt = LocalDateTime.now().toDatabaseString()
-//                        ).apply {
-//
-//                            val result = offersDataSource.addOffers(this)
-//
-//                            if (result > 0) {
-//                                call.respond(
-//                                    HttpStatusCode.OK, MyResponse(
-//                                        success = true,
-//                                        message = "Offer inserted successfully .",
-//                                        data = this
-//                                    )
-//                                )
-//                                return@post
-//                            } else {
-//                                call.respond(
-//                                    HttpStatusCode.OK,
-//                                    MyResponse(
-//                                        success = false,
-//                                        message = "Offer inserted failed .",
-//                                        data = null
-//                                    )
-//                                )
-//                                return@post
-//                            }
-//                        }
-//                    } else {
-//                        storageService.deleteOfferImages(fileName = fileName!!)
-//                        call.respond(
-//                            status = HttpStatusCode.OK,
-//                            message = MyResponse(
-//                                success = false,
-//                                message = "some Error happened while uploading .",
-//                                data = null
-//                            )
-//                        )
-//                        return@post
-//                    }
-                } else {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = false,
-                            message = "Offer inserted before .",
-                            data = null
+                val imageUrl: String? = multiPart.image?.let { img ->
+                    if (img.isNotEmpty() &&
+                        !generateNewName.isNullOrEmpty()
+                    )
+                        storageService.saveOfferImage(
+                            fileName = generateNewName,
+                            fileUrl = url,
+                            fileBytes = img
                         )
-                    )
-                    return@post
+                    else null
                 }
-            } catch (exc: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = exc.message ?: "Creation Failed .",
-                        data = null
-                    )
+                logger.debug { "imageUrl =$imageUrl" }
+
+                val offerDto = multiPart.data.copy(offerImageUrl = imageUrl)
+                val createdOffer = offersDataSource
+                    .addOffers(offerDto.toEntity(userId))
+                respondWithSuccessfullyResult(
+                    result = createdOffer,
+                    message = "Offer inserted successfully ."
                 )
-                return@post
+            } catch (e: Exception) {
+                throw ErrorException(e.stackTraceToString() ?: "Some Thing Goes Wrong .")
+
             }
-
-
         }
-        //delete type category //api/v1/admin-client/offer/delete/{id}
+        //delete type offer //api/v1/admin-client/offer/delete/{id}
         delete("$DELETE_OFFERS/{id}") {
             try {
                 logger.debug { "get /$DELETE_OFFERS/{id}" }
-                val id = call.parameters["id"]?.toIntOrNull()
-                id?.let { offerId ->
+                call.parameters["id"]?.toIntOrNull()?.let { offerId ->
                     offersDataSource.getOffersById(offerId)?.let { offer ->
-
-                        val isDeleted = try {
-                            storageService.deleteOfferImages(fileName = offer.image!!.substringAfterLast("/"))
-                        } catch (e: Exception) {
-                            call.respond(
-                                HttpStatusCode.InternalServerError,
-                                MyResponse(
-                                    success = false,
-                                    message = e.message ?: "Failed to delete icon",
-                                    data = null
-                                )
-                            )
-                            return@delete
+                        val oldImageName = offer.image?.substringAfterLast("/")
+                        logger.debug { "try to delete oldImageName $oldImageName" }
+                        oldImageName?.let {
+                            storageService.deleteOfferImages(fileName = it)
                         }
-                        if (isDeleted) {
-                            val deleteResult = offersDataSource.deleteOffers(offerId)
-                            if (deleteResult > 0) {
-                                call.respond(
-                                    HttpStatusCode.OK,
-                                    MyResponse(
-                                        success = true,
-                                        message = "Offer deleted successfully .",
-                                        data = null
-                                    )
-                                )
-                            } else {
-                                call.respond(
-                                    HttpStatusCode.NotFound,
-                                    MyResponse(
-                                        success = false,
-                                        message = " Offer deleted failed .",
-                                        data = null
-                                    )
-                                )
-                            }
-
+                        val deleteResult = offersDataSource.deleteOffers(offerId)
+                        if (deleteResult > 0) {
+                            respondWithSuccessfullyResult(
+                                result = true,
+                                message = "Offer deleted successfully ."
+                            )
                         } else {
-                            call.respond(
-                                HttpStatusCode.Conflict,
-                                MyResponse(
-                                    success = false,
-                                    message = "Failed to delete image",
-                                    data = null
-                                )
-                            )
-
+                            throw UnknownErrorException("Offer deleted failed .")
                         }
+                    }
+
+                } ?: throw MissingParameterException("Missing parameters .")
+            } catch (exc: Exception) {
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred")
+            }
+        }
+        //put size offer //api/v1/admin-client/offer/update/{id}
+        put("$UPDATE_OFFERS/{id}") {
+            try {
+                logger.debug { "get /$UPDATE_OFFERS/{id}" }
+                val multiPart = receiveMultipart<ProductOfferCreateDto>(imageValidator)
+                val userId = extractAdminId()
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+                    val tempProduct = offersDataSource.getOffersById(id)
+                        ?: throw NotFoundException("no Offer found .")
+                    val newName = multiPart.data.offerTitle
+                    logger.debug { "check if ($newName) the new name if not repeat" }
+//                    val checkProduct = productDataSource.getProductByName(newName)
+                    val oldImageName = tempProduct.image?.substringAfterLast("/")
+                    val responseFileName = multiPart.fileName
+                    logger.debug { "check oldImage ($oldImageName) and response (${responseFileName}) image new name if not repeat" }
+                    val isSameName = tempProduct.title == multiPart.data.offerTitle
+
+                    if (
+                        isSameName &&
+                        oldImageName == multiPart.fileName
+                    ) {
+
+                        throw AlreadyExistsException("that name ($newName) is already found ")
+                    }
+                    /**
+                     * get old image url to delete
+                     */
+                    logger.debug { "oldImageName is  : $oldImageName" }
+                    logger.debug { "try to delete old Image from storage first extract oldImageName " }
+                    oldImageName?.let {
+                        if (it.isNotEmpty())
+                            storageService.deleteOfferImages(it)
+                    }
+
+                    logger.info { "old Image is deleted successfully from storage" }
+                    logger.debug { "try to save new icon in storage" }
 
 
-                    } ?: call.respond(
-                        HttpStatusCode.NotFound,
-                        MyResponse(
-                            success = false,
-                            message = " Offer deleted failed .",
-                            data = null
+                    val generateNewName = responseFileName?.let { generateSafeFileName(it) }
+                    val url = "${multiPart.baseUrl}offers/${generateNewName}"
+
+                    val imageUrl = multiPart.image?.let { img ->
+                        if (img.isNotEmpty() &&
+                            !generateNewName.isNullOrEmpty()
                         )
-                    )
+                            storageService.saveOfferImage(
+                                fileName = generateNewName,
+                                fileUrl = url,
+                                fileBytes = img
+                            )
+                        else null
+                    }
+                    logger.debug { "imageUrl =$imageUrl" }
+                    val offerDto = multiPart.data.copy(offerImageUrl = imageUrl)
+                    logger.debug { "try to save ceramic product info in db" }
 
+                    val updateResult = offersDataSource
+                        .updateOffers(id, offerDto.toEntity(userId))
+                    logger.debug { "ceramic product info save successfully in db" }
+                    if (updateResult > 0) {
+                        val updatedCategory = offersDataSource
+                            .getOfferByTitleDto(newName)
+                            ?: throw NotFoundException("ceramic product name ($newName) is not found ")
 
-                } ?: call.respond(
-                    HttpStatusCode.BadRequest,
-                    MyResponse(
-                        success = false,
-                        message = "Missing parameters .",
-                        data = null
-                    )
-                )
+                        respondWithSuccessfullyResult(
+                            result = updatedCategory,
+                            message = "ceramic product updated successfully ."
+                        )
+                    } else {
+                        throw UnknownErrorException("update failed .")
+
+                    }
+
+                } ?: throw MissingParameterException("Missing parameters .")
 
             } catch (exc: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = exc.message ?: "Failed ",
-                        data = null
-                    )
-                )
-                return@delete
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
+
             }
         }
     }

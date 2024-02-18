@@ -41,7 +41,7 @@ fun Route.sizeCategoryAdminRoute() {
             try {
                 val multiPart = receiveMultipart<SizeCategoryCreateDto>(imageValidator)
                 val userId = extractAdminId()
-                val generateNewName = generateSafeFileName(multiPart.fileName)
+                val generateNewName = generateSafeFileName(multiPart.fileName!!)
                 val url = "${multiPart.baseUrl}categories/images/${generateNewName}"
                 val imageUrl = multiPart.image?.let { img ->
                     storageService.saveCategoryImages(
@@ -167,7 +167,7 @@ fun Route.sizeCategoryAdminRoute() {
                     logger.debug { "try to save new icon in storage" }
 
 
-                    val generateNewName = generateSafeFileName(responseFileName)
+                    val generateNewName = generateSafeFileName(responseFileName!!)
                     val url = "${multiPart.baseUrl}categories/images/${generateNewName}"
 
                     val imageUrl = multiPart.image?.let { img ->
