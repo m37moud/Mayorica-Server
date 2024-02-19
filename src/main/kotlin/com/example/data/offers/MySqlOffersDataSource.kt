@@ -307,6 +307,43 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
 
     }
 
+    override suspend fun addToHotOffer(id: Int): Int {
+        logger.debug { "addToHotOffer call" }
+        return withContext(Dispatchers.IO) {
+            getOffersById(id)?.let { offer ->
+                if (offer.isHotOffer)
+                    throw AlreadyExistsException("Hot Offer added before")
+
+            } ?: NotFoundException("Offer Not Found")
+
+            val result = db.update(OffersEntity) {
+                set(it.isHotOffer, true)
+                where {
+                    it.id eq id
+                }
+            }
+            result
+        }
+    }
+
+    override suspend fun removeFromHotOffer(id: Int): Int {
+        logger.debug { "removeFromHotOffer call" }
+        return withContext(Dispatchers.IO) {
+            getOffersById(id)?.let { offer ->
+                if (!offer.isHotOffer)
+                    throw AlreadyExistsException("Offer is Not Hot")
+
+            } ?: NotFoundException("Offer Not Found")
+            val result = db.update(OffersEntity) {
+                set(it.isHotOffer, false)
+                where {
+                    it.id eq id
+                }
+            }
+            result
+        }
+    }
+
     private fun rowToOffer(row: QueryRowSet?): Offer? {
         return if (row == null) {
             null

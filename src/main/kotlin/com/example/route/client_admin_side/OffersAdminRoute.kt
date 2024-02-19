@@ -10,12 +10,8 @@ import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.NotFoundException
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.plugins.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
@@ -24,11 +20,13 @@ import org.koin.ktor.ext.inject
 
 const val ALL_OFFERS = "${ADMIN_CLIENT}/offers"
 const val ALL_OFFERS_PAGEABLE = "${ALL_OFFERS}-pageable"
-const val SINGLE_OFFERS = "${ADMIN_CLIENT}/offer"
-const val CREATE_OFFERS = "${SINGLE_OFFERS}/create"
-const val UPDATE_OFFERS = "${SINGLE_OFFERS}/update"
-const val DELETE_OFFERS = "${SINGLE_OFFERS}/delete"
-const val DELETE_ALL_OFFERS = "${SINGLE_OFFERS}/delete-all"
+const val SINGLE_OFFER = "${ADMIN_CLIENT}/offer"
+const val CREATE_OFFER = "${SINGLE_OFFER}/create"
+const val UPDATE_OFFER = "${SINGLE_OFFER}/update"
+const val DELETE_OFFER = "${SINGLE_OFFER}/delete"
+const val ADD_HOT_OFFER = "${SINGLE_OFFER}/hot-add"
+const val REMOVE_HOT_OFFER = "${SINGLE_OFFER}/hot-delete"
+const val DELETE_ALL_OFFERS = "${SINGLE_OFFER}/delete-all"
 
 
 private val logger = KotlinLogging.logger { }
@@ -120,9 +118,9 @@ fun Route.offersAdminRoute(
 
 
         //get offer //api/v1/admin-client/offer/{id}
-        get("$SINGLE_OFFERS/{id}") {
+        get("$SINGLE_OFFER/{id}") {
             try {
-                logger.debug { "get /$SINGLE_OFFERS/{id}" }
+                logger.debug { "get /$SINGLE_OFFER/{id}" }
                 call.parameters["id"]?.toIntOrNull()?.let { id ->
                     offersDataSource.getOffersByIdDto(id)?.let { offer ->
                         respondWithSuccessfullyResult(
@@ -137,8 +135,8 @@ fun Route.offersAdminRoute(
             }
         }
         //post type category //api/v1/admin-client/offer/create
-        post(CREATE_OFFERS) {
-            logger.debug { "POST /$CREATE_OFFERS" }
+        post(CREATE_OFFER) {
+            logger.debug { "POST /$CREATE_OFFER" }
 
             try {
                 val multiPart = receiveMultipart<ProductOfferCreateDto>(imageValidator)
@@ -175,9 +173,9 @@ fun Route.offersAdminRoute(
             }
         }
         //delete type offer //api/v1/admin-client/offer/delete/{id}
-        delete("$DELETE_OFFERS/{id}") {
+        delete("$DELETE_OFFER/{id}") {
             try {
-                logger.debug { "get /$DELETE_OFFERS/{id}" }
+                logger.debug { "get /$DELETE_OFFER/{id}" }
                 call.parameters["id"]?.toIntOrNull()?.let { offerId ->
                     offersDataSource.getOffersById(offerId)?.let { offer ->
                         val oldImageName = offer.image?.substringAfterLast("/")
@@ -202,9 +200,9 @@ fun Route.offersAdminRoute(
             }
         }
         //put size offer //api/v1/admin-client/offer/update/{id}
-        put("$UPDATE_OFFERS/{id}") {
+        put("$UPDATE_OFFER/{id}") {
             try {
-                logger.debug { "get /$UPDATE_OFFERS/{id}" }
+                logger.debug { "get /$UPDATE_OFFER/{id}" }
                 val multiPart = receiveMultipart<ProductOfferCreateDto>(imageValidator)
                 val userId = extractAdminId()
                 call.parameters["id"]?.toIntOrNull()?.let { id ->
@@ -281,6 +279,52 @@ fun Route.offersAdminRoute(
 
             }
         }
+        //put size offer //api/v1/admin-client/offer/hot-add/{id}
+        put("$ADD_HOT_OFFER/{id}") {
+            logger.debug { "get /$ADD_HOT_OFFER/{id}" }
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+                    if (offersDataSource.addToHotOffer(id) < 0)
+                        throw ErrorException("Hot Offer Insert Failed")
+
+                    respondWithSuccessfullyResult(
+                        result = true,
+                        message = "Hot Offer Insert successfully"
+                    )
+
+                } ?: throw MissingParameterException("Missing parameters .")
+            } catch (e: Exception) {
+                logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
+                throw ErrorException(e.message ?: "An unknown error occurred")
+
+            }
+
+
+        }
+        //put size offer //api/v1/admin-client/offer/hot-delete/{id}
+        put("$REMOVE_HOT_OFFER/{id}") {
+            logger.debug { "get /$REMOVE_HOT_OFFER/{id}" }
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+                    if (offersDataSource.removeFromHotOffer(id) < 0)
+                        throw ErrorException("Hot Offer Insert Failed")
+
+                    respondWithSuccessfullyResult(
+                        result = true,
+                        message = "Hot Offer Insert successfully"
+                    )
+
+                } ?: throw MissingParameterException("Missing parameters .")
+            } catch (e: Exception) {
+                logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
+                throw ErrorException(e.message ?: "An unknown error occurred")
+
+            }
+
+
+        }
+
+
     }
 
 }

@@ -32,4 +32,7 @@ interface OffersDataSource {
     suspend fun updateOffers(id: Int, offer: ProductOfferCreate): Int
     suspend fun deleteOffers(id: Int): Int
     suspend fun deleteAllOffers(): Int
+
+    suspend fun addToHotOffer(id: Int): Int
+    suspend fun removeFromHotOffer(id: Int): Int
 }
