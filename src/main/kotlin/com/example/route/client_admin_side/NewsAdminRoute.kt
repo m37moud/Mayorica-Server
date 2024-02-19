@@ -1,28 +1,28 @@
 package com.example.route.client_admin_side
 
-import com.example.data.contact_us.ContactUsDataSource
 import com.example.data.news.NewsDataSource
-import com.example.models.News
+import com.example.mapper.toEntity
+import com.example.models.MyResponsePageable
+import com.example.models.dto.NewsCreateDto
+import com.example.models.options.getNewsOptions
 import com.example.service.storage.StorageService
 import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
+import com.example.utils.NotFoundException
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.plugins.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
 import org.koin.ktor.ext.inject
-import java.time.LocalDateTime
 
-private const val NEWS = "${ADMIN_CLIENT}/news"
-private const val CREATE_NEWS = "$NEWS/create"
-private const val UPDATE_NEWS = "$NEWS/update"
-private const val DELETE_NEWS = "$NEWS/delete"
+private const val ALL_NEWS = "${ADMIN_CLIENT}/news"
+const val ALL_NEWS_PAGEABLE = "${ALL_NEWS}-pageable"
+
+private const val CREATE_NEWS = "$ALL_NEWS/create"
+private const val UPDATE_NEWS = "$ALL_NEWS/update"
+private const val DELETE_NEWS = "$ALL_NEWS/delete"
 
 private val logger = KotlinLogging.logger { }
 
@@ -33,12 +33,13 @@ fun Route.newsAdminRoute(
 ) {
     val newsDataSource: NewsDataSource by inject()
     val storageService: StorageService by inject()
+    val imageValidator: ImageValidator by inject()
 
 
     authenticate {
-        //get all -> api/v1/admin-client/news
-        get(NEWS) {
-            logger.debug { "get all NEWS  $NEWS" }
+        //get all News -> api/v1/admin-client/news
+        get(ALL_NEWS) {
+            logger.debug { "get all NEWS  $ALL_NEWS" }
             try {
                 val linkList = newsDataSource.getAllNews()
                 if (linkList.isNotEmpty()) {
@@ -75,349 +76,215 @@ fun Route.newsAdminRoute(
 
             }
         }
-        //get -> api/v1/admin-client/news/{id}
-        get("$NEWS/{id}") {
-            logger.debug { "get NEWS $NEWS/{id}" }
-            call.parameters["id"]?.toIntOrNull()?.let { id ->
-                try {
-                    val news = newsDataSource.getNewsById(newsId = id)
-                    if (news != null) {
-                        call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
-                                success = true,
-                                message = "get NEWS successfully",
-                                data = null
-                            )
+        // get the News as pageable --> get /api/v1/admin-client/news-pageable (token required)
+        get(ALL_NEWS_PAGEABLE) {
+            logger.debug { "GET ALL /$ALL_NEWS_PAGEABLE" }
+
+            try {
+                val params = call.request.queryParameters
+                val newsOption = getNewsOptions(params)
+                val newsList =
+                    newsDataSource
+                        .getAllNewsPageable(
+                            query = newsOption.query,
+                            page = newsOption.page!!,
+                            perPage = newsOption.perPage!!,
+                            sortField = newsOption.sortFiled!!,
+                            sortDirection = newsOption.sortDirection!!
                         )
+                if (newsList.isEmpty()) throw NotFoundException("no news is found.")
+                val numberOfNews = newsDataSource.getNumberOfNews()
 
-                    } else {
-                        call.respond(
-                            status = HttpStatusCode.NotFound,
-                            message = MyResponse(
-                                success = false,
-                                message = "NEWS is not found",
-                                data = null
-                            )
-                        )
-
-
-                    }
-                } catch (e: Exception) {
-                    logger.error { "get NEWS error ${e.stackTrace}" }
-                    call.respond(
-                        status = HttpStatusCode.Conflict,
-                        message = MyResponse(
-                            success = false,
-                            message = e.message ?: "failed to get ",
-                            data = null
-                        )
-                    )
-
-
-                }
-
-            } ?: call.respond(
-                HttpStatusCode.BadRequest,
-                MyResponse(
-                    success = false,
-                    message = "Missing parameters .",
-                    data = null
+                respondWithSuccessfullyResult(
+                    result = MyResponsePageable(
+                        page = newsOption.page + 1,
+                        perPage = numberOfNews,
+                        data = newsList
+                    ),
+                    message = "get all news successfully"
                 )
-            )
+            } catch (e: Exception) {
+                logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+            }
+
+
+        }
+        //get -> api/v1/admin-client/news/{id}
+        get("$ALL_NEWS/{id}") {
+            logger.debug { "get News $ALL_NEWS/{id}" }
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+
+                    newsDataSource.getNewsByIdDto(newsId = id)?.let { news ->
+                        respondWithSuccessfullyResult(
+                            result = news,
+                            message = "get News Successfully ."
+                        )
+                    } ?: throw NotFoundException("no News found .")
+                } ?: throw MissingParameterException("Missing parameters .")
+
+            } catch (e: Exception) {
+                logger.error { "get News error ${e.stackTrace ?: "An unknown error occurred  "}" }
+                throw ErrorException(e.message ?: "An unknown error occurred  ")
+
+            }
 
         }
         // post the NEWS --> POST /api/v1/admin-client/news/create (token required)
         post(CREATE_NEWS) {
-            logger.debug { "post NEWS $CREATE_NEWS" }
-            val multiPart = call.receiveMultipart()
-            var title: String? = null
-            var newsDescription: String? = null
-            var fileName: String? = null
-            var fileBytes: ByteArray? = null
-            var url: String? = null
-            var imageUrl: String? = null
-            val principal = call.principal<JWTPrincipal>()
-            val userAdminId = try {
-                principal?.getClaim("userId", String::class)?.toIntOrNull()
-            } catch (e: Exception) {
-//                logger.runCatching { "post /$e" }
-                call.respond(
-                    status = HttpStatusCode.Conflict, message = MyResponse(
-                        success = false,
-                        message = e.message ?: "Error with authentication",
-                        data = null
-                    )
-                )
-                return@post
-            }
-            val baseUrl =
-                call.request.origin.scheme + "://" + call.request.host() + ":" + call.request.port() + "${Constants.ENDPOINT}/image/"
-
-            multiPart.forEachPart { part ->
-                when (part) {
-                    is PartData.FormItem -> {
-                        // to read parameters that we sent with the image
-                        when (part.name) {
-                            "title" -> {
-                                title = part.value
-                            }
-
-                            "newsDescription" -> {
-                                newsDescription = part.value
-                            }
-
-                        }
-
-                    }
-
-                    is PartData.FileItem -> {
-                        val isValid = part.originalFileName as String
-                        logger.debug { "isValid $isValid" }
-                        if (isValid.isNotEmpty()) {
-                            logger.debug { "check if empty $isValid" }
-
-                            if (!isImageContentType(part.contentType.toString())) {
-                                call.respond(
-                                    message = MyResponse(
-                                        success = false,
-                                        message = "Invalid file format",
-                                        data = null
-                                    ), status = HttpStatusCode.BadRequest
-                                )
-                                part.dispose()
-                                return@forEachPart
-
-                            }
-                            fileName = generateSafeFileName(part.originalFileName as String)
-//                            imageUrl = "$baseUrl$fileName"
-                            fileBytes = part.streamProvider().readBytes()
-                            url = "${baseUrl}news/${fileName}"
-                        } else {
-                            fileName = null
-
-                        }
-
-
-                    }
-
-                    else -> {}
-
-                }
-                part.dispose()
-            }
+            logger.debug { "POST /$CREATE_NEWS" }
 
             try {
-                if (!fileName.isNullOrEmpty()) {
-                    logger.debug { "check if empty fileName $fileName" }
-                    logger.debug { "check if empty url $url" }
+                val multiPart = receiveMultipart<NewsCreateDto>(imageValidator)
+                val userId = extractAdminId()
+                val generateNewName = multiPart.fileName?.let { fileName ->
 
-                    imageUrl = try {
-                        storageService.saveNewsImage(
-                            fileName = fileName!!,
-                            fileUrl = url!!,
-                            fileBytes = fileBytes!!
-                        )
-                    } catch (e: Exception) {
-                        storageService.deleteNewsImages(fileName = fileName!!)
-                        call.respond(
-                            status = HttpStatusCode.InternalServerError,
-                            message = MyResponse(
-                                success = false,
-                                message = e.message ?: "Error happened while uploading Image.",
-                                data = null
-                            )
-                        )
-                        return@post
-                    }
+                    generateSafeFileName(fileName)
                 }
-                logger.debug { "check if not empty title $title newsDescription $newsDescription userAdminId $userAdminId imageUrl $imageUrl" }
+                val url = "${multiPart.baseUrl}news/${generateNewName}"
 
-
-                News(
-                    title = title!!,
-                    newsDescription = newsDescription!!,
-                    userAdminId = userAdminId!!,
-                    image = imageUrl,
-//                    createdAt = LocalDateTime.now().toDatabaseString(),
-//                    updatedAt = "",
-                ).apply {
-                    logger.debug { "check if not empty title $title newsDescription $newsDescription userAdminId $userAdminId imageUrl $imageUrl" }
-
-                    val isInserted = newsDataSource.addNews(this)
-                    if (isInserted > 0) {
-                        call.respond(
-                            status = HttpStatusCode.Created,
-                            message = MyResponse(
-                                success = true,
-                                message = "news inserted successfully",
-                                data = this
-                            )
-                        )
-                        return@post
-                    } else {
-                        call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
-                                success = false,
-                                message = "news insert failed",
-                                data = null
-                            )
-                        )
-                        return@post
-                    }
-                }
-//                if (!imageUrl.isNullOrEmpty()) {
-//                    News(
-//                        title = title!!,
-//                        newsDescription = newsDescription!!,
-//                        userAdminId = userAdminId!!,
-//                        image = imageUrl ?: "",
-//                        createdAt = LocalDateTime.now().toDatabaseString(),
-//                        updatedAt = "",
-//                    ).apply {
-//
-//                        val isInserted = newsDataSource.addNews(this)
-//                        if (isInserted > 0) {
-//                            call.respond(
-//                                status = HttpStatusCode.Created,
-//                                message = MyResponse(
-//                                    success = true,
-//                                    message = "news inserted successfully",
-//                                    data = this
-//                                )
-//                            )
-//                            return@post
-//                        } else {
-//                            call.respond(
-//                                status = HttpStatusCode.OK,
-//                                message = MyResponse(
-//                                    success = false,
-//                                    message = "news insert failed",
-//                                    data = null
-//                                )
-//                            )
-//                            return@post
-//                        }
-//                    }
-//
-//                } else {
-//                    storageService.deleteNewsImages(fileName = fileName!!)
-//                    call.respond(
-//                        status = HttpStatusCode.Conflict,
-//                        message = MyResponse(
-//                            success = false,
-//                            message = "some Error happened while uploading .",
-//                            data = null
-//                        )
-//                    )
-//                    return@post
-//                }
-
-
-            } catch (ex: Exception) {
-                // something went wrong with the image part, delete the file
-                storageService.deleteNewsImages(fileName = fileName!!)
-                ex.printStackTrace()
-                call.respond(
-                    status = HttpStatusCode.InternalServerError, message = MyResponse(
-                        success = false,
-                        message = ex.message ?: "Error happened while uploading .",
-                        data = null
+                val imageUrl: String? = multiPart.image?.let { img ->
+                    if (img.isNotEmpty() &&
+                        !generateNewName.isNullOrEmpty()
                     )
+                        storageService.saveNewsImage(
+                            fileName = generateNewName,
+                            fileUrl = url,
+                            fileBytes = img
+                        )
+                    else null
+                }
+                logger.debug { "imageUrl =$imageUrl" }
+
+                val newsDto = multiPart.data.copy(newsImageUrl = imageUrl)
+                val createdNews = newsDataSource
+                    .addNews(newsDto.toEntity(userId))
+                respondWithSuccessfullyResult(
+                    result = createdNews,
+                    message = "News inserted successfully ."
                 )
-                return@post
+            } catch (e: Exception) {
+                logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
+                throw ErrorException(e.message ?: "Some Thing Goes Wrong .")
+
             }
-
-
         }
+
         // delete the NEWS --> delete /api/v1/admin-client/news/delete/{id} (token required)
         delete("$DELETE_NEWS/{id}") {
             logger.debug { "delete /$DELETE_NEWS" }
-            call.parameters["id"]?.toIntOrNull()?.let { id ->
-                try {
-                    newsDataSource.getNewsById(newsId = id)?.let {
-                        val isDeletedImage = try {
-                            storageService.deleteNewsImages(fileName = it.image!!.substringAfterLast("/"))
-                        } catch (e: Exception) {
-                            call.respond(
-                                HttpStatusCode.InternalServerError,
-                                MyResponse(
-                                    success = false,
-                                    message = e.message ?: "Failed to delete image",
-                                    data = null
-                                )
-                            )
-                            return@delete
-                        }
-                        if (isDeletedImage) {
-                            val deleteResult = newsDataSource.deleteNews(newsId = id)
-                            if (deleteResult > 0) {
-                                call.respond(
-                                    HttpStatusCode.OK,
-                                    MyResponse(
-                                        success = true,
-                                        message = "NEWS deleted successfully .",
-                                        data = null
-                                    )
-                                )
-                            } else {
-                                call.respond(
-                                    HttpStatusCode.NotFound,
-                                    MyResponse(
-                                        success = false,
-                                        message = " NEWS deleted failed .",
-                                        data = null
-                                    )
-                                )
-                            }
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
 
+                    newsDataSource.getNewsById(newsId = id)?.let { news ->
+                        val oldImageName = news.image?.substringAfterLast("/")
+                        logger.debug { "try to delete oldImageName $oldImageName" }
+                        oldImageName?.let {
+                            storageService.deleteNewsImages(fileName = it)
+                        }
+
+                        val deleteResult = newsDataSource.deleteNews(newsId = id)
+                        if (deleteResult > 0) {
+                            respondWithSuccessfullyResult(
+                                result = true,
+                                message = "News deleted successfully ."
+                            )
                         } else {
-                            call.respond(
-                                HttpStatusCode.Conflict,
-                                MyResponse(
-                                    success = false,
-                                    message = "Failed to delete image",
-                                    data = null
-                                )
-                            )
-
+                            throw UnknownErrorException("News deleted failed .")
                         }
 
-                    } ?: call.respond(
-                        HttpStatusCode.NotFound,
-                        MyResponse(
-                            success = false,
-                            message = " news deleted failed .",
-                            data = null
-                        )
-                    )
 
-                } catch (e: Exception) {
-                    logger.error { "Exception /${e.stackTrace}" }
-                    call.respond(
-                        status = HttpStatusCode.Conflict,
-                        message = MyResponse(
-                            success = false,
-                            message = e.message ?: "failed",
-                            data = null
-                        )
-                    )
-                    return@delete
-                }
+                    } ?: throw NotFoundException("no News found .")                } ?: throw MissingParameterException("Missing parameters .")
+            } catch (e: Exception) {
+                logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(e.message ?: "An unknown error occurred")
 
-            } ?: call.respond(
-                status = HttpStatusCode.BadRequest,
-                message = MyResponse(
-                    success = false,
-                    message = "Missing parameters",
-                    data = null
-                )
-            )
+            }
+
 
         }
 
-        // TODO: handle update logic
+        //put size NEWS //api/v1/admin-client/news/update/{id}
+        put("$UPDATE_NEWS/{id}") {
+            try {
+                logger.debug { "get /$UPDATE_NEWS/{id}" }
+                val multiPart = receiveMultipart<NewsCreateDto>(imageValidator)
+                val userId = extractAdminId()
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+                    val tempProduct = newsDataSource.getNewsById(id)
+                        ?: throw NotFoundException("no News found .")
+                    val newName = multiPart.data.newsTitle
+                    logger.debug { "check if ($newName) the new name if not repeat" }
+                    val oldImageName = tempProduct.image?.substringAfterLast("/")
+                    val responseFileName = multiPart.fileName
+                    logger.debug { "check oldImage ($oldImageName) and response (${responseFileName}) image new name if not repeat" }
+                    val isSameName = tempProduct.title == multiPart.data.newsTitle
+
+                    if (
+                        isSameName &&
+                        oldImageName == multiPart.fileName
+                    ) {
+
+                        throw AlreadyExistsException("that name ($newName) or image is already found ")
+                    }
+                    /**
+                     * get old image url to delete
+                     */
+                    logger.debug { "oldImageName is  : $oldImageName" }
+                    logger.debug { "try to delete old Image from storage first extract oldImageName " }
+                    oldImageName?.let {
+                        if (it.isNotEmpty())
+                            storageService.deleteNewsImages(it)
+                    }
+
+                    logger.info { "old Image is deleted successfully from storage" }
+                    logger.debug { "try to save new image in storage" }
+
+
+                    val generateNewName = responseFileName?.let { generateSafeFileName(it) }
+                    val url = "${multiPart.baseUrl}news/${generateNewName}"
+
+                    val imageUrl = multiPart.image?.let { img ->
+                        if (img.isNotEmpty() &&
+                            !generateNewName.isNullOrEmpty()
+                        )
+                            storageService.saveNewsImage(
+                                fileName = generateNewName,
+                                fileUrl = url,
+                                fileBytes = img
+                            )
+                        else null
+                    }
+                    logger.debug { "imageUrl =$imageUrl" }
+                    val newsDto = multiPart.data.copy(newsImageUrl = imageUrl)
+                    logger.debug { "try to save News info in db" }
+
+                    val updateResult = newsDataSource
+                        .updateNews(id, newsDto.toEntity(userId))
+                    logger.debug { "News info save successfully in db" }
+                    if (updateResult > 0) {
+                        val updatedCategory = newsDataSource
+                            .getNewsByTitleDto(newName)
+                            ?: throw NotFoundException("Failed to get ($newName) after update ")
+
+                        respondWithSuccessfullyResult(
+                            result = updatedCategory,
+                            message = "News Item updated successfully ."
+                        )
+                    } else {
+                        throw UnknownErrorException("update failed .")
+
+                    }
+
+                } ?: throw MissingParameterException("Missing parameters .")
+
+            } catch (exc: Exception) {
+                logger.error { "${exc.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
+
+            }
+        }
     }
 
 }

@@ -18,15 +18,15 @@ import mu.KotlinLogging
 import org.koin.ktor.ext.inject
 
 
-const val ALL_OFFERS = "${ADMIN_CLIENT}/offers"
-const val ALL_OFFERS_PAGEABLE = "${ALL_OFFERS}-pageable"
-const val SINGLE_OFFER = "${ADMIN_CLIENT}/offer"
-const val CREATE_OFFER = "${SINGLE_OFFER}/create"
-const val UPDATE_OFFER = "${SINGLE_OFFER}/update"
-const val DELETE_OFFER = "${SINGLE_OFFER}/delete"
-const val ADD_HOT_OFFER = "${SINGLE_OFFER}/hot-add"
-const val REMOVE_HOT_OFFER = "${SINGLE_OFFER}/hot-delete"
-const val DELETE_ALL_OFFERS = "${SINGLE_OFFER}/delete-all"
+private const val ALL_OFFERS = "${ADMIN_CLIENT}/offers"
+private const val ALL_OFFERS_PAGEABLE = "${ALL_OFFERS}-pageable"
+private const val SINGLE_OFFER = "${ADMIN_CLIENT}/offer"
+private const val CREATE_OFFER = "${SINGLE_OFFER}/create"
+private const val UPDATE_OFFER = "${SINGLE_OFFER}/update"
+private const val DELETE_OFFER = "${SINGLE_OFFER}/delete"
+private const val ADD_HOT_OFFER = "${SINGLE_OFFER}/hot-add"
+private const val REMOVE_HOT_OFFER = "${SINGLE_OFFER}/hot-delete"
+private const val DELETE_ALL_OFFERS = "${SINGLE_OFFER}/delete-all"
 
 
 private val logger = KotlinLogging.logger { }
@@ -125,12 +125,13 @@ fun Route.offersAdminRoute(
                     offersDataSource.getOffersByIdDto(id)?.let { offer ->
                         respondWithSuccessfullyResult(
                             result = offer,
-                            message = "offer is found ."
+                            message = "get Offer Successfully ."
                         )
                     } ?: throw NotFoundException("no Offer found .")
                 } ?: throw MissingParameterException("Missing parameters .")
 
             } catch (exc: Exception) {
+                logger.error { "get Offers error ${exc.stackTrace ?: "An unknown error occurred  "}" }
                 throw ErrorException(exc.message ?: "Some Thing Goes Wrong .")
             }
         }
@@ -168,7 +169,9 @@ fun Route.offersAdminRoute(
                     message = "Offer inserted successfully ."
                 )
             } catch (e: Exception) {
-                throw ErrorException(e.stackTraceToString() ?: "Some Thing Goes Wrong .")
+                logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
+
+                throw ErrorException(e.message ?: "Some Thing Goes Wrong .")
 
             }
         }
@@ -192,10 +195,11 @@ fun Route.offersAdminRoute(
                         } else {
                             throw UnknownErrorException("Offer deleted failed .")
                         }
-                    }
+                    } ?: throw NotFoundException("no Offer found .")
 
                 } ?: throw MissingParameterException("Missing parameters .")
             } catch (exc: Exception) {
+                logger.error { "${exc.stackTrace ?: "An unknown error occurred"}" }
                 throw UnknownErrorException(exc.message ?: "An unknown error occurred")
             }
         }
@@ -234,7 +238,7 @@ fun Route.offersAdminRoute(
                     }
 
                     logger.info { "old Image is deleted successfully from storage" }
-                    logger.debug { "try to save new icon in storage" }
+                    logger.debug { "try to save new image in storage" }
 
 
                     val generateNewName = responseFileName?.let { generateSafeFileName(it) }
@@ -253,19 +257,19 @@ fun Route.offersAdminRoute(
                     }
                     logger.debug { "imageUrl =$imageUrl" }
                     val offerDto = multiPart.data.copy(offerImageUrl = imageUrl)
-                    logger.debug { "try to save ceramic product info in db" }
+                    logger.debug { "try to save Offer info in db" }
 
                     val updateResult = offersDataSource
                         .updateOffers(id, offerDto.toEntity(userId))
-                    logger.debug { "ceramic product info save successfully in db" }
+                    logger.debug { "Offer info save successfully in db" }
                     if (updateResult > 0) {
                         val updatedCategory = offersDataSource
                             .getOfferByTitleDto(newName)
-                            ?: throw NotFoundException("ceramic product name ($newName) is not found ")
+                            ?: throw NotFoundException("Offer name ($newName) is not found ")
 
                         respondWithSuccessfullyResult(
                             result = updatedCategory,
-                            message = "ceramic product updated successfully ."
+                            message = "Offer Item updated successfully ."
                         )
                     } else {
                         throw UnknownErrorException("update failed .")
@@ -275,6 +279,8 @@ fun Route.offersAdminRoute(
                 } ?: throw MissingParameterException("Missing parameters .")
 
             } catch (exc: Exception) {
+                logger.error { "${exc.stackTrace ?: "An unknown error occurred"}" }
+
                 throw UnknownErrorException(exc.message ?: "An unknown error occurred  ")
 
             }
