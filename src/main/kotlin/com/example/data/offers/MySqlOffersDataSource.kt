@@ -391,7 +391,7 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
 
             val createdAt = row[OffersEntity.createdAt] ?: ""
             val updatedAt = row[OffersEntity.updatedAt] ?: ""
-            val endedAt = row[OffersEntity.updatedAt] ?: ""
+            val endedAt = row[OffersEntity.endedAt] ?: ""
 
 
 
