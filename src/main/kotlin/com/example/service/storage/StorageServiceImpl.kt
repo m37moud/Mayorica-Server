@@ -233,7 +233,7 @@ class StorageServiceImpl(
     }
 
     override suspend fun deleteNewsImages(fileName: String): Boolean {
-        logger.debug { "deleteProductImage: $fileName" }
+        logger.debug { "deleteNewsImages: $fileName" }
 
         return withContext(Dispatchers.IO) {
             val path = "${news}/$fileName"
@@ -245,7 +245,7 @@ class StorageServiceImpl(
     }
 
     override suspend fun deleteOfferImages(fileName: String): Boolean {
-        logger.debug { "deleteProductImage: $fileName" }
+        logger.debug { "deleteOfferImages: $fileName" }
 
         return withContext(Dispatchers.IO) {
             val path = "${offers}/$fileName"

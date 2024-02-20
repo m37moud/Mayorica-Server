@@ -184,7 +184,8 @@ fun Route.offersAdminRoute(
                         val oldImageName = offer.image?.substringAfterLast("/")
                         logger.debug { "try to delete oldImageName $oldImageName" }
                         oldImageName?.let {
-                            storageService.deleteOfferImages(fileName = it)
+                            if (it.isNotEmpty())
+                                storageService.deleteOfferImages(fileName = it)
                         }
                         val deleteResult = offersDataSource.deleteOffers(offerId)
                         if (deleteResult > 0) {
@@ -219,9 +220,10 @@ fun Route.offersAdminRoute(
                     val responseFileName = multiPart.fileName
                     logger.debug { "check oldImage ($oldImageName) and response (${responseFileName}) image new name if not repeat" }
                     val isSameName = tempProduct.title == multiPart.data.offerTitle
+                    val isSameDescription = tempProduct.offerDescription == multiPart.data.offerDescription
 
                     if (
-                        isSameName &&
+                        isSameName && isSameDescription &&
                         oldImageName == multiPart.fileName
                     ) {
 

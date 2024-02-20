@@ -181,7 +181,8 @@ fun Route.newsAdminRoute(
                         val oldImageName = news.image?.substringAfterLast("/")
                         logger.debug { "try to delete oldImageName $oldImageName" }
                         oldImageName?.let {
-                            storageService.deleteNewsImages(fileName = it)
+                            if (it.isNotEmpty())
+                                storageService.deleteNewsImages(fileName = it)
                         }
 
                         val deleteResult = newsDataSource.deleteNews(newsId = id)
@@ -195,7 +196,8 @@ fun Route.newsAdminRoute(
                         }
 
 
-                    } ?: throw NotFoundException("no News found .")                } ?: throw MissingParameterException("Missing parameters .")
+                    } ?: throw NotFoundException("no News found .")
+                } ?: throw MissingParameterException("Missing parameters .")
             } catch (e: Exception) {
                 logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
                 throw UnknownErrorException(e.message ?: "An unknown error occurred")
@@ -220,9 +222,10 @@ fun Route.newsAdminRoute(
                     val responseFileName = multiPart.fileName
                     logger.debug { "check oldImage ($oldImageName) and response (${responseFileName}) image new name if not repeat" }
                     val isSameName = tempProduct.title == multiPart.data.newsTitle
+                    val isSameDescription = tempProduct.newsDescription == multiPart.data.newsDescription
 
                     if (
-                        isSameName &&
+                        isSameName && isSameDescription &&
                         oldImageName == multiPart.fileName
                     ) {
 
