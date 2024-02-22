@@ -110,6 +110,7 @@ fun Route.offersAdminRoute(
                     message = "get all offers successfully"
                 )
             } catch (e: Exception) {
+                logger.error { "SINGLE_OFFER error ${e.stackTrace ?: "An unknown error occurred"}" }
                 throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
             }
 
