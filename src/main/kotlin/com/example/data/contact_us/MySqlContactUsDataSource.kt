@@ -4,6 +4,8 @@ import com.example.database.table.AboutUsEntity
 import com.example.database.table.ContactUsEntity
 import com.example.models.AboutUs
 import com.example.models.ContactUs
+import com.example.models.ContactUsCreate
+import com.example.utils.UnknownErrorException
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,6 +13,7 @@ import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
+
 @Singleton
 class MySqlContactUsDataSource(private val db: Database) : ContactUsDataSource {
     override suspend fun getContactUsInfo(): ContactUs? {
@@ -24,7 +27,16 @@ class MySqlContactUsDataSource(private val db: Database) : ContactUsDataSource {
         }
     }
 
-    override suspend fun addContactUsInfo(contactUs: ContactUs): Int {
+    override suspend fun addContactUsInfo(contactUs: ContactUsCreate): ContactUs {
+        val result = getContactUsInfo()?.let { contactUsItem ->
+            updateContactUsInfo(id = contactUsItem.id, contactUs = contactUs)
+
+        } ?: createContactUsInfo(contactUs)
+        if (result < 0) throw UnknownErrorException("Failed to Insert Contact Us Information")
+        return getContactUsInfo() ?: ContactUs()
+    }
+
+    suspend fun createContactUsInfo(contactUs: ContactUsCreate): Int {
         return withContext(Dispatchers.IO) {
             val result = db.insert(ContactUsEntity) {
                 set(it.country, contactUs.country)
@@ -40,7 +52,7 @@ class MySqlContactUsDataSource(private val db: Database) : ContactUsDataSource {
                 set(it.youtubeLink, contactUs.youtubeLink)
                 set(it.instagramLink, contactUs.instagramLink)
                 set(it.linkedInLink, contactUs.linkedInLink)
-                set(it.userAdminID, contactUs.userAdminID)
+                set(it.userAdminID, contactUs.userAdminId)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
 
@@ -49,7 +61,8 @@ class MySqlContactUsDataSource(private val db: Database) : ContactUsDataSource {
         }
     }
 
-    override suspend fun updateContactUsInfo(contactUs: ContactUs): Int {
+
+    override suspend fun updateContactUsInfo(id: Int, contactUs: ContactUsCreate): Int {
         return withContext(Dispatchers.IO) {
             val result = db.update(ContactUsEntity) {
                 set(it.country, contactUs.country)
@@ -65,10 +78,10 @@ class MySqlContactUsDataSource(private val db: Database) : ContactUsDataSource {
                 set(it.youtubeLink, contactUs.youtubeLink)
                 set(it.instagramLink, contactUs.instagramLink)
                 set(it.linkedInLink, contactUs.linkedInLink)
-                set(it.userAdminID, contactUs.userAdminID)
+                set(it.userAdminID, contactUs.userAdminId)
                 set(it.updatedAt, LocalDateTime.now())
                 where {
-                    it.id eq contactUs.id
+                    it.id eq id
                 }
 
             }

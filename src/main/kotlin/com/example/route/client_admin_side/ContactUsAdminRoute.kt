@@ -2,10 +2,15 @@ package com.example.route.client_admin_side
 
 import com.example.data.contact_us.ContactUsDataSource
 import com.example.data.gallery.products.hot_release.HotReleaseDataSource
+import com.example.mapper.toModel
 import com.example.models.AboutUs
 import com.example.models.ContactUs
+import com.example.models.dto.ContactUsCreateDto
 import com.example.utils.Constants.ADMIN_CLIENT
 import com.example.utils.MyResponse
+import com.example.utils.UnknownErrorException
+import com.example.utils.extractAdminId
+import com.example.utils.respondWithSuccessfullyResult
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -32,102 +37,42 @@ fun Route.contactUsAdminRoute() {
             logger.debug { "Get Contact US $CONTACT_US" }
             try {
                 contactUsDataSource.getContactUsInfo()?.let {
-                    call.respond(
-                        status = HttpStatusCode.OK, message = MyResponse(
-                            success = true,
-                            message = "Contact Us Information Found",
-                            data = it
-                        )
+                    respondWithSuccessfullyResult(
+                        result = it,
+                        message = "Contact Us Information Found"
                     )
 
 
-                } ?: call.respond(
-                    status = HttpStatusCode.NotFound,
-                    message = MyResponse(
-                        success = false,
-                        message = "Contact Us Information Not Found",
-                        data = null
-                    )
+                } ?: respondWithSuccessfullyResult(
+                    result = ContactUs(),
+                    message = "Contact Us Information Found"
                 )
 
 
             } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Transaction Failed ",
-                        data = null
-                    )
-                )
-                return@get
+                logger.error { "$CONTACT_US error ${e.stackTrace}" }
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+
             }
 
         }
         //post contact us //api/v1/admin-client/contact-us/create
         post(CREATE_CONTACT_US) {
             logger.debug { "POST contact US $CREATE_CONTACT_US" }
-            val contactUsRequest = try {
-                call.receive<ContactUs>()
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Missing Some Fields",
-                        data = null
-                    )
-                )
-                return@post
-            }
-            val principal = call.principal<JWTPrincipal>()
-            val userId = try {
-                principal?.getClaim("userId", String::class)?.toIntOrNull()
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Transaction Failed ",
-                        data = null
-                    )
-                )
-                return@post
-            }
+            val contactUsRequest = call.receive<ContactUsCreateDto>()
+            val userId = extractAdminId()
 
             try {
                 val result =
                     contactUsDataSource
-                        .addContactUsInfo(contactUsRequest.copy(userAdminID = userId!!))
-                if (result > 0) {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = true,
-                            message = "contact Us Information inserted successfully .",
-                            data = null
-                        )
-                    )
-                    return@post
-                } else {
-                    call.respond(
-                        HttpStatusCode.OK, MyResponse(
-                            success = false,
-                            message = "contact Us Information inserted failed .",
-                            data = null
-                        )
-                    )
-                    return@post
-                }
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Transaction Failed while adding information",
-                        data = null
-                    )
+                        .addContactUsInfo(contactUsRequest.toModel(adminId = userId))
+                respondWithSuccessfullyResult(
+                    result = result,
+                    message = "Contact Us Information inserted successfully ."
                 )
+            } catch (e: Exception) {
+                logger.error { "$CREATE_CONTACT_US error ${e.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
 
             }
         }
@@ -135,42 +80,15 @@ fun Route.contactUsAdminRoute() {
         put("$UPDATE_CONTACT_US/{id}") {
             logger.debug { "put contact US $UPDATE_CONTACT_US" }
             call.parameters["id"]?.toIntOrNull()?.let { id ->
-                val contactUsRequest = try {
-                    call.receive<ContactUs>()
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = "Missing Some Fields",
-                            data = null
-                        )
-                    )
-                    return@put
-                }
-                val principal = call.principal<JWTPrincipal>()
-                val userId = try {
-                    principal?.getClaim("userId", String::class)?.toIntOrNull()
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "Failed ",
-                            data = null
-                        )
-                    )
-                    return@put
-                }
+                val contactUsRequest = call.receive<ContactUsCreateDto>()
+                val userId = extractAdminId()
 
                 try {
                     val result =
                         contactUsDataSource
                             .updateContactUsInfo(
-                                contactUsRequest.copy(
-                                    id = id,
-                                    userAdminID = userId!!
-                                )
+                                1,
+                                contactUsRequest.toModel(userId)
                             )
                     if (result > 0) {
                         call.respond(

@@ -1,10 +1,9 @@
-package com.example.models
+package com.example.models.dto
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ContactUs(
-    val id: Int = -1,
+data class ContactUsCreateDto(
     val country: String = "",
     val governorate: String = "",
     val address: String = "",
@@ -18,8 +17,4 @@ data class ContactUs(
     val youtubeLink: String = "",
     val instagramLink: String = "",
     val linkedInLink: String = "",
-    val userAdminID: Int = -1,
-    val createdAt: String = "",
-    val updatedAt: String = "",
-
-    )
+)
