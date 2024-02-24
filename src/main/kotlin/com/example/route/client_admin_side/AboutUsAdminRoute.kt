@@ -23,9 +23,7 @@ private const val DELETE_ABOUT_US = "$ABOUT_US/delete"
 private const val DELETE_ALL_ABOUT_US = "$ABOUT_US/delete-all"
 private val logger = KotlinLogging.logger {}
 
-fun Route.aboutUsAdminRoute(
-//    aboutUsDataSource: AboutUsDataSource
-) {
+fun Route.aboutUsAdminRoute() {
     val aboutUsDataSource: AboutUsDataSource by inject()
 
     authenticate {
@@ -204,51 +202,26 @@ fun Route.aboutUsAdminRoute(
         //delete about us //api/v1/admin-client/about_us/delete
         delete("$DELETE_ABOUT_US/{id}") {
             logger.debug { "delete ABOUT US $DELETE_ABOUT_US" }
-            call.parameters["id"]?.toIntOrNull()?.let { id ->
 
-                try {
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+
                     val result = aboutUsDataSource.deleteAboutUs(id = id)
                     if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = "About Us Information delete successfully .",
-                                data = null
-                            )
+                        respondWithSuccessfullyResult(
+                            result = true,
+                            message = "About Us Information delete successfully ."
                         )
-                        return@delete
                     } else {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "About Us Information delete failed .",
-                                data = null
-                            )
-                        )
-                        return@delete
+                        throw UnknownErrorException("About Us Information delete failed .")
                     }
-                } catch (e: Exception) {
+                } ?: throw MissingParameterException("Missing parameters .")
+            } catch (exc: Exception) {
+                logger.error { "$DELETE_ABOUT_US error ${exc.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(exc.message ?: "An Known Error Occurred .")
+            }
 
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "error while delete ",
-                            data = null
-                        )
-                    )
-                    return@delete
-                }
 
-            } ?: call.respond(
-                HttpStatusCode.BadRequest,
-                MyResponse(
-                    success = false,
-                    message = "Missing parameters .",
-                    data = null
-                )
-            )
         }
         //delete about us //api/v1/admin-client/about_us/delete-all
         delete(DELETE_ALL_ABOUT_US) {

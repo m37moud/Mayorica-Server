@@ -168,16 +168,22 @@ fun Route.colorCategoryAdminRoute() {
             try {
                 logger.debug { "get /$DELETE_COLOR_CATEGORY/{id}" }
                 call.parameters["id"]?.toIntOrNull()?.let {
-                    colorCategoryDataSource.deleteColorCategory(it)
-                    respondWithSuccessfullyResult(
-                        result = true,
-                        message = "color category deleted successfully ."
-                    )
+                    val result = colorCategoryDataSource.deleteColorCategory(it)
+                    if (result > 0) {
+                        respondWithSuccessfullyResult(
+                            result = true,
+                            message = "color category deleted successfully ."
+                        )
+                    } else {
+                        throw UnknownErrorException( "failed to delete color category .")
+                    }
 
 
                 } ?: throw MissingParameterException("Missing parameters .")
 
             } catch (exc: Exception) {
+                logger.error { "$DELETE_COLOR_CATEGORY error ${exc.stackTrace ?: "An unknown error occurred"}" }
+
                 throw UnknownErrorException(exc.message ?: "An Known Error Occurred .")
 
             }
