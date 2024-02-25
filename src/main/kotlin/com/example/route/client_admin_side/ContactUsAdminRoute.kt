@@ -59,10 +59,11 @@ fun Route.contactUsAdminRoute() {
         //post contact us //api/v1/admin-client/contact-us/create
         post(CREATE_CONTACT_US) {
             logger.debug { "POST contact US $CREATE_CONTACT_US" }
-            val contactUsRequest = call.receive<ContactUsCreateDto>()
-            val userId = extractAdminId()
+
 
             try {
+                val contactUsRequest = call.receive<ContactUsCreateDto>()
+                val userId = extractAdminId()
                 val result =
                     contactUsDataSource
                         .addContactUsInfo(contactUsRequest.toModel(adminId = userId))

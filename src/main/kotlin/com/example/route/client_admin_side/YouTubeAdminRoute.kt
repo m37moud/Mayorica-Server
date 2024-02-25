@@ -3,10 +3,11 @@ package com.example.route.client_admin_side
 import com.example.data.videos.youtube.YoutubeDataSource
 import com.example.mapper.toModel
 import com.example.models.YoutubeLink
+import com.example.models.dto.VideoLinkCreateDto
 import com.example.models.request.YoutubeLinkRequest
 import com.example.service.storage.StorageService
+import com.example.utils.*
 import com.example.utils.Constants.ADMIN_CLIENT
-import com.example.utils.MyResponse
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -26,9 +27,7 @@ private const val DELETE_YOUTUBE_LINK = "$YOUTUBE_LINK/delete"
 
 private val logger = KotlinLogging.logger { }
 
-fun Route.youtubeLinkAdminRoute(
-//    youtubeDataSource: YoutubeDataSource
-) {
+fun Route.youtubeLinkAdminRoute() {
     val youtubeDataSource: YoutubeDataSource by inject()
 
     authenticate {
@@ -39,43 +38,24 @@ fun Route.youtubeLinkAdminRoute(
             try {
                 val linkList = youtubeDataSource.getAllYoutubeVideoLinks()
                 if (linkList.isNotEmpty()) {
-                    call.respond(
-                        status = HttpStatusCode.OK,
-                        message = MyResponse(
-                            success = true,
-                            message = "get all youtube link successfully",
-                            data = linkList
-                        )
+                    respondWithSuccessfullyResult(
+                        message = "get all youtube link successfully",
+                        result = linkList
                     )
 
                 } else {
-                    call.respond(
-                        status = HttpStatusCode.NotFound,
-                        message = MyResponse(
-                            success = false,
-                            message = "no youtube link is found",
-                            data = null
-                        )
-                    )
-
-
+                    throw NotFoundException("no Videos link is found")
                 }
             } catch (e: Exception) {
                 logger.error { "get all youtube Links error ${e.stackTrace}" }
-                call.respond(
-                    status = HttpStatusCode.Conflict, message = MyResponse(
-                        success = false, message = e.message ?: "failed",
-                        data = null
-                    )
-                )
-
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
 
             }
         }
         //get all -> api/v1/admin-client/youtube-links/{id}
         get("$YOUTUBE_LINK/{id}") {
             logger.debug { "get youtube Links $YOUTUBE_LINK/{id}" }
-            call.parameters["id"]?.toIntOrNull()?.let {id->
+            call.parameters["id"]?.toIntOrNull()?.let { id ->
                 try {
                     val link = youtubeDataSource.getSingleYoutubeVideoLinks(id = id)
                     if (link != null) {
@@ -128,72 +108,22 @@ fun Route.youtubeLinkAdminRoute(
         post(CREATE_YOUTUBE_LINK) {
             logger.debug { "post  youtube Link $CREATE_YOUTUBE_LINK" }
 
-            val linkRequest = try {
-                call.receive<YoutubeLink>()
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Missing Some Fields",
-                        data = null
-                    )
-                )
-                return@post
-            }
-            val principal = call.principal<JWTPrincipal>()
-            val adminUserId = try {
-                principal?.getClaim("userId", String::class)?.toIntOrNull()
-
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Failed ",
-                        data = null
-                    )
-                )
-                return@post
-            }
-
             try {
+                val linkRequest = call.receive<VideoLinkCreateDto>()
+                val adminUserId = extractAdminId()
 
-                val result = youtubeDataSource.addYoutubeLink(linkRequest.copy(userAdminId = adminUserId!!))
-                if (result > 0) {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = true,
-                            message = "Youtube Link Information inserted successfully .",
-                            data = linkRequest
-                        )
-                    )
-                    return@post
-                } else {
-                    call.respond(
-                        HttpStatusCode.OK, MyResponse(
-                            success = false,
-                            message = "Youtube Link Information inserted failed .",
-                            data = null
-                        )
-                    )
-                    return@post
-                }
+                val result = youtubeDataSource.addYoutubeLink(linkRequest.toModel(adminUserId))
+                respondWithSuccessfullyResult(
+                    result = result,
+                    message = "Video Link Information inserted successfully ."
+                )
+
 
             } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "error while insert ",
-                        data = null
-                    )
-                )
-                return@post
+                logger.error { "$CREATE_YOUTUBE_LINK error ${e.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+
             }
-
-
         }
         //put  -> api/v1/admin-client/youtube-links/update
         put("$UPDATE_YOUTUBE_LINK/{id}") {
@@ -276,48 +206,25 @@ fun Route.youtubeLinkAdminRoute(
         //delete  -> api/v1/admin-client/youtube-links/delete
         delete("$DELETE_YOUTUBE_LINK/{id}") {
             logger.debug { "delete Youtube Link $DELETE_YOUTUBE_LINK" }
-            call.parameters["id"]?.toIntOrNull()?.let { id ->
-                try {
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+
                     val result = youtubeDataSource.deleteYoutubeLink(youtubeId = id)
                     if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = "Youtube Link Information delete successfully .",
-                                data = null
-                            )
+                        respondWithSuccessfullyResult(
+                            result = true,
+                            message = "Video Link Information delete successfully ."
                         )
-                        return@delete
+
                     } else {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "Youtube Link Information delete failed .",
-                                data = null
-                            )
-                        )
-                        return@delete
+                        throw UnknownErrorException("Video Link Information delete failed .")
+
                     }
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "error while delete ",
-                            data = null
-                        )
-                    )
-                    return@delete
-                }
-            } ?: call.respond(
-                HttpStatusCode.BadRequest,
-                MyResponse(
-                    success = false,
-                    message = "Missing parameters .",
-                    data = null
-                )
-            )
+                } ?: throw MissingParameterException("Missing parameters .")
+            } catch (exc: Exception) {
+                logger.error { "$DELETE_YOUTUBE_LINK error ${exc.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(exc.message ?: "An Known Error Occurred .")
+            }
 
 
         }

@@ -1,7 +1,11 @@
 package com.example.data.videos.youtube
 
 import com.example.database.table.YouTubeLinkEntity
+import com.example.models.VideoLinkCreate
 import com.example.models.YoutubeLink
+import com.example.utils.AlreadyExistsException
+import com.example.utils.ErrorException
+import com.example.utils.NotFoundException
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -9,6 +13,7 @@ import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
 import java.time.LocalDateTime
+
 @Singleton
 class MySqlYoutubeDataSource(private val db: Database) : YoutubeDataSource {
     override suspend fun getAllYoutubeVideoLinks(): List<YoutubeLink> {
@@ -47,12 +52,34 @@ class MySqlYoutubeDataSource(private val db: Database) : YoutubeDataSource {
         }
     }
 
-    override suspend fun addYoutubeLink(youtubeLink: YoutubeLink): Int {
+    override suspend fun getVideoLinkByIdLink(idLink: String): YoutubeLink? {
+        return withContext(Dispatchers.IO) {
+            val link = db.from(YouTubeLinkEntity)
+                .select()
+                .where {
+                    YouTubeLinkEntity.idLink eq idLink
+                }
+                .mapNotNull { rowToYoutubeLink(it) }
+                .firstOrNull()
+            link
+        }
+
+    }
+
+    override suspend fun addYoutubeLink(link: VideoLinkCreate): YoutubeLink {
+        if (getVideoLinkByIdLink(link.idLink) != null) throw AlreadyExistsException("this item inserted before .")
+        if (createYoutubeLink(link) < 0) throw ErrorException("Failed to create Video Link Item .")
+        return getVideoLinkByIdLink(link.idLink)
+            ?: throw NotFoundException("failed to get About Us Item after created.")
+
+    }
+
+    suspend fun createYoutubeLink(link: VideoLinkCreate): Int {
         return withContext(Dispatchers.IO) {
             val result = db.insert(YouTubeLinkEntity) {
-                set(it.idLink, youtubeLink.idLink)
-                set(it.linkEnabled, youtubeLink.linkEnabled)
-                set(it.userAdminId, youtubeLink.userAdminId)
+                set(it.idLink, link.idLink)
+                set(it.linkEnabled, link.linkEnabled)
+                set(it.userAdminId, link.userAdminId)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
             }
