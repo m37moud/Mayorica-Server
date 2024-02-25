@@ -38,6 +38,8 @@ fun Route.youtubeLinkAdminRoute() {
             try {
                 val linkList = youtubeDataSource.getAllYoutubeVideoLinks()
                 if (linkList.isNotEmpty()) {
+                    logger.debug { "get all youtube Links $linkList" }
+
                     respondWithSuccessfullyResult(
                         message = "get all youtube link successfully",
                         result = linkList

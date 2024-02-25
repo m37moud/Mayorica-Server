@@ -123,8 +123,8 @@ class MySqlYoutubeDataSource(private val db: Database) : YoutubeDataSource {
                 idLink = row[YouTubeLinkEntity.idLink] ?: "",
                 linkEnabled = row[YouTubeLinkEntity.linkEnabled] ?: false,
                 userAdminId = row[YouTubeLinkEntity.userAdminId] ?: -1,
-                createdAt = row[YouTubeLinkEntity.createdAt]?.toDatabaseString() ?: "",
-                updatedAt = row[YouTubeLinkEntity.updatedAt]?.toDatabaseString() ?: ""
+                createdAt = row[YouTubeLinkEntity.createdAt]?.toString() ?: "",
+                updatedAt = row[YouTubeLinkEntity.updatedAt]?.toString() ?: ""
             )
         }
 
