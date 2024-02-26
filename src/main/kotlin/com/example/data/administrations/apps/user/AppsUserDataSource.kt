@@ -6,6 +6,7 @@ import com.example.models.dto.ColorCategoryDto
 import org.ktorm.schema.Column
 
 interface AppsUserDataSource {
+    suspend fun getNumberOfApps(): Int
     suspend fun getAllAppsPageable(
         query: String?,
         page: Int,
@@ -13,11 +14,12 @@ interface AppsUserDataSource {
         sortField: Column<*>,
         sortDirection: Int
     ): List<AppsModelDto>
-    suspend fun appCreate(app : AppsModel) : Int
-    suspend fun appDelete(appId : Int) : Int
-    suspend fun appUpdate(app : AppsModel) : Int
-    suspend fun getAppInfo(appId : Int) : AppsModel?
-    suspend fun getAppInfo(packageName : String) : AppsModel?
+
+    suspend fun appCreate(app: AppsModel): Int
+    suspend fun appDelete(appId: Int): Int
+    suspend fun appUpdate(app: AppsModel): Int
+    suspend fun getAppInfo(appId: Int): AppsModel?
+    suspend fun getAppInfo(packageName: String): AppsModel?
 
     suspend fun getUserWithApp(apiKey: String): AppsModel?
 

@@ -3,8 +3,9 @@ package com.example.route.client_admin_side
 import com.example.data.administrations.apps.admin.AppsAdminDataSource
 import com.example.data.administrations.apps.user.AppsUserDataSource
 import com.example.models.AppsModel
-import com.example.utils.Constants
-import com.example.utils.MyResponse
+import com.example.models.MyResponsePageable
+import com.example.models.options.getAppsOptions
+import com.example.utils.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -22,6 +23,7 @@ private val logger = KotlinLogging.logger {}
  * USER APP
  */
 private const val ADMIN_APP = "${Constants.ADMIN_CLIENT}/admin-app"
+private const val ALL_ADMIN_APP_PAGEABLE = "${ADMIN_APP}-pageable"
 private const val CREATE_ADMIN_APP = "${ADMIN_APP}/create"
 private const val UPDATE_ADMIN_APP = "${ADMIN_APP}/update"
 private const val DELETE_ADMIN_APP = "${ADMIN_APP}/delete"
@@ -30,6 +32,8 @@ private const val DELETE_ADMIN_APP = "${ADMIN_APP}/delete"
  * USER APP
  */
 private const val USER_APP = "${Constants.ADMIN_CLIENT}/user-app"
+private const val ALL_USER_APP_PAGEABLE = "${USER_APP}-pageable"
+
 private const val CREATE_USER_APP = "${USER_APP}/create"
 private const val UPDATE_USER_APP = "${USER_APP}/update"
 private const val DELETE_USER_APP = "${USER_APP}/delete"
@@ -44,6 +48,7 @@ fun Route.appsAdminRoute() {
         /**
          * USER APP
          */
+
 
         //get all -> api/v1/admin-client/admin-app/{id}
         get("$ADMIN_APP/{id}") {
@@ -121,18 +126,18 @@ fun Route.appsAdminRoute() {
 
                 appsAdminDataSource
                     .getAppInfo(packageName = appRequest.packageName)?.let {
-                    call.respond(
-                        status = HttpStatusCode.OK,
-                        message = MyResponse(
-                            success = false,
-                            message = "this app inserted before",
-                            data = null
+                        call.respond(
+                            status = HttpStatusCode.OK,
+                            message = MyResponse(
+                                success = false,
+                                message = "this app inserted before",
+                                data = null
+                            )
                         )
-                    )
-                    return@post
+                        return@post
 
 
-                } ?: run { // app not found try to insert new one
+                    } ?: run { // app not found try to insert new one
                     val principal = call.principal<JWTPrincipal>()
                     val adminUserId = try {
                         principal?.getClaim("userId", String::class)?.toIntOrNull()
@@ -316,6 +321,40 @@ fun Route.appsAdminRoute() {
         /**
          * USER APP
          */
+        get(ALL_USER_APP_PAGEABLE) {
+            logger.debug { "GET ALL /$ALL_USER_APP_PAGEABLE" }
+
+            try {
+                val params = call.request.queryParameters
+                val appsOption = getAppsOptions(params)
+                val appsList =
+                    appsUserDataSource
+                        .getAllAppsPageable(
+                            query = appsOption.query,
+                            page = appsOption.page!!,
+                            perPage = appsOption.perPage!!,
+                            sortField = appsOption.sortFiled!!,
+                            sortDirection = appsOption.sortDirection!!
+                        )
+                if (appsList.isEmpty()) throw NotFoundException("no apps is found.")
+                val numberOfNews = appsUserDataSource.getNumberOfApps()
+
+                respondWithSuccessfullyResult(
+                    result = MyResponsePageable(
+                        page = appsOption.page + 1,
+                        perPage = numberOfNews,
+                        data = appsList
+                    ),
+                    message = "get all apps successfully"
+                )
+            } catch (e: Exception) {
+                logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+            }
+
+
+        }
+
         //get all -> api/v1/admin-client/user-app/{id}
         get("$USER_APP/{id}") {
             logger.debug { "get user App Client $USER_APP/{id}" }
@@ -538,48 +577,24 @@ fun Route.appsAdminRoute() {
         //delete  -> api/v1/admin-client/app/delete
         delete("$DELETE_USER_APP/{id}") {
             logger.debug { "delete app $DELETE_USER_APP" }
-            call.parameters["id"]?.toIntOrNull()?.let { id ->
-                try {
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+
                     val result = appsUserDataSource.appDelete(appId = id)
                     if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = "Youtube Link Information delete successfully .",
-                                data = null
-                            )
+                        respondWithSuccessfullyResult(
+                            result = true,
+                            message = "App deleted successfully ."
                         )
-                        return@delete
                     } else {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "Youtube Link Information delete failed .",
-                                data = null
-                            )
-                        )
-                        return@delete
+                        throw UnknownErrorException("failed to delete App .")
                     }
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "error while delete ",
-                            data = null
-                        )
-                    )
-                    return@delete
-                }
-            } ?: call.respond(
-                HttpStatusCode.BadRequest,
-                MyResponse(
-                    success = false,
-                    message = "Missing parameters .",
-                    data = null
-                )
-            )
+                } ?: throw MissingParameterException("Missing parameters .")
+            } catch (exc: Exception) {
+                logger.error { "$DELETE_USER_APP error ${exc.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(exc.message ?: "An Known Error Occurred .")
+
+            }
 
 
         }

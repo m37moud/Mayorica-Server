@@ -1,8 +1,6 @@
 package com.example.data.administrations.apps.user
 
-import com.example.database.table.AdminAppEntity
-import com.example.database.table.AdminUserEntity
-import com.example.database.table.ContactUsEntity
+import com.example.database.table.*
 import com.example.models.AppsModel
 import com.example.models.dto.AppsModelDto
 import com.example.utils.generateApiKey
@@ -20,6 +18,17 @@ val logger = KotlinLogging.logger { }
 
 @Singleton
 class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
+    override suspend fun getNumberOfApps(): Int {
+        logger.debug { "getNumberOfApps call" }
+
+        return withContext(Dispatchers.IO) {
+            val appsList = db.from(MobileAppEntity)
+                .select()
+                .mapNotNull { rowToAppsModel(it) }
+            appsList.size
+        }
+    }
+
     override suspend fun getAllAppsPageable(
         query: String?,
         page: Int,
@@ -31,20 +40,20 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
         return withContext(Dispatchers.IO) {
             val myLimit = if (perPage > 100) 100 else perPage
             val myOffset = (page * perPage)
-            val appsList = db.from(AdminAppEntity)
-                .innerJoin(AdminUserEntity, on = AdminAppEntity.userAdminId eq AdminUserEntity.id)
+            val appsList = db.from(MobileAppEntity)
+                .innerJoin(AdminUserEntity, on = MobileAppEntity.userAdminID eq AdminUserEntity.id)
                 .select(
-                    AdminAppEntity.id,
+                    MobileAppEntity.id,
                     AdminUserEntity.username,
-                    AdminAppEntity.packageName,
-                    AdminAppEntity.apiKey,
-                    AdminAppEntity.currentVersion,
-                    AdminAppEntity.forceUpdate,
-                    AdminAppEntity.updateMessage,
-                    AdminAppEntity.enableApp,
-                    AdminAppEntity.enableMessage,
-                    AdminAppEntity.createdAt,
-                    AdminAppEntity.updatedAt,
+                    MobileAppEntity.packageName,
+                    MobileAppEntity.apiKey,
+                    MobileAppEntity.currentVersion,
+                    MobileAppEntity.forceUpdate,
+                    MobileAppEntity.updateMessage,
+                    MobileAppEntity.enableApp,
+                    MobileAppEntity.enableMessage,
+                    MobileAppEntity.createdAt,
+                    MobileAppEntity.updatedAt,
                 )
                 .limit(myLimit)
                 .offset(myOffset)
@@ -56,7 +65,7 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
                 )
                 .whereWithConditions {
                     if (!query.isNullOrEmpty()) {
-                        it += (AdminAppEntity.packageName like "%${query}%")
+                        it += (MobileAppEntity.packageName like "%${query}%")
                     }
 
                 }
@@ -71,7 +80,7 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
      * @return Int  if inserted more than 1, 0 otherwise
      */
     override suspend fun appCreate(app: AppsModel): Int = withContext(Dispatchers.IO) {
-        val result = db.insert(AdminAppEntity) {
+        val result = db.insert(MobileAppEntity) {
             set(it.packageName, app.packageName)
             set(it.apiKey, generateApiKey())
             set(it.currentVersion, app.currentVersion)
@@ -79,7 +88,7 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
             set(it.updateMessage, app.updateMessage)
             set(it.enableApp, app.enableApp)
             set(it.enableMessage, app.enableMessage)
-            set(it.userAdminId, app.userAdminId)
+            set(it.userAdminID, app.userAdminId)
             set(it.createdAt, LocalDateTime.now())
             set(it.updatedAt, LocalDateTime.now())
         }
@@ -107,7 +116,7 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
      * @return Int  if inserted more than 1, 0 otherwise
      */
     override suspend fun appUpdate(app: AppsModel): Int = withContext(Dispatchers.IO) {
-        val result = db.update(AdminAppEntity) {
+        val result = db.update(MobileAppEntity) {
             set(it.packageName, app.packageName)
 //            set(it.apiKey, app.apiKey)
             set(it.currentVersion, app.currentVersion)
@@ -115,17 +124,17 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
             set(it.updateMessage, app.updateMessage)
             set(it.enableApp, app.enableApp)
             set(it.enableMessage, app.enableMessage)
-            set(it.userAdminId, app.userAdminId)
+            set(it.userAdminID, app.userAdminId)
             set(it.updatedAt, LocalDateTime.now())
         }
         result
     }
 
     override suspend fun getAppInfo(appId: Int): AppsModel? = withContext(Dispatchers.IO) {
-        val result = db.from(AdminAppEntity)
+        val result = db.from(MobileAppEntity)
             .select()
             .where {
-                AdminAppEntity.id eq appId
+                MobileAppEntity.id eq appId
             }
             .map { rowToAppsModel(it) }
             .firstOrNull()
@@ -134,10 +143,10 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
     }
 
     override suspend fun getAppInfo(packageName: String): AppsModel? = withContext(Dispatchers.IO) {
-        val result = db.from(AdminAppEntity)
+        val result = db.from(MobileAppEntity)
             .select()
             .where {
-                AdminAppEntity.packageName eq packageName
+                MobileAppEntity.packageName eq packageName
             }
             .map { rowToAppsModel(it) }
             .firstOrNull()
@@ -146,10 +155,10 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
     }
 
     override suspend fun getUserWithApp(apiKey: String): AppsModel? = withContext(Dispatchers.IO) {
-        val result = db.from(AdminAppEntity)
+        val result = db.from(MobileAppEntity)
             .select()
             .where {
-                AdminAppEntity.apiKey eq apiKey
+                MobileAppEntity.apiKey eq apiKey
 
             }
             .map { rowToAppsModel(it) }
@@ -163,18 +172,18 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
         return if (row == null) {
             null
         } else {
-            val id = row[AdminAppEntity.id] ?: -1
-            val packageName = row[AdminAppEntity.packageName] ?: ""
-            val apiKey = row[AdminAppEntity.apiKey] ?: ""
-            val currentVersion = row[AdminAppEntity.currentVersion] ?: 0.0
-            val forceUpdate = row[AdminAppEntity.forceUpdate] ?: false
-            val updateMessage = row[AdminAppEntity.updateMessage] ?: ""
-            val enableApp = row[AdminAppEntity.enableApp] ?: false
-            val enableMessage = row[AdminAppEntity.enableMessage] ?: ""
+            val id = row[MobileAppEntity.id] ?: -1
+            val packageName = row[MobileAppEntity.packageName] ?: ""
+            val apiKey = row[MobileAppEntity.apiKey] ?: ""
+            val currentVersion = row[MobileAppEntity.currentVersion] ?: 0.0
+            val forceUpdate = row[MobileAppEntity.forceUpdate] ?: false
+            val updateMessage = row[MobileAppEntity.updateMessage] ?: ""
+            val enableApp = row[MobileAppEntity.enableApp] ?: false
+            val enableMessage = row[MobileAppEntity.enableMessage] ?: ""
 
-            val userAdminId = row[AdminAppEntity.userAdminId] ?: -1
-            val createdAt = row[AdminAppEntity.createdAt] ?: LocalDateTime.now()
-            val updatedAt = row[AdminAppEntity.updatedAt] ?: LocalDateTime.now()
+            val userAdminId = row[MobileAppEntity.userAdminID] ?: -1
+            val createdAt = row[MobileAppEntity.createdAt] ?: LocalDateTime.now()
+            val updatedAt = row[MobileAppEntity.updatedAt] ?: LocalDateTime.now()
 
 
 
@@ -200,18 +209,18 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
         return if (row == null) {
             null
         } else {
-            val id = row[AdminAppEntity.id] ?: -1
-            val packageName = row[AdminAppEntity.packageName] ?: ""
-            val apiKey = row[AdminAppEntity.apiKey] ?: ""
-            val currentVersion = row[AdminAppEntity.currentVersion] ?: 0.0
-            val forceUpdate = row[AdminAppEntity.forceUpdate] ?: false
-            val updateMessage = row[AdminAppEntity.updateMessage] ?: ""
-            val enableApp = row[AdminAppEntity.enableApp] ?: false
-            val enableMessage = row[AdminAppEntity.enableMessage] ?: ""
+            val id = row[MobileAppEntity.id] ?: -1
+            val packageName = row[MobileAppEntity.packageName] ?: ""
+            val apiKey = row[MobileAppEntity.apiKey] ?: ""
+            val currentVersion = row[MobileAppEntity.currentVersion] ?: 0.0
+            val forceUpdate = row[MobileAppEntity.forceUpdate] ?: false
+            val updateMessage = row[MobileAppEntity.updateMessage] ?: ""
+            val enableApp = row[MobileAppEntity.enableApp] ?: false
+            val enableMessage = row[MobileAppEntity.enableMessage] ?: ""
             val userAdminName = row[AdminUserEntity.username] ?: ""
 
-            val createdAt = row[AdminAppEntity.createdAt] ?: ""
-            val updatedAt = row[AdminAppEntity.updatedAt] ?: ""
+            val createdAt = row[MobileAppEntity.createdAt] ?: ""
+            val updatedAt = row[MobileAppEntity.updatedAt] ?: ""
 
 
 

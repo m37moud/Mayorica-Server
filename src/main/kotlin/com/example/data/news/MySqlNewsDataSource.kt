@@ -22,7 +22,7 @@ val logger = KotlinLogging.logger { }
 @Singleton
 class MySqlNewsDataSource(private val db: Database) : NewsDataSource {
     override suspend fun getNumberOfNews(): Int {
-        logger.debug { "getNumberOfOffers call" }
+        logger.debug { "getNumberOfNews call" }
 
         return withContext(Dispatchers.IO) {
             val newsList = db.from(NewsEntity)

@@ -18,7 +18,7 @@ import mu.KotlinLogging
 import org.koin.ktor.ext.inject
 
 private const val ALL_NEWS = "${ADMIN_CLIENT}/news"
-const val ALL_NEWS_PAGEABLE = "${ALL_NEWS}-pageable"
+private const val ALL_NEWS_PAGEABLE = "${ALL_NEWS}-pageable"
 
 private const val CREATE_NEWS = "$ALL_NEWS/create"
 private const val UPDATE_NEWS = "$ALL_NEWS/update"
