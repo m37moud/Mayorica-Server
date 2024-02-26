@@ -1,20 +1,70 @@
 package com.example.data.administrations.apps.user
 
-import com.example.data.administrations.apps.admin.AppsAdminDataSource
 import com.example.database.table.AdminAppEntity
+import com.example.database.table.AdminUserEntity
 import com.example.database.table.ContactUsEntity
 import com.example.models.AppsModel
+import com.example.models.dto.AppsModelDto
 import com.example.utils.generateApiKey
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mu.KotlinLogging
 import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
+import org.ktorm.schema.Column
 import java.time.LocalDateTime
+
+val logger = KotlinLogging.logger { }
 
 @Singleton
 class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
+    override suspend fun getAllAppsPageable(
+        query: String?,
+        page: Int,
+        perPage: Int,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<AppsModelDto> {
+        logger.debug { "getAllAppsPageable" }
+        return withContext(Dispatchers.IO) {
+            val myLimit = if (perPage > 100) 100 else perPage
+            val myOffset = (page * perPage)
+            val appsList = db.from(AdminAppEntity)
+                .innerJoin(AdminUserEntity, on = AdminAppEntity.userAdminId eq AdminUserEntity.id)
+                .select(
+                    AdminAppEntity.id,
+                    AdminUserEntity.username,
+                    AdminAppEntity.packageName,
+                    AdminAppEntity.apiKey,
+                    AdminAppEntity.currentVersion,
+                    AdminAppEntity.forceUpdate,
+                    AdminAppEntity.updateMessage,
+                    AdminAppEntity.enableApp,
+                    AdminAppEntity.enableMessage,
+                    AdminAppEntity.createdAt,
+                    AdminAppEntity.updatedAt,
+                )
+                .limit(myLimit)
+                .offset(myOffset)
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+                .whereWithConditions {
+                    if (!query.isNullOrEmpty()) {
+                        it += (AdminAppEntity.packageName like "%${query}%")
+                    }
+
+                }
+                .mapNotNull { rowToAppsModelDto(it) }
+            appsList
+        }
+    }
+
     /**
      * create app
      * @param app AppsModel app
@@ -71,7 +121,7 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
         result
     }
 
-    override suspend fun getAppInfo(appId : Int): AppsModel? = withContext(Dispatchers.IO) {
+    override suspend fun getAppInfo(appId: Int): AppsModel? = withContext(Dispatchers.IO) {
         val result = db.from(AdminAppEntity)
             .select()
             .where {
@@ -82,6 +132,7 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
         result
 
     }
+
     override suspend fun getAppInfo(packageName: String): AppsModel? = withContext(Dispatchers.IO) {
         val result = db.from(AdminAppEntity)
             .select()
@@ -139,6 +190,43 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
                 userAdminId = userAdminId,
                 createdAt = createdAt.toDatabaseString(),
                 updatedAt = updatedAt.toDatabaseString()
+
+            )
+
+        }
+    }
+
+    private fun rowToAppsModelDto(row: QueryRowSet?): AppsModelDto? {
+        return if (row == null) {
+            null
+        } else {
+            val id = row[AdminAppEntity.id] ?: -1
+            val packageName = row[AdminAppEntity.packageName] ?: ""
+            val apiKey = row[AdminAppEntity.apiKey] ?: ""
+            val currentVersion = row[AdminAppEntity.currentVersion] ?: 0.0
+            val forceUpdate = row[AdminAppEntity.forceUpdate] ?: false
+            val updateMessage = row[AdminAppEntity.updateMessage] ?: ""
+            val enableApp = row[AdminAppEntity.enableApp] ?: false
+            val enableMessage = row[AdminAppEntity.enableMessage] ?: ""
+            val userAdminName = row[AdminUserEntity.username] ?: ""
+
+            val createdAt = row[AdminAppEntity.createdAt] ?: ""
+            val updatedAt = row[AdminAppEntity.updatedAt] ?: ""
+
+
+
+            AppsModelDto(
+                id = id,
+                packageName = packageName,
+                apiKey = apiKey,
+                currentVersion = currentVersion,
+                forceUpdate = forceUpdate,
+                updateMessage = updateMessage,
+                enableApp = enableApp,
+                enableMessage = enableMessage,
+                adminUserName = userAdminName,
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString()
 
             )
 
