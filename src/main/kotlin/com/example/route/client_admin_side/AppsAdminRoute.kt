@@ -2,8 +2,10 @@ package com.example.route.client_admin_side
 
 import com.example.data.administrations.apps.admin.AppsAdminDataSource
 import com.example.data.administrations.apps.user.AppsUserDataSource
+import com.example.mapper.toEntity
 import com.example.models.AppsModel
 import com.example.models.MyResponsePageable
+import com.example.models.dto.AppCreateDto
 import com.example.models.options.getAppsOptions
 import com.example.utils.*
 import io.ktor.http.*
@@ -46,147 +48,87 @@ fun Route.appsAdminRoute() {
     authenticate {
 
         /**
-         * USER APP
+         * ADMIN APP
          */
+        get(ALL_ADMIN_APP_PAGEABLE) {
+            logger.debug { "GET ALL /$ALL_ADMIN_APP_PAGEABLE" }
+
+            try {
+                val params = call.request.queryParameters
+                val appsOption = getAppsOptions(params)
+                val appsList =
+                    appsAdminDataSource
+                        .getAllAppsPageable(
+                            query = appsOption.query,
+                            page = appsOption.page!!,
+                            perPage = appsOption.perPage!!,
+                            sortField = appsOption.sortFiled!!,
+                            sortDirection = appsOption.sortDirection!!
+                        )
+                if (appsList.isEmpty()) throw NotFoundException("no apps is found.")
+                val numberOfNews = appsAdminDataSource.getNumberOfApps()
+
+                respondWithSuccessfullyResult(
+                    result = MyResponsePageable(
+                        page = appsOption.page + 1,
+                        perPage = numberOfNews,
+                        data = appsList
+                    ),
+                    message = "get all apps successfully"
+                )
+            } catch (e: Exception) {
+                logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+            }
+
+
+        }
 
 
         //get all -> api/v1/admin-client/admin-app/{id}
         get("$ADMIN_APP/{id}") {
-            logger.debug { "get youtube Links $ADMIN_APP/{id}" }
-            call.parameters["id"]?.toIntOrNull()?.let { id ->
-                try {
-                    val link = appsAdminDataSource.getAppInfo(appId = id)
-                    if (link != null) {
-                        call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
-                                success = true,
-                                message = "get app successfully",
-                                data = link
+            logger.debug { "get $ADMIN_APP/{id}" }
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+
+                    appsAdminDataSource
+                        .getAppInfoByIdDto(appId = id)?.let { app ->
+                            respondWithSuccessfullyResult(
+                                result = app,
+                                message = "get app successfully"
                             )
-                        )
+                        } ?: throw NotFoundException("app is not found")
 
-                    } else {
-                        call.respond(
-                            status = HttpStatusCode.NotFound,
-                            message = MyResponse(
-                                success = false,
-                                message = "app is not found",
-                                data = null
-                            )
-                        )
+                } ?: throw MissingParameterException("Missing parameters .")
+
+            } catch (e: Exception) {
+                logger.error { "get by id app error ${e.stackTrace}" }
+                throw UnknownErrorException(e.message ?: "An Known Error Occurred ")
 
 
-                    }
-                } catch (e: Exception) {
-                    logger.error { "get youtube Link error ${e.stackTrace}" }
-                    call.respond(
-                        status = HttpStatusCode.Conflict,
-                        message = MyResponse(
-                            success = false,
-                            message = e.message ?: "failed to get ",
-                            data = null
-                        )
-                    )
-
-
-                }
-
-            } ?: call.respond(
-                HttpStatusCode.BadRequest,
-                MyResponse(
-                    success = false,
-                    message = "Missing parameters .",
-                    data = null
-                )
-            )
+            }
 
         }
         //post  -> api/v1/admin-client/admin-app/create
         post(CREATE_ADMIN_APP) {
             logger.debug { "create new app $CREATE_ADMIN_APP" }
 
-            val appRequest = try {
-                call.receive<AppsModel>()
-
-            } catch (e: Exception) {
-                call.respond(
-                    status = HttpStatusCode.Conflict,
-                    message = MyResponse(
-                        success = false, message = e.message ?: "Missing Some Fields",
-                        data = null
-                    )
-                )
-                return@post
-            }
-
-
 
             try {//check if this app is inserted before
-
-                appsAdminDataSource
-                    .getAppInfo(packageName = appRequest.packageName)?.let {
-                        call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
-                                success = false,
-                                message = "this app inserted before",
-                                data = null
-                            )
-                        )
-                        return@post
-
-
-                    } ?: run { // app not found try to insert new one
-                    val principal = call.principal<JWTPrincipal>()
-                    val adminUserId = try {
-                        principal?.getClaim("userId", String::class)?.toIntOrNull()
-                    } catch (e: Exception) {
-                        call.respond(
-                            status = HttpStatusCode.Conflict,
-                            message = MyResponse(
-                                success = false,
-                                message = e.message ?: "Missing Some Fields",
-                                data = null
-                            )
-                        )
-                        return@post
-                    }
-
-                    val result = appsAdminDataSource
-                        .appCreate(appRequest.copy(userAdminId = adminUserId ?: -1))
-                    if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = "App Information inserted successfully .",
-                                data = appRequest
-                            )
-                        )
-                        return@post
-                    } else {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "App Information inserted failed .",
-                                data = null
-                            )
-                        )
-                        return@post
-                    }
-                }
-
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "error while insert ",
-                        data = null
-                    )
+                val appRequest = call.receive<AppCreateDto>()
+                val adminUserId = extractAdminId()
+                val createdApp = appsAdminDataSource
+                    .addApp(appRequest.toEntity(adminId = adminUserId))
+                respondWithSuccessfullyResult(
+                    statusCode = HttpStatusCode.OK,
+                    result = createdApp,
+                    message = "App Information inserted successfully ."
                 )
-                return@post
+
+            } catch (exc: Exception) {
+                logger.error { "$CREATE_ADMIN_APP error is ${exc.stackTrace}" }
+                throw UnknownErrorException(exc.message ?: "An Known Error Occurred ")
+
             }
 
         }
@@ -194,125 +136,60 @@ fun Route.appsAdminRoute() {
         put("$UPDATE_ADMIN_APP/{id}") {
             logger.debug { "update apps $UPDATE_ADMIN_APP" }
 
-            call.parameters["id"]?.toIntOrNull()?.let {
-                val linkRequest = try {
-                    call.receive<AppsModel>()
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = "Missing Some Fields",
-                            data = null
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+                    val appRequest = call.receive<AppCreateDto>()
+
+                    val adminUserId = extractAdminId()
+                    if (appsAdminDataSource.getAppInfoByPackage(appRequest.packageName) != null)
+                        throw AlreadyExistsException("that package name (${appRequest.packageName}) is already found ")
+                    val updatedApp = appsAdminDataSource
+                        .appUpdate(id, appRequest.toEntity(adminId = adminUserId))
+                    if (updatedApp > 0) {
+                        logger.debug { "app info save successfully in db" }
+                        val updateApp =
+                            appsAdminDataSource
+                                .getAppInfoByPackageDto(appRequest.packageName)
+                                ?: throw NotFoundException("package name (${appRequest.packageName}) is not found ")
+
+                        respondWithSuccessfullyResult(
+                            result = updateApp,
+                            message = "app updated successfully ."
                         )
-                    )
-                    return@put
-                }
-                val principal = call.principal<JWTPrincipal>()
-                val userId = try {
-                    principal?.getClaim("userId", String::class)?.toIntOrNull()
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "Failed ",
-                            data = null
-                        )
-                    )
-                    return@put
-                }
-                try {
-                    val result = appsAdminDataSource.appUpdate(linkRequest.copy(userAdminId = userId!!))
-                    if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = " Youtube Link Information update successfully .",
-                                data = linkRequest
-                            )
-                        )
-                        return@put
                     } else {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "Youtube Link Information update failed .",
-                                data = null
-                            )
-                        )
-                        return@put
+                        throw UnknownErrorException("update failed .")
                     }
+                } ?: throw MissingParameterException("Missing parameters .")
+            } catch (exc: Exception) {
+                logger.error { "$CREATE_ADMIN_APP error is ${exc.stackTrace}" }
+                throw UnknownErrorException(exc.message ?: "An Known Error Occurred ")
 
-
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "error while update ",
-                            data = null
-                        )
-                    )
-                    return@put
-                }
-            } ?: call.respond(
-                HttpStatusCode.BadRequest,
-                MyResponse(
-                    success = false,
-                    message = "Missing parameters .",
-                    data = null
-                )
-            )
+            }
 
 
         }
         //delete  -> api/v1/admin-client/admin-app/delete
         delete("$DELETE_ADMIN_APP/{id}") {
             logger.debug { "delete app $DELETE_ADMIN_APP" }
-            call.parameters["id"]?.toIntOrNull()?.let { id ->
-                try {
-                    val result = appsAdminDataSource.appDelete(appId = id)
-                    if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = "Youtube Link Information delete successfully .",
-                                data = null
-                            )
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+
+                    val adminApp = appsAdminDataSource.appDelete(appId = id)
+                    if (adminApp > 0) {
+                        respondWithSuccessfullyResult(
+                            result = true,
+                            message = "App deleted successfully ."
                         )
-                        return@delete
                     } else {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "Youtube Link Information delete failed .",
-                                data = null
-                            )
-                        )
-                        return@delete
+                        throw UnknownErrorException("failed to delete app .")
                     }
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "error while delete ",
-                            data = null
-                        )
-                    )
-                    return@delete
-                }
-            } ?: call.respond(
-                HttpStatusCode.BadRequest,
-                MyResponse(
-                    success = false,
-                    message = "Missing parameters .",
-                    data = null
-                )
-            )
+                } ?: throw MissingParameterException("Missing parameters .")
+            } catch (exc: Exception) {
+                logger.error { "$DELETE_ADMIN_APP error ${exc.stackTrace ?: "An unknown error occurred"}" }
+
+                throw UnknownErrorException(exc.message ?: "An Known Error Occurred .")
+
+            }
 
 
         }
@@ -358,219 +235,85 @@ fun Route.appsAdminRoute() {
         //get all -> api/v1/admin-client/user-app/{id}
         get("$USER_APP/{id}") {
             logger.debug { "get user App Client $USER_APP/{id}" }
-            call.parameters["id"]?.toIntOrNull()?.let { id ->
-                try {
-                    val link = appsUserDataSource.getAppInfo(appId = id)
-                    if (link != null) {
-                        call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
-                                success = true,
-                                message = "get app successfully",
-                                data = link
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+
+                    appsUserDataSource
+                        .getAppInfoByIdDto(appId = id)?.let { app ->
+                            logger.debug { "get user App successfully $app" }
+
+                            respondWithSuccessfullyResult(
+                                result = app,
+                                message = "get app successfully"
                             )
-                        )
+                        } ?: throw NotFoundException("app is not found")
 
-                    } else {
-                        call.respond(
-                            status = HttpStatusCode.NotFound,
-                            message = MyResponse(
-                                success = false,
-                                message = "app is not found",
-                                data = null
-                            )
-                        )
+                } ?: throw MissingParameterException("Missing parameters .")
+
+            } catch (e: Exception) {
+                logger.error { "get by id app error ${e.stackTrace}" }
+                throw UnknownErrorException(e.message ?: "An Known Error Occurred ")
 
 
-                    }
-                } catch (e: Exception) {
-                    logger.error { "get youtube Link error ${e.stackTrace}" }
-                    call.respond(
-                        status = HttpStatusCode.Conflict,
-                        message = MyResponse(
-                            success = false,
-                            message = e.message ?: "failed to get ",
-                            data = null
-                        )
-                    )
-
-
-                }
-
-            } ?: call.respond(
-                HttpStatusCode.BadRequest,
-                MyResponse(
-                    success = false,
-                    message = "Missing parameters .",
-                    data = null
-                )
-            )
+            }
 
         }
         //post  -> api/v1/admin-client/user-app/create
         post(CREATE_USER_APP) {
             logger.debug { "create new user app $CREATE_USER_APP" }
 
-            val appRequest = try {
-                call.receive<AppsModel>()
-
-            } catch (e: Exception) {
-                call.respond(
-                    status = HttpStatusCode.Conflict,
-                    message = MyResponse(
-                        success = false, message = e.message ?: "Missing Some Fields",
-                        data = null
-                    )
-                )
-                return@post
-            }
-            logger.debug { "appRequest $appRequest" }
-
-
-
             try {//check if this app is inserted before
-
-                appsUserDataSource
-                    .getAppInfo(packageName = appRequest.packageName)?.let {
-                        call.respond(
-                            status = HttpStatusCode.OK,
-                            message = MyResponse(
-                                success = false,
-                                message = "this app inserted before",
-                                data = null
-                            )
-                        )
-                        return@post
-
-
-                    } ?: run { // app not found try to insert new one
-                    val principal = call.principal<JWTPrincipal>()
-                    val adminUserId = try {
-                        principal?.getClaim("userId", String::class)?.toIntOrNull()
-                    } catch (e: Exception) {
-                        call.respond(
-                            status = HttpStatusCode.Conflict,
-                            message = MyResponse(
-                                success = false,
-                                message = e.message ?: "Missing Some Fields",
-                                data = null
-                            )
-                        )
-                        return@post
-                    }
-
-                    val result = appsUserDataSource
-                        .appCreate(appRequest.copy(userAdminId = adminUserId ?: -1))
-                    if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = "App Information inserted successfully .",
-                                data = appRequest
-                            )
-                        )
-                        return@post
-                    } else {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "App Information inserted failed .",
-                                data = null
-                            )
-                        )
-                        return@post
-                    }
-                }
-
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "error while insert ",
-                        data = null
-                    )
+                val appRequest = call.receive<AppCreateDto>()
+                val adminUserId = extractAdminId()
+                val createdApp = appsUserDataSource
+                    .addApp(appRequest.toEntity(adminId = adminUserId))
+                respondWithSuccessfullyResult(
+                    statusCode = HttpStatusCode.OK,
+                    result = createdApp,
+                    message = "App Information inserted successfully ."
                 )
-                return@post
+
+            } catch (exc: Exception) {
+                logger.error { "$CREATE_ADMIN_APP error is ${exc.stackTrace}" }
+                throw UnknownErrorException(exc.message ?: "An Known Error Occurred ")
+
             }
+
 
         }
         //put  -> api/v1/admin-client/user-app/update
         put("$UPDATE_USER_APP/{id}") {
             logger.debug { "update USER apps $UPDATE_USER_APP" }
 
-            call.parameters["id"]?.toIntOrNull()?.let {
-                val linkRequest = try {
-                    call.receive<AppsModel>()
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = "Missing Some Fields",
-                            data = null
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+                    val userAppRequest = call.receive<AppCreateDto>()
+
+                    val adminUserId = extractAdminId()
+                    if (appsUserDataSource.getAppInfoByPackage(userAppRequest.packageName) != null)
+                        throw AlreadyExistsException("that package name (${userAppRequest.packageName}) is already found ")
+                    val updatedApp = appsUserDataSource
+                        .appUpdate(id, userAppRequest.toEntity(adminId = adminUserId))
+                    if (updatedApp > 0) {
+                        logger.debug { "app info save successfully in db" }
+                        val updateUserApp =
+                            appsUserDataSource
+                                .getAppInfoByPackageDto(userAppRequest.packageName)
+                                ?: throw NotFoundException("package name (${userAppRequest.packageName}) is not found ")
+
+                        respondWithSuccessfullyResult(
+                            result = updateUserApp,
+                            message = "app updated successfully ."
                         )
-                    )
-                    return@put
-                }
-                val principal = call.principal<JWTPrincipal>()
-                val userId = try {
-                    principal?.getClaim("userId", String::class)?.toIntOrNull()
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "Failed ",
-                            data = null
-                        )
-                    )
-                    return@put
-                }
-                try {
-                    val result = appsUserDataSource.appUpdate(linkRequest.copy(userAdminId = userId!!))
-                    if (result > 0) {
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = " Youtube Link Information update successfully .",
-                                data = linkRequest
-                            )
-                        )
-                        return@put
                     } else {
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "Youtube Link Information update failed .",
-                                data = null
-                            )
-                        )
-                        return@put
+                        throw UnknownErrorException("update failed .")
                     }
+                } ?: throw MissingParameterException("Missing parameters .")
+            } catch (exc: Exception) {
+                logger.error { "$CREATE_ADMIN_APP error is ${exc.stackTrace}" }
+                throw UnknownErrorException(exc.message ?: "An Known Error Occurred ")
 
-
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = e.message ?: "error while update ",
-                            data = null
-                        )
-                    )
-                    return@put
-                }
-            } ?: call.respond(
-                HttpStatusCode.BadRequest,
-                MyResponse(
-                    success = false,
-                    message = "Missing parameters .",
-                    data = null
-                )
-            )
+            }
 
 
         }

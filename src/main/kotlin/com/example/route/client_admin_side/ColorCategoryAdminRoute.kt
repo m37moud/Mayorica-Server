@@ -94,6 +94,7 @@ fun Route.colorCategoryAdminRoute() {
                 )
 
             } catch (exc: Exception) {
+                logger.error { "$COLOR_CATEGORIES_PAGEABLE error is ${exc.stackTrace}" }
                 throw UnknownErrorException(exc.message ?: "An Known Error Occurred ")
             }
         }
@@ -149,11 +150,10 @@ fun Route.colorCategoryAdminRoute() {
                             result = updatedCategory,
                             message = "color category updated successfully ."
                         )
-                    }else{
+                    } else {
                         throw UnknownErrorException("update failed .")
 
                     }
-
 
 
                 } ?: throw MissingParameterException("Missing parameters .")
@@ -175,7 +175,7 @@ fun Route.colorCategoryAdminRoute() {
                             message = "color category deleted successfully ."
                         )
                     } else {
-                        throw UnknownErrorException( "failed to delete color category .")
+                        throw UnknownErrorException("failed to delete color category .")
                     }
 
 

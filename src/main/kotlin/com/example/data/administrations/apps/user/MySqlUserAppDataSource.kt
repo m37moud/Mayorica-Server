@@ -1,10 +1,10 @@
 package com.example.data.administrations.apps.user
 
 import com.example.database.table.*
+import com.example.models.AppCreate
 import com.example.models.AppsModel
 import com.example.models.dto.AppsModelDto
-import com.example.utils.generateApiKey
-import com.example.utils.toDatabaseString
+import com.example.utils.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
@@ -79,7 +79,18 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
      * @param app AppsModel app
      * @return Int  if inserted more than 1, 0 otherwise
      */
-    override suspend fun appCreate(app: AppsModel): Int = withContext(Dispatchers.IO) {
+    override suspend fun addApp(app: AppCreate): AppsModelDto {
+
+        if (getAppInfoByPackage(app.packageName) != null)
+            throw AlreadyExistsException("this app inserted before .")
+        if (createApp(app) < 0)
+            throw ErrorException("Failed to create app .")
+        return getAppInfoByPackageDto(app.packageName)
+            ?: throw NotFoundException("failed to get The app after created.")
+
+    }
+
+    private suspend fun createApp(app: AppCreate): Int = withContext(Dispatchers.IO) {
         val result = db.insert(MobileAppEntity) {
             set(it.packageName, app.packageName)
             set(it.apiKey, generateApiKey())
@@ -103,7 +114,7 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
 
     override suspend fun appDelete(appId: Int): Int {
         return withContext(Dispatchers.IO) {
-            val result = db.delete(ContactUsEntity) {
+            val result = db.delete(MobileAppEntity) {
                 it.id eq appId
             }
             result
@@ -115,7 +126,7 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
      * @param app AppsModel app
      * @return Int  if inserted more than 1, 0 otherwise
      */
-    override suspend fun appUpdate(app: AppsModel): Int = withContext(Dispatchers.IO) {
+    override suspend fun appUpdate(appId: Int, app: AppCreate): Int = withContext(Dispatchers.IO) {
         val result = db.update(MobileAppEntity) {
             set(it.packageName, app.packageName)
 //            set(it.apiKey, app.apiKey)
@@ -126,11 +137,14 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
             set(it.enableMessage, app.enableMessage)
             set(it.userAdminID, app.userAdminId)
             set(it.updatedAt, LocalDateTime.now())
+            where {
+                it.id eq appId
+            }
         }
         result
     }
 
-    override suspend fun getAppInfo(appId: Int): AppsModel? = withContext(Dispatchers.IO) {
+    override suspend fun getAppInfoById(appId: Int): AppsModel? = withContext(Dispatchers.IO) {
         val result = db.from(MobileAppEntity)
             .select()
             .where {
@@ -142,7 +156,36 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
 
     }
 
-    override suspend fun getAppInfo(packageName: String): AppsModel? = withContext(Dispatchers.IO) {
+    override suspend fun getAppInfoByIdDto(appId: Int): AppsModelDto? {
+        logger.debug { "getAppInfoByIdDto" }
+        return withContext(Dispatchers.IO) {
+            val result = db.from(MobileAppEntity)
+                .innerJoin(AdminUserEntity, on = MobileAppEntity.userAdminID eq AdminUserEntity.id)
+                .select(
+                    MobileAppEntity.id,
+                    AdminUserEntity.username,
+                    MobileAppEntity.packageName,
+                    MobileAppEntity.apiKey,
+                    MobileAppEntity.currentVersion,
+                    MobileAppEntity.forceUpdate,
+                    MobileAppEntity.updateMessage,
+                    MobileAppEntity.enableApp,
+                    MobileAppEntity.enableMessage,
+                    MobileAppEntity.createdAt,
+                    MobileAppEntity.updatedAt,
+                )
+                .where {
+                    MobileAppEntity.id eq appId
+                }
+                .map { rowToAppsModelDto(it) }
+                .firstOrNull()
+            result
+
+        }
+
+    }
+
+    override suspend fun getAppInfoByPackage(packageName: String): AppsModel? = withContext(Dispatchers.IO) {
         val result = db.from(MobileAppEntity)
             .select()
             .where {
@@ -153,6 +196,32 @@ class MySqlUserAppDataSource(private val db: Database) : AppsUserDataSource {
         result
 
     }
+
+    override suspend fun getAppInfoByPackageDto(packageName: String): AppsModelDto? = withContext(Dispatchers.IO) {
+        val result = db.from(MobileAppEntity)
+            .innerJoin(AdminUserEntity, on = MobileAppEntity.userAdminID eq AdminUserEntity.id)
+            .select(
+                MobileAppEntity.id,
+                AdminUserEntity.username,
+                MobileAppEntity.packageName,
+                MobileAppEntity.apiKey,
+                MobileAppEntity.currentVersion,
+                MobileAppEntity.forceUpdate,
+                MobileAppEntity.updateMessage,
+                MobileAppEntity.enableApp,
+                MobileAppEntity.enableMessage,
+                MobileAppEntity.createdAt,
+                MobileAppEntity.updatedAt,
+            )
+            .where {
+                MobileAppEntity.packageName eq packageName
+            }
+            .map { rowToAppsModelDto(it) }
+            .firstOrNull()
+        result
+
+    }
+
 
     override suspend fun getUserWithApp(apiKey: String): AppsModel? = withContext(Dispatchers.IO) {
         val result = db.from(MobileAppEntity)
