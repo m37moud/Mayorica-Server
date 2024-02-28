@@ -14,7 +14,6 @@ import com.example.utils.*
 import com.example.utils.Claim.CREATED_AT
 import com.example.utils.Claim.FULL_NAME
 import com.example.utils.Claim.PERMISSION
-import com.example.utils.Claim.USERNAME
 import com.example.utils.Claim.USER_ID
 import com.example.utils.Constants.ADMIN_CLIENT
 import io.ktor.http.*

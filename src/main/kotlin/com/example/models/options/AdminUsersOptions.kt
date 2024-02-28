@@ -1,11 +1,9 @@
 package com.example.models.options
 
 import com.example.database.table.AdminUserEntity
-import com.example.database.table.MobileAppEntity
 import com.example.utils.MissingParameterException
 import io.ktor.http.*
 import org.ktorm.schema.Column
-
 
 data class AdminUsersOptions(
     val query: String?,
