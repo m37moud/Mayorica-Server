@@ -121,10 +121,6 @@ fun Route.registerAdmin(){
             }
 
         }
-        post(REGISTER_ADMIN_REQUEST){
-
-
-        }
     }
 
 

@@ -155,6 +155,7 @@ class MYSqlUserDataSource(
                 if (!query.isNullOrEmpty()) it += AdminUserEntity.full_name like "%${query}%" or (AdminUserEntity.username like "%${query}%")
                 if (!permission.isNullOrEmpty()) it += (AdminUserEntity.role eq "$permission")
             }
+            .where { AdminUserEntity.role notEq "SUPER_ADMIN" }
             .mapNotNull {
                 rowToAdminUser(it)
             }.toModel()

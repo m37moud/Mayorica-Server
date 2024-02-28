@@ -1,5 +1,6 @@
 package com.example.data.order
 
+import com.example.models.CustomerOrderRevenue
 import com.example.models.UserOrderDto
 import com.example.models.UserOrderStatus
 import com.example.models.UserOrderStatusRequestCreate
@@ -18,6 +19,7 @@ interface OrderStatusDataSource {
         sortField: Column<*>,
         sortDirection: Int
     ): List<UserOrderDto>
+
     suspend fun getAllOrderStatusByApprove(approveState: Int): List<UserOrderStatus>
     suspend fun updateOrderStatus(
         requestUserId: Int,
@@ -25,5 +27,7 @@ interface OrderStatusDataSource {
     ): Int
 
     suspend fun deleteOrderStatus(requestUserId: Int): Int
+
+    suspend fun getCustomerOrderDetails(): CustomerOrderRevenue
 
 }

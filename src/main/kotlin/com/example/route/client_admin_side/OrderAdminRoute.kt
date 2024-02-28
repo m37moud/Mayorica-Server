@@ -3,6 +3,7 @@ package com.example.route.client_admin_side
 import com.example.data.administrations.admin_user.UserDataSource
 import com.example.data.order.OrderDataSource
 import com.example.data.order.OrderStatusDataSource
+import com.example.mapper.toDto
 import com.example.mapper.toModel
 import com.example.models.MyResponsePageable
 import com.example.models.options.getCustomerOrderOptions
@@ -23,6 +24,7 @@ const val ORDER_RESPONSE = "${ADMIN_CLIENT}/orders"
 const val ORDER_RESPONSE_PAGEABLE = "$ORDER_RESPONSE-pageable"
 const val ORDER_STATUE_RESPONSE = "$ORDER_RESPONSE/statue"
 const val ORDER_STATUE_UPDATE = "$ORDER_STATUE_RESPONSE/update"
+const val ORDER_STATUE_REVENUE = "$ORDER_STATUE_RESPONSE/revenue"
 
 private val logger = KotlinLogging.logger {}
 
@@ -113,41 +115,42 @@ fun Route.ordersAdminRoute() {
 
             val userAdminId = extractAdminId()
 
-            val isAdmin = userDataSource.isAdmin(userAdminId!!)
-            if (isAdmin) {
-                try {
-                    val orderStatusRequest = call.receive<UserOrderStatusRequestCreateDto>()
+//            val isAdmin = userDataSource.isAdmin(userAdminId!!)
+//            if (isAdmin) {
+//
+//            } else {
+//                throw UnknownErrorException("Not Authorize .")
+//
+//            }
+            try {
+                val orderStatusRequest = call.receive<UserOrderStatusRequestCreateDto>()
 
-                    call.parameters["id"]?.toIntOrNull()?.let { id ->
-                        val updateResult =
-                            orderStatusDataSource
-                                .updateOrderStatus(
-                                    requestUserId = id,
-                                    orderStatusRequest.toModel(adminId = userAdminId)
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+                    val updateResult =
+                        orderStatusDataSource
+                            .updateOrderStatus(
+                                requestUserId = id,
+                                orderStatusRequest.toModel(adminId = userAdminId)
+                            )
+                    if (updateResult > 0) {
+                        orderStatusDataSource
+                            .getOrderStatusByRequestUserIdDto(id)?.let { order ->
+
+                                respondWithSuccessfullyResult(
+                                    result = order,
+                                    message = "order statue update successful ."
                                 )
-                        if (updateResult > 0) {
-                            orderStatusDataSource
-                                .getOrderStatusByRequestUserIdDto(id)?.let { order ->
+                            } ?: throw NotFoundException("order not found .")
+                    } else {
+                        throw UnknownErrorException("update failed .")
 
-                                    respondWithSuccessfullyResult(
-                                        result = order,
-                                        message = "order statue update successful ."
-                                    )
-                                } ?: throw NotFoundException("order not found .")
-                        } else {
-                            throw UnknownErrorException("update failed .")
+                    }
 
-                        }
-
-                    } ?: throw MissingParameterException("Missing parameters .")
-                } catch (e: Exception) {
-                    throw UnknownErrorException(e.message ?: "An Known Error Occurred .")
-                }
-
-            } else {
-                throw UnknownErrorException("Not Authorize .")
-
+                } ?: throw MissingParameterException("Missing parameters .")
+            } catch (e: Exception) {
+                throw UnknownErrorException(e.message ?: "An Known Error Occurred .")
             }
+
 
         }
         get(ORDER_RESPONSE_PAGEABLE) {
@@ -175,10 +178,28 @@ fun Route.ordersAdminRoute() {
                 )
 
             } catch (e: Exception) {
+                logger.error { "error in route name -> $ORDER_RESPONSE_PAGEABLE is ${e.stackTrace}" }
                 throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
 
             }
 
+
+        }
+        // Get the orders info --> GET /api/v1/admin-client/orders (with token)
+
+        get(ORDER_STATUE_REVENUE) {
+            logger.debug { "get $ORDER_STATUE_REVENUE" }
+            try {
+                val revenue = orderStatusDataSource.getCustomerOrderDetails()
+                respondWithSuccessfullyResult(
+                    result = revenue.toDto(),
+                    message = "get revenue successful ."
+                )
+            } catch (e: Exception) {
+                logger.error { "error in route name -> $ORDER_RESPONSE_PAGEABLE is ${e.stackTrace}" }
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+
+            }
 
         }
 

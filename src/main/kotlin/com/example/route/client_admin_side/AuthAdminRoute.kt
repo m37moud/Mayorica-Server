@@ -4,18 +4,20 @@ import com.example.data.administrations.admin_user.UserDataSource
 import com.example.database.table.AdminUserEntity
 import com.example.models.AdminUser
 import com.example.models.MyResponsePageable
+import com.example.models.options.getAdminUserOptions
+import com.example.models.options.getAppsOptions
+import com.example.models.options.getUserOptions
 import com.example.models.request.auth.AdminRegister
 import com.example.models.response.UserAdminResponse
 import com.example.security.hash.HashingService
 import com.example.security.hash.SaltedHash
 import com.example.security.token.TokenClaim
 import com.example.security.token.TokenService
+import com.example.utils.*
 import com.example.utils.Claim.PERMISSION
 import com.example.utils.Claim.USERNAME
 import com.example.utils.Claim.USER_ID
 import com.example.utils.Constants.ADMIN_CLIENT
-import com.example.utils.MyResponse
-import com.example.utils.toDatabaseString
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -146,84 +148,36 @@ fun Route.authenticationRoutes(
         //get all pageable users
         get(USERS_PAGEABLE) {
             logger.debug { "get all pageable users /$USERS_PAGEABLE" }
-            val params = call.request.queryParameters
-            params["page"]?.toIntOrNull()?.let { pageNum ->
-                val page = if (pageNum > 0) pageNum - 1 else 0
-                val perPage = params["perPage"]?.toIntOrNull() ?: 10
-                val sortFiled = when (params["sort_by"] ?: "date") {
-                    "name" -> AdminUserEntity.full_name
-                    "username" -> AdminUserEntity.username
-                    "date" -> AdminUserEntity.created_at
-                    else -> {
-                        return@get call.respond(
-                            status = HttpStatusCode.BadRequest,
-                            message = MyResponse(
-                                success = false,
-                                message = "invalid parameter for sort_by chose between (name & username & date)",
-                                data = null
-                            )
-                        )
-                    }
-                }
-                val sortDirection = when (params["sort_direction"] ?: "dec") {
-                    "dec" -> -1
-                    "asc" -> 1
-                    else -> {
-                        return@get call.respond(
-                            status = HttpStatusCode.BadRequest,
-                            message = MyResponse(
-                                success = false,
-                                message = "invalid parameter for sort_direction chose between (dec & asc)",
-                                data = null
-                            )
-                        )
-                    }
-                }
-                logger.debug { "GET ALL User /$USERS?page=$page&perPage=$perPage" }
-                val query: String? = params["query"]?.trim()
-                val permission: String? = params["permission"]?.trim()
-                try {
-                    val users = userDataSource.getAllUserPageable(
-                        query = query,
-                        permission = permission,
-                        page = page,
-                        perPage = perPage,
-                        sortField = sortFiled,
-                        sortDirection = sortDirection
+
+            try {
+                val params = call.request.queryParameters
+                val appsOption = getAdminUserOptions(params)
+                logger.debug { "GET ALL User /$USERS?page=${appsOption.page}&perPage=${appsOption.perPage}" }
+
+                val users = userDataSource.getAllUserPageable(
+                    query = appsOption.query,
+                    permission = appsOption.permission,
+                    page = appsOption.page!!,
+                    perPage = appsOption.perPage!!,
+                    sortField = appsOption.sortFiled!!,
+                    sortDirection = appsOption.sortDirection!!,
 
                     )
-                    if (users.isNotEmpty()) {
-                        val numberOfUsers = userDataSource.getNumberOUsers()
-                        call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = true,
-                                message = "get all users successfully",
-                                data = MyResponsePageable(page = page + 1, perPage = numberOfUsers, data = users)
-                            )
-                        )
-                        return@get
-                    } else {
-                        return@get call.respond(
-                            HttpStatusCode.OK, MyResponse(
-                                success = false,
-                                message = "no user is found",
-                                data = null
-                            )
-                        )
-                    }
+                if (users.isEmpty()) throw NotFoundException("users is not found")
+                val numberOfUsers = userDataSource.getNumberOUsers()
+                respondWithSuccessfullyResult(
+                    result = MyResponsePageable(
+                        page = appsOption.page + 1,
+                        perPage = numberOfUsers,
+                        data = users
+                    ),
+                    message = "get all users successfully"
+                )
 
-                } catch (exc: Exception) {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        MyResponse(
-                            success = false,
-                            message = exc.message ?: "Failed ",
-                            data = null
-                        )
-                    )
-                    return@get
-                }
 
+            } catch (e: Exception) {
+                logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
 
             }
 

@@ -1,6 +1,7 @@
 package com.example.data.order
 
 import com.example.database.table.*
+import com.example.models.CustomerOrderRevenue
 import com.example.models.UserOrderDto
 import com.example.models.UserOrderStatus
 import com.example.models.UserOrderStatusRequestCreate
@@ -19,7 +20,7 @@ private val logger = KotlinLogging.logger { }
 @Singleton
 class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSource {
 
-    suspend fun getAdminUserName(id: Int): String? {
+    private suspend fun getAdminUserName(id: Int): String? {
         logger.debug { "getAdminUserName : called" }
         return withContext(Dispatchers.IO) {
             val result = db.from(AdminUserEntity)
@@ -180,8 +181,8 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
     ): Int {
         return withContext(Dispatchers.IO) {
             val result = db.useTransaction {
-                 updateCustomerOrderStatus(requestUserId, userOrderStatus)
-                updateCustomerOrder(requestUserId,userOrderStatus.approveState)
+                updateCustomerOrderStatus(requestUserId, userOrderStatus)
+                updateCustomerOrder(requestUserId, userOrderStatus.approveState)
             }
             result
         }
@@ -244,6 +245,81 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
             result
         }
     }
+
+    override suspend fun getCustomerOrderDetails(): CustomerOrderRevenue {
+        return withContext(Dispatchers.IO) {
+            val customerOrderRevenue = db.useTransaction {
+                val create = getAllCreatedOrders()
+                val review = getAllReviewingOrders()
+                val accept = getAllAcceptedOrders()
+                val reject = getAllRejectedOrders()
+                CustomerOrderRevenue(
+                    createdOrders = create,
+                    reviewingOrders = review,
+                    acceptedOrders = accept,
+                    rejectedOrders = reject,
+                )
+            }
+            customerOrderRevenue
+        }
+
+    }
+
+    private suspend fun getAllCreatedOrders(): Double {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(UserOrderStatusEntity)
+                .select()
+                .where {
+                    UserOrderStatusEntity.approve_state eq 0
+                }
+                .map { rowToUserOrderStatus(it) }
+            result?.size?.toDouble() ?: 0.0
+        }
+
+    }
+
+    private suspend fun getAllReviewingOrders(): Double {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(UserOrderStatusEntity)
+                .select()
+                .where {
+                    UserOrderStatusEntity.approve_state eq 1
+                }
+                .mapNotNull { rowToUserOrderStatus(it) }
+            result?.size?.toDouble() ?: 0.0
+
+        }
+
+    }
+
+    private suspend fun getAllAcceptedOrders(): Double {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(UserOrderStatusEntity)
+                .select()
+                .where {
+                    UserOrderStatusEntity.approve_state eq 2
+                }
+                .mapNotNull { rowToUserOrderStatus(it) }
+            result?.size?.toDouble() ?: 0.0
+
+        }
+
+    }
+
+    private suspend fun getAllRejectedOrders(): Double {
+        return withContext(Dispatchers.IO) {
+            val result = db.from(UserOrderStatusEntity)
+                .select()
+                .where {
+                    UserOrderStatusEntity.approve_state eq 3
+                }
+                .mapNotNull { rowToUserOrderStatus(it) }
+            result?.size?.toDouble() ?: 0.0
+
+        }
+
+    }
+
 
     private fun rowToUserOrderStatus(row: QueryRowSet?): UserOrderStatus? {
         return if (row == null) {
