@@ -1,8 +1,6 @@
 package com.example.data.administrations.admin_user
 
-import com.example.models.AdminUser
-import com.example.models.AdminUserDetail
-import com.example.models.User
+import com.example.models.*
 import com.example.security.hash.SaltedHash
 import org.ktorm.schema.Column
 
@@ -29,5 +27,9 @@ interface UserDataSource {
     suspend fun isAdmin(id: Int): Boolean
     suspend fun updatePermission(id: Int, permission: String): Int
     suspend fun deleteAdminUser(id: Int): Int
+
+    suspend fun updateUserProfile(id: Int, userProfileInfo: UpdateUserProfileInfo): Int
+    suspend fun updateUserPassword(id: Int, userPasswordInfo: UpdateUserPasswordInfo): Int
+
 
 }

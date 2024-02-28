@@ -1,8 +1,12 @@
 package com.example.route.client_admin_side
 
 import com.example.data.administrations.admin_user.UserDataSource
+import com.example.mapper.toEntity
 import com.example.models.AdminUser
 import com.example.models.MyResponsePageable
+import com.example.models.UpdateUserPasswordInfo
+import com.example.models.dto.UpdateUserPasswordInfoDto
+import com.example.models.dto.UpdateUserProfileInfoDto
 import com.example.models.options.getAdminUserOptions
 import com.example.models.request.auth.AdminRegister
 import com.example.models.response.UserAdminResponse
@@ -33,7 +37,8 @@ private const val USERS_PAGEABLE = "$USERS-pageable"
 private const val USER = "$ADMIN_CLIENT/user"
 private const val REGISTER_REQUEST = "$USER/register"
 private const val DELETE_REQUEST = "$USER/delete"
-private const val UPDATE_USER_INFO_REQUEST = "$USER/update"
+private const val UPDATE_USER_INFO_REQUEST = "$USER/updateInfo"
+private const val UPDATE_USER_PASS_REQUEST = "$USER/updatePassword"
 private const val UPDATE_USER_PERMISSION_REQUEST = "$UPDATE_USER_INFO_REQUEST/permission"
 private const val LOGIN_REQUEST = "$USER/login"
 private const val ME_REQUEST = "$USERS/me"
@@ -50,85 +55,74 @@ fun Route.authenticationRoutes(
     authenticate {
         post(REGISTER_REQUEST) {
 
-            // check body request if  missing some fields
-            val registerRequest = try {
-                call.receive<AdminRegister>()
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = "Missing Some Fields",
-                        data = null
-                    )
-                )
-                return@post
-            }
 
-            // check if operation connected db successfully
             try {
-                if (registerRequest.username.isEmpty() || registerRequest.password.isEmpty() || registerRequest.role.isEmpty()) {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = false,
-                            message = "Failed Registration",
-                            data = null
+                val userAdminId = extractAdminId()
+
+                val isAdmin = userDataSource.isAdmin(userAdminId)
+                if (isAdmin) {
+                    // check body request if  missing some fields
+                    val registerRequest = call.receive<AdminRegister>()
+
+                    // check if operation connected db successfully
+                    if (registerRequest.username.isEmpty() || registerRequest.password.isEmpty() || registerRequest.role.isEmpty()) {
+                        throw UnknownErrorException("Failed Registration")
+                    }
+
+                    // check if email exist or note
+                    if (userDataSource.getUserDetailByUsername(registerRequest.username) == null) // means not found
+                    {
+                        val saltedHash = hashingService.createHashingPassword(registerRequest.password)
+                        val user = AdminUser(
+                            username = registerRequest.username,
+                            full_name = registerRequest.full_name,
+                            password = saltedHash.hash,
+                            salt = saltedHash.salt,
+                            role = registerRequest.role,
+                            created_at = LocalDateTime.now().toDatabaseString(),
+                            updated_at = ""
                         )
-                    )
-                    return@post
-                }
 
-                // check if email exist or note
-                if (userDataSource.getUserDetailByUsername(registerRequest.username) == null) // means not found
-                {
-                    val saltedHash = hashingService.createHashingPassword(registerRequest.password)
-                    val user = AdminUser(
-                        username = registerRequest.username,
-                        full_name = registerRequest.full_name,
-                        password = saltedHash.hash,
-                        salt = saltedHash.salt,
-                        role = registerRequest.role,
-                        created_at = LocalDateTime.now().toDatabaseString(),
-                        updated_at = ""
-                    )
+                        val result = userDataSource.register(user)
+                        // if result >0 it's success else is failed
+                        if (result > 0) {
+                            val adminUser = userDataSource.getUserDetailByUsername(user.username)
 
-                    val result = userDataSource.register(user)
-                    // if result >0 it's success else is failed
-                    if (result > 0) {
-                        val adminUser = userDataSource.getUserDetailByUsername(user.username)
-
-                        call.respond(
-                            HttpStatusCode.OK,
-                            MyResponse(
-                                success = true,
-                                message = "Registration Successfully",
-                                data = adminUser
+                            call.respond(
+                                HttpStatusCode.OK,
+                                MyResponse(
+                                    success = true,
+                                    message = "Registration Successfully",
+                                    data = adminUser
+                                )
                             )
-                        )
-                        return@post
+                            return@post
+                        } else {
+                            call.respond(
+                                HttpStatusCode.OK,
+                                MyResponse(
+                                    success = false,
+                                    message = "Failed Registration",
+                                    data = null
+                                )
+                            )
+                            return@post
+                        }
                     } else {
                         call.respond(
                             HttpStatusCode.OK,
                             MyResponse(
                                 success = false,
-                                message = "Failed Registration",
+                                message = "User already registration before.",
                                 data = null
                             )
                         )
                         return@post
                     }
                 } else {
-                    call.respond(
-                        HttpStatusCode.OK,
-                        MyResponse(
-                            success = false,
-                            message = "User already registration before.",
-                            data = null
-                        )
-                    )
-                    return@post
+                    throw UnknownErrorException("You Are Not Authorize .")
                 }
+
 
             } catch (e: Exception) {
                 call.respond(
@@ -253,6 +247,12 @@ fun Route.authenticationRoutes(
             logger.debug { "delete /$DELETE_REQUEST/{id}" }
             call.parameters["id"]?.toIntOrNull()?.let { id ->
                 try {
+                    val userAdminId = extractAdminId()
+
+                    val isAdmin = userDataSource.isAdmin(userAdminId)
+                    if (!isAdmin)
+                        throw UnknownErrorException("You Are Not Authorize .")
+
                     val result = userDataSource.deleteAdminUser(id = id)
                     if (result > 0) {
                         call.respond(
@@ -342,6 +342,90 @@ fun Route.authenticationRoutes(
             }
 
         }
+
+        put("$UPDATE_USER_INFO_REQUEST/{id}") {
+            logger.debug { "Put -> $UPDATE_USER_INFO_REQUEST" }
+
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+
+                    val userProfileDto = call.receive<UpdateUserProfileInfoDto>()
+                    if (userDataSource.getAdminUserByUsername(userProfileDto.userName)!= null) {
+                        throw AlreadyExistsException("that username (${userProfileDto.userName}) is already found ")
+                    }
+                    val result = userDataSource.updateUserProfile(id = id, userProfileInfo = userProfileDto.toEntity())
+                    if (result > 0) {
+                        respondWithSuccessfullyResult(
+                            result = true,
+                            message = "User Information Updated Successfully ."
+                        )
+                    } else {
+                        throw UnknownErrorException("update failed .")
+                    }
+                } ?: throw MissingParameterException("Missing parameters .")
+
+            } catch (exc: Exception) {
+                logger.error { "$UPDATE_USER_INFO_REQUEST error ${exc.stackTrace ?: "An unknown error occurred"}" }
+
+                throw UnknownErrorException(exc.message ?: "An Known Error Occurred .")
+
+            }
+
+
+        }
+        put("$UPDATE_USER_PASS_REQUEST/{id}") {
+            logger.debug { "Put -> $UPDATE_USER_PASS_REQUEST" }
+
+            try {
+                call.parameters["id"]?.toIntOrNull()?.let { id ->
+
+                    val userPasswordDto = call.receive<UpdateUserPasswordInfoDto>()
+                    userDataSource.getUserDetailById(id)?.let { userDetail ->
+                        val originalUse = userDataSource.getAdminUserByUsername(userDetail.username)
+                            ?: throw NotFoundException("User Not Found.")
+                        val isValidPassword = hashingService.verifyHashingPassword(
+                            value = userPasswordDto.oldPassword,//loginRequest.password,
+                            saltedHash = SaltedHash(
+                                hash = originalUse.password,
+                                salt = originalUse.salt
+                            )
+                        )
+                        if (!isValidPassword)
+                            throw UnknownErrorException("Wrong Password")
+                        val saltedHash = hashingService.createHashingPassword(userPasswordDto.newPassword)
+
+                        val result =
+                            userDataSource
+                                .updateUserPassword(
+                                    id = id,
+                                    userPasswordInfo = UpdateUserPasswordInfo(
+                                        newPassword = saltedHash.hash,
+                                        salt = saltedHash.salt
+                                    )
+                                )
+                        if (result > 0) {
+                            respondWithSuccessfullyResult(
+                                result = true,
+                                message = "User Password Updated Successfully ."
+                            )
+                        } else {
+                            throw UnknownErrorException("update failed .")
+                        }
+
+                    } ?: throw NotFoundException("User Not Found.")
+
+                } ?: throw MissingParameterException("Missing parameters .")
+
+            } catch (exc: Exception) {
+                logger.error { "$UPDATE_USER_INFO_REQUEST error ${exc.stackTrace ?: "An unknown error occurred"}" }
+
+                throw UnknownErrorException(exc.message ?: "An Known Error Occurred .")
+
+            }
+
+
+        }
+
     }
 
     // Login a user --> POST /api/v1/admin-client/users/login

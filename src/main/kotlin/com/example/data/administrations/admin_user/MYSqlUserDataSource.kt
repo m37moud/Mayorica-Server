@@ -2,10 +2,7 @@ package com.example.data.administrations.admin_user
 
 import com.example.database.table.AdminUserEntity
 import com.example.database.table.UserEntity
-import com.example.models.AdminUser
-import com.example.models.AdminUserDetail
-import com.example.models.Role
-import com.example.models.User
+import com.example.models.*
 import com.example.models.mapper.toModel
 import com.example.security.hash.SaltedHash
 import kotlinx.coroutines.Dispatchers
@@ -179,7 +176,10 @@ class MYSqlUserDataSource(
     override suspend fun updatePermission(id: Int, permission: String): Int {
         return withContext(Dispatchers.IO) {
             val result = db.update(AdminUserEntity) {
+
                 set(it.role, permission)
+                set(it.updated_at, LocalDateTime.now())
+
                 where {
                     it.id eq id
                 }
@@ -193,6 +193,38 @@ class MYSqlUserDataSource(
             it.id eq id
         }
         result
+    }
+
+    override suspend fun updateUserProfile(id: Int, userProfileInfo: UpdateUserProfileInfo): Int {
+        return withContext(Dispatchers.IO) {
+            val result = db.update(AdminUserEntity) {
+                set(it.username, userProfileInfo.userName)
+                set(it.full_name, userProfileInfo.fullName)
+                set(it.updated_at, LocalDateTime.now())
+
+                where {
+                    it.id eq id
+                }
+            }
+            result
+        }
+
+    }
+
+    override suspend fun updateUserPassword(id: Int, userPasswordInfo: UpdateUserPasswordInfo): Int {
+        return withContext(Dispatchers.IO) {
+            val result = db.update(AdminUserEntity) {
+                set(it.password, userPasswordInfo.newPassword)
+                set(it.salt, userPasswordInfo.salt)
+                set(it.updated_at, LocalDateTime.now())
+
+                where {
+                    it.id eq id
+                }
+            }
+            result
+        }
+
     }
 
     private fun rowToAdminUser(row: QueryRowSet?): AdminUser? {
