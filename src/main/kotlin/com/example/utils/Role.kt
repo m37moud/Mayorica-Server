@@ -13,5 +13,7 @@ object Claim {
     const val USER_ID = "userId"
     const val PERMISSION = "userRole"
     const val USERNAME = "username"
+    const val FULL_NAME = "fullName"
+    const val CREATED_AT = "createdAt"
     const val TOKEN_TYPE = "tokenType"
 }

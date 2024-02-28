@@ -4,6 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserAdminResponse(
-    val id : Int,
-    val role :String
+    val id: Int,
+    val fullName: String,
+    val role: String,
+    val createdAt: String,
 )

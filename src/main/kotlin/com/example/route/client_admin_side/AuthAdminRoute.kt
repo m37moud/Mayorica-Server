@@ -1,12 +1,9 @@
 package com.example.route.client_admin_side
 
 import com.example.data.administrations.admin_user.UserDataSource
-import com.example.database.table.AdminUserEntity
 import com.example.models.AdminUser
 import com.example.models.MyResponsePageable
 import com.example.models.options.getAdminUserOptions
-import com.example.models.options.getAppsOptions
-import com.example.models.options.getUserOptions
 import com.example.models.request.auth.AdminRegister
 import com.example.models.response.UserAdminResponse
 import com.example.security.hash.HashingService
@@ -14,6 +11,8 @@ import com.example.security.hash.SaltedHash
 import com.example.security.token.TokenClaim
 import com.example.security.token.TokenService
 import com.example.utils.*
+import com.example.utils.Claim.CREATED_AT
+import com.example.utils.Claim.FULL_NAME
 import com.example.utils.Claim.PERMISSION
 import com.example.utils.Claim.USERNAME
 import com.example.utils.Claim.USER_ID
@@ -227,44 +226,27 @@ fun Route.authenticationRoutes(
         get(ME_REQUEST) {
             logger.debug { "get /$ME_REQUEST" }
 
-            val principal = call.principal<JWTPrincipal>()
-            val userId = try {
-                principal?.getClaim(USER_ID, String::class)?.toIntOrNull()
-            } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Failed ",
-                        data = null
+            try {
+                val principal = call.principal<JWTPrincipal>()
+                val userId = principal?.getClaim(USER_ID, String::class)?.toIntOrNull()
+                val userRole = principal?.getClaim(PERMISSION, String::class)
+                val fullName = principal?.getClaim(FULL_NAME, String::class)
+                val createdAt = principal?.getClaim(CREATED_AT, String::class)
+                respondWithSuccessfullyResult(
+                    result = UserAdminResponse(
+                        id = userId ?: -1,
+                        fullName = fullName ?: "",
+                        role = userRole ?: "",
+                        createdAt = createdAt ?: "",
                     )
                 )
-                return@get
-            }
-            val userRole = try {
-                principal?.getClaim(PERMISSION, String::class)
+
             } catch (e: Exception) {
-                call.respond(
-                    HttpStatusCode.Conflict,
-                    MyResponse(
-                        success = false,
-                        message = e.message ?: "Failed ",
-                        data = null
-                    )
-                )
-                return@get
+                logger.error { "${e.stackTrace ?: "An unknown error occurred"}" }
+                throw UnknownErrorException(e.message ?: "An unknown error occurred  ")
+
             }
 
-            call.respond(
-                HttpStatusCode.OK, MyResponse(
-                    success = true,
-                    message = "",
-                    data = UserAdminResponse(
-                        id = userId!!,
-                        role = userRole!!
-                    )
-                )
-            )
 
         }
         // delete the user info --> delete /api/v1/user/delete (with token)
@@ -396,9 +378,18 @@ fun Route.authenticationRoutes(
                             name = PERMISSION,
                             value = adminUser.role
                         ),
+//                        TokenClaim(
+//                            name = USERNAME,
+//                            value = adminUser.username
+//                        )
+
                         TokenClaim(
-                            name = USERNAME,
-                            value = adminUser.username
+                            name = FULL_NAME,
+                            value = adminUser.full_name
+                        ),
+                        TokenClaim(
+                            name = CREATED_AT,
+                            value = adminUser.created_at
                         ),
 
                         )
