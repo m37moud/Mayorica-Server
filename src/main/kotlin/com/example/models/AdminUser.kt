@@ -3,7 +3,6 @@ package com.example.models
 import io.ktor.server.auth.*
 import kotlinx.serialization.Serializable
 
-@Serializable
 data class AdminUser(
     val id: Int = -1,
     val full_name: String,

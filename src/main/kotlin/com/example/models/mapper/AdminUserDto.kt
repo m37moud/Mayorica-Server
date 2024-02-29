@@ -4,6 +4,7 @@ import com.example.models.AdminUser
 import com.example.models.AdminUserDetail
 import com.example.models.UserInfo
 import com.example.models.request.auth.AdminRegister
+import com.example.models.response.UserAdminResponse
 import com.example.security.hash.SaltedHash
 
 fun AdminRegister.toModel() = UserInfo(
@@ -35,6 +36,16 @@ fun AdminUser.toModel() = AdminUserDetail(
 )
 
 fun List<AdminUser>.toModel() = map { it.toModel() }
+
+
+fun AdminUserDetail.toDto(id: Int) = UserAdminResponse(
+    id = id,
+    username =username ,
+    fullName =full_name ,
+    role = role,
+    createdAt = created_at,
+
+)
 
 
 

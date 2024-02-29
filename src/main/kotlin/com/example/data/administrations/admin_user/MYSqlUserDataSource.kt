@@ -7,7 +7,6 @@ import com.example.models.mapper.toModel
 import com.example.security.hash.SaltedHash
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.koin.core.annotation.Single
 import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*

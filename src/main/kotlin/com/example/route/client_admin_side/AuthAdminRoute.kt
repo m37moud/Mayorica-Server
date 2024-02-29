@@ -7,6 +7,7 @@ import com.example.models.MyResponsePageable
 import com.example.models.UpdateUserPasswordInfo
 import com.example.models.dto.UpdateUserPasswordInfoDto
 import com.example.models.dto.UpdateUserProfileInfoDto
+import com.example.models.mapper.toDto
 import com.example.models.options.getAdminUserOptions
 import com.example.models.request.auth.AdminRegister
 import com.example.models.response.UserAdminResponse
@@ -18,6 +19,7 @@ import com.example.utils.*
 import com.example.utils.Claim.CREATED_AT
 import com.example.utils.Claim.FULL_NAME
 import com.example.utils.Claim.PERMISSION
+import com.example.utils.Claim.USERNAME
 import com.example.utils.Claim.USER_ID
 import com.example.utils.Constants.ADMIN_CLIENT
 import io.ktor.http.*
@@ -222,16 +224,22 @@ fun Route.authenticationRoutes(
             try {
                 val principal = call.principal<JWTPrincipal>()
                 val userId = principal?.getClaim(USER_ID, String::class)?.toIntOrNull()
-                val userRole = principal?.getClaim(PERMISSION, String::class)
-                val fullName = principal?.getClaim(FULL_NAME, String::class)
-                val createdAt = principal?.getClaim(CREATED_AT, String::class)
+
+                val userDetails =
+                    userDataSource.getUserDetailById(userId!!) ?: throw NotFoundException("User Not Found ")
+
+
+                logger.debug { "userId = $userId" }
+                logger.debug { "userRole = ${userDetails.role}" }
+                logger.debug { "fullName = ${userDetails.full_name}" }
+                logger.debug { "userName = ${userDetails.username}" }
+                logger.debug { "createdAt = ${userDetails.created_at}" }
+                logger.debug { "user  = ${userDetails.toDto(userId)}" }
+
+
                 respondWithSuccessfullyResult(
-                    result = UserAdminResponse(
-                        id = userId ?: -1,
-                        fullName = fullName ?: "",
-                        role = userRole ?: "",
-                        createdAt = createdAt ?: "",
-                    )
+                    result = userDetails.toDto(userId),
+                    message = "Get User Profile Successfully"
                 )
 
             } catch (e: Exception) {
@@ -349,11 +357,21 @@ fun Route.authenticationRoutes(
             try {
                 call.parameters["id"]?.toIntOrNull()?.let { id ->
 
-                    val userProfileDto = call.receive<UpdateUserProfileInfoDto>()
-                    if (userDataSource.getAdminUserByUsername(userProfileDto.userName)!= null) {
-                        throw AlreadyExistsException("that username (${userProfileDto.userName}) is already found ")
+                    val newUserProfileDto = call.receive<UpdateUserProfileInfoDto>()
+
+                    val oldUser = userDataSource.getUserDetailById(id) ?: throw NotFoundException("User Not Found.")
+                    val isSameUsername = newUserProfileDto.userName == oldUser.username
+                    val isSameFullName = newUserProfileDto.fullName == oldUser.full_name
+
+
+                    if (isSameUsername && isSameFullName) {
+                        throw AlreadyExistsException("no new data to change ")
                     }
-                    val result = userDataSource.updateUserProfile(id = id, userProfileInfo = userProfileDto.toEntity())
+                    if (userDataSource.getAdminUserByUsername(newUserProfileDto.userName) != null && isSameFullName) {
+                        throw AlreadyExistsException("that username (${newUserProfileDto.userName}) is already found ")
+                    }
+                    val result =
+                        userDataSource.updateUserProfile(id = id, userProfileInfo = newUserProfileDto.toEntity())
                     if (result > 0) {
                         respondWithSuccessfullyResult(
                             result = true,
@@ -436,7 +454,7 @@ fun Route.authenticationRoutes(
         val username = params["username"]?.trim().toString()
         val password = params["password"]?.trim().toString()
 
-        logger.debug { "username /$username , password = $password " }
+//        logger.debug { "username /$username , password = $password " }
 
         // check if operation connected db successfully
         try {
@@ -461,15 +479,16 @@ fun Route.authenticationRoutes(
                             name = PERMISSION,
                             value = adminUser.role
                         ),
-//                        TokenClaim(
-//                            name = USERNAME,
-//                            value = adminUser.username
-//                        )
-
                         TokenClaim(
                             name = FULL_NAME,
                             value = adminUser.full_name
                         ),
+                        TokenClaim(
+                            name = USERNAME,
+                            value = adminUser.username
+                        ),
+
+
                         TokenClaim(
                             name = CREATED_AT,
                             value = adminUser.created_at
