@@ -354,10 +354,9 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
             val image = row[OffersEntity.image] ?: ""
             val isHotOffer = row[OffersEntity.isHotOffer] ?: false
             val userAdminID = row[OffersEntity.userAdminID] ?: -1
-            val createdAt = row[OffersEntity.createdAt] ?: LocalDateTime.now()
-            val updatedAt = row[OffersEntity.updatedAt] ?: LocalDateTime.now()
-            val endedAt = row[OffersEntity.updatedAt] ?: LocalDateTime.now()
-
+            val createdAt = row[OffersEntity.createdAt] ?: ""
+            val updatedAt = row[OffersEntity.updatedAt] ?: ""
+            val endedAt = row[OffersEntity.endedAt] ?: ""
 
 
             Offer(
@@ -367,9 +366,9 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
                 image = image,
                 isHotOffer = isHotOffer,
                 userAdminID = userAdminID,
-                createdAt = createdAt.toDatabaseString(),
-                updatedAt = updatedAt.toDatabaseString(),
-                endedAt = endedAt.toDatabaseString()
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString(),
+                endedAt = endedAt.toString()
 
 
             )

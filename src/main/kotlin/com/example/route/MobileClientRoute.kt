@@ -6,7 +6,7 @@ import io.ktor.server.routing.*
 
 fun Route.configureMobileClient() {
 
-    authenticate("mobile") {
+    authenticate("client") {
         userOrderRequest()
         getUserOrderClient()
         getNearlyProvider()

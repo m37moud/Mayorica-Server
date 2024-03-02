@@ -2,19 +2,19 @@ package com.example.plugins
 
 import com.example.data.administrations.apps.admin.AppsAdminDataSource
 import com.example.models.response.toResponse
-import dev.forst.ktor.apikey.apiKey
 import io.ktor.server.auth.*
-import mu.KotlinLogging
 
 
-fun AuthenticationConfig.configureMobileAuthority(app: AppsAdminDataSource) {
-    basic("mobile") {
+fun AuthenticationConfig.configureClientAppsAuthority(app: AppsAdminDataSource) {
+    basic("client") {
 
         validate { credentials ->
+
             val mobileApp = app.getAppDetailByKeyAndPackageName(
                 packageName = credentials.name,
                 apiKey = credentials.password
             )
+            println("mobile packageName = ${credentials.name} , apiKey = ${credentials.password}")
 
             if (mobileApp != null) {
                 AppPrincipal(mobileApp.toResponse())
@@ -24,7 +24,7 @@ fun AuthenticationConfig.configureMobileAuthority(app: AppsAdminDataSource) {
         }
     }
 
-//    apiKey("mobile") {
+//    apiKey("client") {
 //
 //        validate { keyFromHeader ->
 //            println("configureMobileAuthority keyFromHeader = $keyFromHeader")

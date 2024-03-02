@@ -3,14 +3,9 @@ package com.example.plugins
 import com.example.data.administrations.apps.admin.AppsAdminDataSource
 import com.example.models.response.AppResponse
 import com.example.security.token.TokenService
-import com.example.utils.Constants.SERVER_LOCKED_FILE_NAME
-import com.example.utils.getUserWorkingDirectory
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.response.*
 import org.koin.ktor.ext.inject
-import java.io.File
 
 
 // principal for the app
@@ -40,7 +35,7 @@ fun Application.configureSecurity(
     install(Authentication) {
         configureAppAuthority(jwtService)
         adminClientAuth(jwtService)
-        configureMobileAuthority(app)
+        configureClientAppsAuthority(app)
 
     }
 
