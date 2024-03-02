@@ -12,6 +12,7 @@ fun AuthenticationConfig.adminClientAuth(
     jwtService: TokenService
 ) {
 
+
     jwt {
         // Load the token verification config
         jwtService.verifyJWT()?.let { verifier(it) }

@@ -23,5 +23,6 @@ interface AppsAdminDataSource {
     suspend fun getAppInfoByPackage(packageName: String): AppsModel?
     suspend fun getAppInfoByPackageDto(packageName: String): AppsModelDto?
     suspend fun getUserWithApp(apiKey: String): AppsModel?
+    suspend fun getAppDetailByKeyAndPackageName(packageName: String, apiKey: String): AppsModel?
 
 }

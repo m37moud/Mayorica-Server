@@ -1,7 +1,9 @@
 package com.example.models.response
 
 import com.example.models.AppsModel
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class AppResponse(
     val id: Int = -1,
     val packageName: String = "",

@@ -74,6 +74,7 @@ class MySqlAdminAppDataSource(private val db: Database) : AppsAdminDataSource {
             appsList
         }
     }
+
     /**
      * create app
      * @param app AppsModel app
@@ -234,6 +235,20 @@ class MySqlAdminAppDataSource(private val db: Database) : AppsAdminDataSource {
         result
 
     }
+
+    override suspend fun getAppDetailByKeyAndPackageName(packageName: String, apiKey: String): AppsModel? =
+        withContext(Dispatchers.IO) {
+            val result = db.from(AdminAppEntity)
+                .select()
+                .where {
+                    (AdminAppEntity.packageName eq packageName) and (AdminAppEntity.apiKey eq apiKey)
+
+                }
+                .map { rowToAppsModel(it) }
+                .firstOrNull()
+            result
+
+        }
 
     private fun rowToAppsModel(row: QueryRowSet?): AppsModel? {
         return if (row == null) {

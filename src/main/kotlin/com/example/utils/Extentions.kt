@@ -73,6 +73,24 @@ fun Route.authenticateWithRole(role: Int, block: Route.() -> Unit) {
         block()
     }
 }
+fun Route.authenticateApp(role: Int, block: Route.() -> Unit) {
+
+    get{
+        val packageName = extractApplicationIdHeader()
+
+    }
+    authenticate("mobile") {
+
+        intercept(ApplicationCallPipeline.Call) {
+
+            val permission = extractPermission()
+            if (!hasPermission(permission, role)) {
+                call.respond(HttpStatusCode.Unauthorized)
+            }
+        }
+        block()
+    }
+}
 
 fun hasPermission(permission: Int, role: Int): Boolean {
     return (permission and role) == role
