@@ -110,7 +110,7 @@ class MySqlContactUsDataSource(private val db: Database) : ContactUsDataSource {
             val email = row[ContactUsEntity.email] ?: ""
             val mapLabel = row[ContactUsEntity.mapLabel] ?: ""
             val latitude = row[ContactUsEntity.latitude] ?: 0.0
-            val longitude = row[ContactUsEntity.latitude] ?: 0.0
+            val longitude = row[ContactUsEntity.longitude] ?: 0.0
             val webLink = row[ContactUsEntity.webLink] ?: ""
             val fbLink = row[ContactUsEntity.fbLink] ?: ""
             val youtubeLink = row[ContactUsEntity.youtubeLink] ?: ""
