@@ -41,7 +41,7 @@ private const val REGISTER_REQUEST = "$USER/register"
 private const val DELETE_REQUEST = "$USER/delete"
 private const val UPDATE_USER_INFO_REQUEST = "$USER/updateInfo"
 private const val UPDATE_USER_PASS_REQUEST = "$USER/updatePassword"
-private const val UPDATE_USER_PERMISSION_REQUEST = "$UPDATE_USER_INFO_REQUEST/permission"
+private const val UPDATE_USER_PERMISSION_REQUEST = "$USER/update/permission"
 private const val LOGIN_REQUEST = "$USER/login"
 private const val ME_REQUEST = "$USERS/me"
 
@@ -308,6 +308,7 @@ fun Route.authenticationRoutes(
             logger.debug { "Put -> $UPDATE_USER_PERMISSION_REQUEST" }
             call.parameters["id"]?.toIntOrNull()?.let { id ->
                 val permission = call.parameters["permission"]?.trim()?.uppercase(Locale.getDefault())
+                logger.debug { "permission = $permission" }
                 try {
                     val result = userDataSource.updatePermission(id = id, permission = permission!!)
                     if (result > 0) {
@@ -324,6 +325,7 @@ fun Route.authenticationRoutes(
                             return@put
                         }
                     } else {
+
                         call.respond(
                             status = HttpStatusCode.OK,
                             message = MyResponse(
