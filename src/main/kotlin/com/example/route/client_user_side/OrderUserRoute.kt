@@ -119,9 +119,9 @@ fun Route.userOrderRequest() {
                 call.respond(
                     HttpStatusCode.OK,
                     MyResponse(
-                        success = false,
+                        success = true,
                         message = "User order already made before.",
-                        data = null
+                        data = checkUserOrder.orderNumber
                     )
                 )
                 return@post
