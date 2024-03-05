@@ -20,7 +20,6 @@ import org.koin.ktor.ext.inject
 
 
 /**
- * we need
  * create
  * update
  * delete
@@ -101,12 +100,14 @@ fun Route.productAdminRoute() {
                 val ceramicOption = getCeramicProductOptions(params)
                 val ceramicList =
                     productDataSource
-                        .getAllProductPageable(
+                        .getAllProductPageableDto(
                             query = ceramicOption.query,
                             page = ceramicOption.page!!,
                             perPage = ceramicOption.perPage!!,
                             byTypeCategoryId = ceramicOption.byTypeCategoryId,
                             bySizeCategoryId = ceramicOption.bySizeCategoryId,
+                            byColorCategoryId = ceramicOption.byColorCategoryId,
+
                             isHot = ceramicOption.isHot,
                             sortField = ceramicOption.sortFiled!!,
                             sortDirection = ceramicOption.sortDirection!!

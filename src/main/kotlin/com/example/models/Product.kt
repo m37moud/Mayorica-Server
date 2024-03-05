@@ -14,7 +14,9 @@ data class Product(
     val image: String,
     val createdAt: String,
     val updatedAt: String,
-    val deleted: Boolean = false
+    val deleted: Boolean = false,
+    val isHot :Boolean = false,
+
 
 )
 

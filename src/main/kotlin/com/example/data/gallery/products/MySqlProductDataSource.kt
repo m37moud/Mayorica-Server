@@ -251,7 +251,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
     }
 
 
-    override suspend fun getAllProductPageable(page: Int, perPage: Int): List<Product> {
+    override suspend fun getAllProductPageableDto(page: Int, perPage: Int): List<Product> {
         logger.debug { "getAllProductPageable /$page $perPage" }
 
         return withContext(Dispatchers.IO) {
@@ -273,6 +273,58 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         perPage: Int,
         byTypeCategoryId: Int?,
         bySizeCategoryId: Int?,
+        byColorCategoryId: Int?,
+        isHot: Boolean?,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<Product> {
+        logger.debug { "getAllProductPageable /$page $perPage" }
+
+        return withContext(Dispatchers.IO) {
+            val myLimit = if (perPage > 100) 100 else perPage
+            val myOffset = (page * perPage)
+            val productList = db.from(ProductEntity)
+                .select()
+                .limit(myLimit)
+                .offset(myOffset)
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+                .whereWithConditions {
+                    if (!query.isNullOrEmpty()) {
+                        it += (ProductEntity.productName like "%${query}%")
+                    }
+                    if (byTypeCategoryId != null) {
+                        it += (ProductEntity.typeCategoryId eq byTypeCategoryId)
+                    }
+                    if (bySizeCategoryId != null) {
+                        it += (ProductEntity.sizeCategoryId eq bySizeCategoryId)
+                    }
+                    if (byColorCategoryId != null) {
+                        it += (ProductEntity.colorCategoryId eq byColorCategoryId)
+                    }
+                }
+                .mapNotNull { rowToProduct(it) }
+            if (isHot != null)
+                if (isHot)
+                    productList.filter { it.isHot }
+                else
+                    productList.filter { !it.isHot }
+            else
+                productList
+        }
+    }
+
+    override suspend fun getAllProductPageableDto(
+        query: String?,
+        page: Int,
+        perPage: Int,
+        byTypeCategoryId: Int?,
+        bySizeCategoryId: Int?,
+        byColorCategoryId: Int?,
         isHot: Boolean?,
         sortField: Column<*>,
         sortDirection: Int
@@ -315,6 +367,9 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                     }
                     if (bySizeCategoryId != null) {
                         it += (ProductEntity.sizeCategoryId eq bySizeCategoryId)
+                    }
+                    if (byColorCategoryId != null) {
+                        it += (ProductEntity.colorCategoryId eq byColorCategoryId)
                     }
                 }
                 .mapNotNull { rowToProductDto(it) }
@@ -570,7 +625,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
     }
 
     override suspend fun checkProduct(product: CeramicProductInfo) {
-        return withContext(Dispatchers.IO){
+        return withContext(Dispatchers.IO) {
             val validTypeCategory = product.typeCategoryId > -1
             val validSizeCategory = product.sizeCategoryId > -1
             val validColorCategory = product.colorCategoryId > -1
@@ -637,7 +692,7 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
         }
     }
 
-    private fun rowToProduct(row: QueryRowSet?): Product? {
+    private suspend fun rowToProduct(row: QueryRowSet?): Product? {
         return if (row == null)
             null
         else {
@@ -651,6 +706,8 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
             val createdAt = row[ProductEntity.createdAt] ?: ""
             val updatedAt = row[ProductEntity.updatedAt] ?: ""
             val deleted = row[ProductEntity.deleted] ?: false
+            val isHot: Boolean = checkProductIsHot(id) != null
+
 
 
             Product(
@@ -663,7 +720,8 @@ class MySqlProductDataSource(private val db: Database) : ProductDataSource {
                 image = image,
                 createdAt = createdAt.toString(),
                 updatedAt = updatedAt.toString(),
-                deleted = deleted
+                deleted = deleted,
+                isHot = isHot
 
             )
         }

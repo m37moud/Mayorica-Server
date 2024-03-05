@@ -3,14 +3,12 @@ package com.example.data.gallery.products
 import com.example.database.table.ProductEntity
 import com.example.models.CeramicProductInfo
 import com.example.models.Product
-import com.example.models.TypeCategory
 import com.example.models.dto.ColorCategoryMenu
 import com.example.models.dto.ProductDto
 import com.example.models.dto.SizeCategoryMenu
 import com.example.models.dto.TypeCategoryMenu
 import com.example.models.response.ProductResponse
 import org.ktorm.schema.Column
-import kotlin.reflect.KProperty1
 
 interface ProductDataSource {
 
@@ -54,7 +52,7 @@ interface ProductDataSource {
     //    suspend fun getAllProductByType(categoryTypeId: Int = -1): List<Product>
 //    suspend fun getAllProductBySize(categorySizeId: Int): List<Product>
 //    suspend fun getAllProductByColor(categoryColorId: Int): List<Product>
-    suspend fun getAllProductPageable(
+    suspend fun getAllProductPageableDto(
         page: Int = 0, perPage: Int = 10
     ): List<Product>
     suspend fun getAllProductPageable(
@@ -63,6 +61,21 @@ interface ProductDataSource {
         perPage: Int,
         byTypeCategoryId: Int?,
         bySizeCategoryId: Int?,
+        byColorCategoryId: Int?,
+
+        isHot: Boolean?,
+
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<Product>
+    suspend fun getAllProductPageableDto(
+        query: String?,
+        page: Int,
+        perPage: Int,
+        byTypeCategoryId: Int?,
+        bySizeCategoryId: Int?,
+        byColorCategoryId: Int?,
+
         isHot: Boolean?,
 
         sortField: Column<*>,
