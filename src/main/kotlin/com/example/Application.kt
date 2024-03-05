@@ -17,7 +17,11 @@ import io.ktor.server.config.*
 @Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.
 fun main(args: Array<String>): Unit =
     io.ktor.server.netty.EngineMain.main(args)
-
+//connector {
+//    // Replace with your actual certificate and key paths
+//    keyStore = file("/path/to/your/server.keystore")
+//    keyStorePassword = "your_keystore_password"
+//}
 fun Application.module() {
     configureKoin() // Configure the Koin plugin to inject dependencies
     val appConfig = HoconApplicationConfig(ConfigFactory.load())
