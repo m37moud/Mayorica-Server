@@ -164,7 +164,7 @@ fun Route.offersUserRoute(
                     MyResponse(
                         success = true,
                         message = "get Random Offer successfully",
-                        data = it
+                        data = it.toUserResponse()
                     )
                 )
 

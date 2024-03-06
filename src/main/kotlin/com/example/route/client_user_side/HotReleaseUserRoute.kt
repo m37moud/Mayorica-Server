@@ -1,6 +1,7 @@
 package com.example.route.client_user_side
 
 import com.example.data.gallery.products.hot_release.HotReleaseDataSource
+import com.example.mapper.toModelResponse
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
 import io.ktor.http.*
@@ -33,7 +34,7 @@ fun Route.hotReleaseUserRoute(
                     message = MyResponse(
                         success = true,
                         message = "product fetched successfully from hot release",
-                        data = productList
+                        data = productList.toModelResponse()
                     )
                 )
             } else {
