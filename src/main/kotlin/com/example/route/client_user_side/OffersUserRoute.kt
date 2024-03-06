@@ -1,6 +1,7 @@
 package com.example.route.client_user_side
 
 import com.example.data.offers.OffersDataSource
+import com.example.mapper.toUserResponse
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
 import io.ktor.http.*
@@ -18,7 +19,6 @@ private const val SINGLE_RANDOM_HOT_OFFERS = "${SINGLE_OFFERS}/random"
 
 
 private val logger = KotlinLogging.logger { }
-
 
 
 fun Route.offersUserRoute(
@@ -118,13 +118,13 @@ fun Route.offersUserRoute(
 
             logger.debug { "GET ALL /${SINGLE_LAST_OFFERS}" }
 
-             offersDataSource.getLastAvailableOffer()?.let {
+            offersDataSource.getLastAvailableOffer()?.let {
                 call.respond(
                     HttpStatusCode.OK,
                     MyResponse(
                         success = true,
                         message = "get Last Offer successfully",
-                        data = it
+                        data = it.toUserResponse()
                     )
                 )
 
@@ -158,7 +158,7 @@ fun Route.offersUserRoute(
 
             logger.debug { "GET  /${SINGLE_RANDOM_HOT_OFFERS}" }
 
-             offersDataSource.getRandomHotOffers()?.let {
+            offersDataSource.getRandomHotOffers()?.let {
                 call.respond(
                     HttpStatusCode.OK,
                     MyResponse(
