@@ -1,6 +1,7 @@
 package com.example.route.client_user_side
 
 import com.example.data.ceramic_provider.CeramicProviderDataSource
+import com.example.mapper.toUserResponse
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
 import io.ktor.http.*
@@ -30,7 +31,7 @@ fun Route.getNearlyProvider(
                     MyResponse(
                         success = true,
                         message = "Get All Ceramic Providers Successfully",
-                        data = providers
+                        data = providers.toUserResponse()
                     )
                 )
                 return@get
@@ -167,13 +168,14 @@ fun Route.getNearlyProvider(
             try {
 
                 val providers = ceramicProvider.getNearlyProvider(latitude, longitude)
+
                 if (providers.isNotEmpty()) {
                     call.respond(
                         HttpStatusCode.OK,
                         MyResponse(
                             success = true,
                             message = "Get All Ceramic Providers Successfully",
-                            data = providers
+                            data = providers.toUserResponse()
                         )
                     )
                     return@get
