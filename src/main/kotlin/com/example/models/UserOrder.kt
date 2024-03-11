@@ -12,7 +12,7 @@ data class UserOrder(
     val latitude: Double,
     val longitude: Double,
     val country: String,
-    val governorate: String,
+    val city: String,
     val address: String,
     /**
      * approve state is state from (0 to 4)
@@ -22,7 +22,8 @@ data class UserOrder(
      * 3 -> order rejected
      */
     val approveState: Int = 0,
-    val created_at: String,
-    val updated_at: String,
+    val sellerId: Int = 0,
+    val createdAt: String,
+    val updatedAt: String,
 
     )

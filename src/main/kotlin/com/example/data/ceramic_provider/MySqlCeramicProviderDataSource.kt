@@ -331,7 +331,7 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 set(it.latitude, ceramicProvider.latitude)
                 set(it.longitude, ceramicProvider.longitude)
                 set(it.country, ceramicProvider.country)
-                set(it.governorate, ceramicProvider.governorate)
+                set(it.governorate, ceramicProvider.city)
                 set(it.address, ceramicProvider.address)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
@@ -414,7 +414,7 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 latitude = latitude,
                 longitude = longitude,
                 country = country,
-                governorate = governorate,
+                city = governorate,
                 address = address,
                 createdAt = createdAt.toString(),
                 updatedAt = updatedAt.toString()

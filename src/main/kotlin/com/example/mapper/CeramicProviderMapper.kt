@@ -12,7 +12,7 @@ fun CeramicProviderRequest.toEntity(userAdminId: Int) = CeramicProvider(
     latitude = this.latitude,
     longitude = this.longitude,
     country = this.country,
-    governorate = this.governorate,
+    city = this.governorate,
     address = this.address,
     createdAt = LocalDateTime.now().toDatabaseString()
 
@@ -25,7 +25,7 @@ fun CeramicProviderRequest.toModelUpdate() = CeramicProvider(
     latitude = this.latitude,
     longitude = this.longitude,
     country = this.country,
-    governorate = this.governorate,
+    city = this.governorate,
     address = this.address,
     updatedAt = LocalDateTime.now().toDatabaseString()
 
@@ -33,7 +33,7 @@ fun CeramicProviderRequest.toModelUpdate() = CeramicProvider(
 )
 
 fun CeramicProvider.toUserResponse() = CeramicProviderResponse(
-    id, name, latitude, longitude, country, governorate, address
+    id, name, latitude, longitude, country, city, address
 )
 
 fun List<CeramicProvider>.toUserResponse() = map { it.toUserResponse() }

@@ -1,19 +1,15 @@
-package com.example.models.response
+package com.example.models
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class OrderResponse(
+data class UserOrderCreate(
     val fullName: String,
     val idNumber: String,
+    val orderNumber: String,
     val department: String,
     val latitude: Double,
     val longitude: Double,
     val country: String,
     val city: String,
     val address: String,
-    val seller: CeramicProviderResponse?,
-
     /**
      * approve state is state from (0 to 4)
      * 0 -> order initialize
@@ -22,10 +18,5 @@ data class OrderResponse(
      * 3 -> order rejected
      */
     val approveState: Int = 0,
-    val createdAt: String,
-    val updatedAt: String,
-    val totalAmount: Double = 0.0,
-    val takenAmount: Double = 0.0,
-    val availableAmount: Double = 0.0,
-    val note: String
+    val sellerId: Int = 0,
 )

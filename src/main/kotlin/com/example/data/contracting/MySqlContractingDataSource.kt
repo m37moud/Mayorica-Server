@@ -113,7 +113,7 @@ class MySqlContractingDataSource(private val db: Database) : ContractingDataSour
                 )
                 .whereWithConditions {
                     if (!query.isNullOrEmpty()) {
-                        it += (UserOrderEntity.full_name like "%%${query}")
+                        it += (UserOrderEntity.fullName like "%%${query}")
                     }
                 }
                 .mapNotNull { rowToContractSectionDto(it) }

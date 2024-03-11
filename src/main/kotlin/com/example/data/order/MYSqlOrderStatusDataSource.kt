@@ -63,8 +63,8 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                     UserOrderStatusEntity.id,
                     UserOrderEntity.id,
                     UserOrderStatusEntity.approveByAdminId,
-                    UserOrderEntity.full_name,
-                    UserOrderEntity.id_number,
+                    UserOrderEntity.fullName,
+                    UserOrderEntity.idNumber,
                     UserOrderEntity.orderNumber,
                     UserOrderEntity.department,
                     UserOrderEntity.latitude,
@@ -120,8 +120,8 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                     UserOrderStatusEntity.id,
                     UserOrderEntity.id,
                     UserOrderStatusEntity.approveByAdminId,
-                    UserOrderEntity.full_name,
-                    UserOrderEntity.id_number,
+                    UserOrderEntity.fullName,
+                    UserOrderEntity.idNumber,
                     UserOrderEntity.orderNumber,
                     UserOrderEntity.department,
                     UserOrderEntity.latitude,
@@ -147,7 +147,7 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                 )
                 .whereWithConditions {
                     if (!query.isNullOrEmpty()) {
-                        it += (UserOrderEntity.full_name like "%%${query}") or
+                        it += (UserOrderEntity.fullName like "%%${query}") or
                                 (UserOrderEntity.orderNumber like "%${query}%")
 
                     }
@@ -222,7 +222,7 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
     private suspend fun updateCustomerOrder(id: Int, approveState: Int): Int {
         return withContext(Dispatchers.IO) {
             val result = db.update(UserOrderEntity) {
-                set(it.approve_state, approveState)
+                set(it.approveState, approveState)
                 where {
                     it.id eq id
                 }
@@ -347,8 +347,8 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
             val id = row[UserOrderStatusEntity.id] ?: -1
             val requestUserId = row[UserOrderEntity.id] ?: -1
             val adminUserName = getAdminUserName(id = row[UserOrderStatusEntity.approveByAdminId] ?: -1) ?: ""
-            val customerName = row[UserOrderEntity.full_name] ?: ""
-            val customerIdNumber = row[UserOrderEntity.id_number] ?: ""
+            val customerName = row[UserOrderEntity.fullName] ?: ""
+            val customerIdNumber = row[UserOrderEntity.idNumber] ?: ""
             val orderNumber = row[UserOrderEntity.orderNumber] ?: ""
             val department = row[UserOrderEntity.department] ?: ""
             val latitude = row[UserOrderEntity.latitude] ?: 0.0

@@ -11,7 +11,7 @@ data class CeramicProvider(
     val latitude: Double,
     val longitude: Double,
     val country: String,
-    val governorate: String,
+    val city: String,
     val address: String,
     val createdAt: String = "",
     val updatedAt: String = ""

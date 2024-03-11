@@ -1,9 +1,12 @@
 package com.example.data.order
 
 import com.example.database.table.*
+import com.example.mapper.toUserResponse
+import com.example.models.CeramicProvider
 import com.example.models.UserOrder
+import com.example.models.UserOrderCreate
 import com.example.models.UserOrderStatus
-import com.example.utils.toDatabaseString
+import com.example.models.response.OrderResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Singleton
@@ -25,7 +28,6 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
     }
 
 
-
     override suspend fun getOrderById(id: Int): UserOrder? {
         return withContext(Dispatchers.IO) {
             val userOrder = db.from(UserOrderEntity)
@@ -44,7 +46,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
             val userOrder = db.from(UserOrderEntity)
                 .select()
                 .where {
-                    UserOrderEntity.created_at eq createdDate
+                    UserOrderEntity.createdAt eq createdDate
                 }.map {
                     rowToUserOrder(it)
                 }.firstOrNull()
@@ -57,7 +59,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
             val userOrder = db.from(UserOrderEntity)
                 .select()
                 .where {
-                    UserOrderEntity.full_name eq name
+                    UserOrderEntity.fullName eq name
                 }.map {
                     rowToUserOrder(it)
                 }.firstOrNull()
@@ -78,13 +80,50 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
         }
     }
 
+    override suspend fun getOrderByOrderNumDto(orderNumber: String): OrderResponse? {
+        return withContext(Dispatchers.IO) {
+            val userOrderStatus = db.from(UserOrderStatusEntity)
+//                .innerJoin(AdminUserEntity, on = UserOrderStatusEntity.approveByAdminId eq AdminUserEntity.id)
+                .innerJoin(UserOrderEntity, on = UserOrderStatusEntity.requestUser_id eq UserOrderEntity.id)
+                .innerJoin(CeramicProviderEntity, on = UserOrderEntity.sellerId eq CeramicProviderEntity.id)
+                .select(
+                    UserOrderEntity.fullName,
+                    UserOrderEntity.idNumber,
+                    UserOrderEntity.orderNumber,
+                    UserOrderEntity.department,
+                    UserOrderEntity.latitude,
+                    UserOrderEntity.longitude,
+                    UserOrderEntity.country,
+                    UserOrderEntity.governorate,
+                    UserOrderEntity.address,
+                    UserOrderEntity.sellerId,
+                    UserOrderStatusEntity.approve_state,
+
+                    UserOrderStatusEntity.totalAmount,
+                    UserOrderStatusEntity.takenAmount,
+                    UserOrderStatusEntity.availableAmount,
+                    UserOrderStatusEntity.note,
+                    UserOrderStatusEntity.approveDate,
+                    UserOrderStatusEntity.approveUpdateDate,
+
+
+                    )
+                .where {
+                    UserOrderEntity.orderNumber eq orderNumber
+                }.map {
+                    rowToUserOrderDto(it)
+                }.firstOrNull()
+            userOrderStatus
+        }
+    }
+
     override suspend fun getOrderByNameAndIdNumber(name: String, idNumber: String): UserOrder? {
         return withContext(Dispatchers.IO) {
             val userOrder = db.from(UserOrderEntity)
                 .select()
                 .where {
-                    (UserOrderEntity.full_name eq name) and
-                            (UserOrderEntity.id_number eq idNumber)
+                    (UserOrderEntity.fullName eq name) and
+                            (UserOrderEntity.idNumber eq idNumber)
 
                 }.map {
                     rowToUserOrder(it)
@@ -96,14 +135,14 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
     override suspend fun updateOrder(userOrder: UserOrder): Int {
         return withContext(Dispatchers.IO) {
             val result = db.update(UserOrderEntity) {
-                set(it.full_name, userOrder.fullName)
-                set(it.id_number, userOrder.idNumber)
+                set(it.fullName, userOrder.fullName)
+                set(it.idNumber, userOrder.idNumber)
                 set(it.department, userOrder.department)
                 set(it.country, userOrder.country)
-                set(it.governorate, userOrder.governorate)
+                set(it.governorate, userOrder.city)
                 set(it.address, userOrder.address)
-                set(it.approve_state, userOrder.approveState)
-                set(it.updated_at, LocalDateTime.now())
+                set(it.approveState, userOrder.approveState)
+                set(it.updatedAt, LocalDateTime.now())
                 where {
                     it.id eq userOrder.id
                 }
@@ -130,7 +169,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
     /**
      *  no authenticate is required
      */
-    override suspend fun createOrderWithOrderStatus(userOrder: UserOrder): Int {
+    override suspend fun createOrderWithOrderStatus(userOrder: UserOrderCreate): Int {
         return withContext(Dispatchers.IO) {
             val result = db.useTransaction {
                 val insertResult = createUserOrder(userOrder)
@@ -149,21 +188,21 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
         }
     }
 
-    suspend fun createUserOrder(userOrder: UserOrder): Int {
+    suspend fun createUserOrder(userOrder: UserOrderCreate): Int {
         return withContext(Dispatchers.IO) {
             val insertResult = db.insert(UserOrderEntity) {
-                set(it.full_name, userOrder.fullName)
-                set(it.id_number, userOrder.idNumber)
+                set(it.fullName, userOrder.fullName)
+                set(it.idNumber, userOrder.idNumber)
                 set(it.orderNumber, userOrder.orderNumber)
                 set(it.department, userOrder.department)
                 set(it.latitude, userOrder.latitude)
                 set(it.longitude, userOrder.longitude)
                 set(it.country, userOrder.country)
-                set(it.governorate, userOrder.governorate)
+                set(it.governorate, userOrder.city)
                 set(it.address, userOrder.address)
-                set(it.approve_state, userOrder.approveState)
-                set(it.created_at, LocalDateTime.now())
-                set(it.updated_at, LocalDateTime.now())
+                set(it.approveState, userOrder.approveState)
+                set(it.createdAt, LocalDateTime.now())
+                set(it.updatedAt, LocalDateTime.now())
             }
             insertResult
         }
@@ -193,7 +232,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
             val order = db.from(UserOrderEntity)
                 .select()
                 .where {
-                    UserOrderEntity.id_number eq idNumber
+                    UserOrderEntity.idNumber eq idNumber
                 }.map {
                     rowToUserOrder(it)
                 }.firstOrNull()
@@ -202,25 +241,111 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
 
     }
 
-
+    suspend fun getCeramicProviderByID(id: Int): CeramicProvider? {
+        return withContext(Dispatchers.IO) {
+            val provider = db.from(CeramicProviderEntity)
+                .select()
+                .where {
+                    CeramicProviderEntity.id eq id
+                }.map {
+                    rowToCeramicProvider(it)
+                }.firstOrNull()
+            provider
+        }
+    }
     private fun rowToUserOrder(row: QueryRowSet?): UserOrder? {
         return if (row == null) {
             null
         } else {
             UserOrder(
-                row[UserOrderEntity.id] ?: -1,
-                row[UserOrderEntity.full_name] ?: "",
-                row[UserOrderEntity.id_number] ?: "",
-                row[UserOrderEntity.orderNumber] ?: "",
-                row[UserOrderEntity.department] ?: "",
-                row[UserOrderEntity.latitude] ?: 0.0,
-                row[UserOrderEntity.longitude] ?: 0.0,
-                row[UserOrderEntity.country] ?: "",
-                row[UserOrderEntity.governorate] ?: "",
-                row[UserOrderEntity.address] ?: "",
-                row[UserOrderEntity.approve_state] ?: 0,
-                row[UserOrderEntity.created_at]?.toDatabaseString() ?: "",
-                row[UserOrderEntity.updated_at]?.toDatabaseString() ?: "",
+                id = row[UserOrderEntity.id] ?: -1,
+                fullName = row[UserOrderEntity.fullName] ?: "",
+                idNumber = row[UserOrderEntity.idNumber] ?: "",
+                orderNumber = row[UserOrderEntity.orderNumber] ?: "",
+                department = row[UserOrderEntity.department] ?: "",
+                latitude = row[UserOrderEntity.latitude] ?: 0.0,
+                longitude = row[UserOrderEntity.longitude] ?: 0.0,
+                country = row[UserOrderEntity.country] ?: "",
+                city = row[UserOrderEntity.governorate] ?: "",
+                address = row[UserOrderEntity.address] ?: "",
+                approveState = row[UserOrderEntity.approveState] ?: 0,
+                sellerId = row[UserOrderEntity.sellerId] ?: -1,
+                createdAt = row[UserOrderEntity.createdAt]?.toString() ?: "",
+                updatedAt = row[UserOrderEntity.updatedAt]?.toString() ?: "",
+            )
+        }
+    }
+
+    private suspend fun rowToUserOrderDto(row: QueryRowSet?): OrderResponse? {
+        return if (row == null) {
+            null
+        } else {
+            val customerName = row[UserOrderEntity.fullName] ?: ""
+            val customerIdNumber = row[UserOrderEntity.idNumber] ?: ""
+            val department = row[UserOrderEntity.department] ?: ""
+            val latitude = row[UserOrderEntity.latitude] ?: 0.0
+            val longitude = row[UserOrderEntity.longitude] ?: 0.0
+            val country = row[UserOrderEntity.country] ?: ""
+            val city = row[UserOrderEntity.governorate] ?: ""
+            val address = row[UserOrderEntity.address] ?: ""
+            val sellerId = row[UserOrderEntity.sellerId] ?: -1
+            val approveState = row[UserOrderStatusEntity.approve_state] ?: -1
+            val totalAmount = row[UserOrderStatusEntity.totalAmount] ?: 0.0
+            val takenAmount = row[UserOrderStatusEntity.takenAmount] ?: 0.0
+            val availableAmount = row[UserOrderStatusEntity.availableAmount] ?: 0.0
+            val note = row[UserOrderStatusEntity.note] ?: ""
+            val approveDate = row[UserOrderStatusEntity.approveDate]?.toString() ?: ""
+            val approveUpdateDate = row[UserOrderStatusEntity.approveUpdateDate]?.toString() ?: ""
+            val seller = getCeramicProviderByID(sellerId)?.toUserResponse()
+
+            OrderResponse(
+                fullName = customerName,
+                idNumber = customerIdNumber,
+                department = department,
+                latitude = latitude,
+                longitude = longitude,
+                country = country,
+                city = city,
+                address = address,
+                seller = seller,
+                approveState = approveState,
+                totalAmount = totalAmount,
+                takenAmount = takenAmount,
+                availableAmount = availableAmount,
+                note = note,
+                createdAt = approveDate.toString(),
+                updatedAt = approveUpdateDate.toString(),
+
+                )
+        }
+    }
+    private fun rowToCeramicProvider(row: QueryRowSet?): CeramicProvider? {
+        return if (row == null)
+            null
+        else {
+            val id = row[CeramicProviderEntity.id] ?: -1
+            val adminUserId = row[CeramicProviderEntity.userAdminID] ?: -1
+            val name = row[CeramicProviderEntity.name] ?: ""
+            val latitude = row[CeramicProviderEntity.latitude] ?: 0.0
+            val longitude = row[CeramicProviderEntity.longitude] ?: 0.0
+            val country = row[CeramicProviderEntity.country] ?: ""
+            val governorate = row[CeramicProviderEntity.governorate] ?: ""
+            val address = row[CeramicProviderEntity.address] ?: ""
+            val createdAt = row[CeramicProviderEntity.createdAt] ?: ""
+            val updatedAt = row[CeramicProviderEntity.updatedAt] ?: ""
+
+            CeramicProvider(
+                id = id,
+                userAdminID = adminUserId,
+                name = name,
+                latitude = latitude,
+                longitude = longitude,
+                country = country,
+                city = governorate,
+                address = address,
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString()
+
             )
         }
     }

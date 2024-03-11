@@ -1,6 +1,5 @@
 package com.example.models.options
 
-import com.example.database.table.ProductEntity
 import com.example.database.table.UserOrderEntity
 import com.example.database.table.UserOrderStatusEntity
 import com.example.utils.MissingParameterException
@@ -25,7 +24,7 @@ fun getCustomerOrderOptions(parameters: Parameters): CustomerOrderOption {
     val byApproveStatue = parameters["approveStatue"]?.toIntOrNull()
 
     val sortFiled = when (parameters["sort_by"] ?: "date") {
-        "name" -> UserOrderEntity.full_name
+        "name" -> UserOrderEntity.fullName
         "date" -> UserOrderStatusEntity.approveDate
         else -> {
             throw MissingParameterException("invalid parameter for sort_by chose between (name & date)")

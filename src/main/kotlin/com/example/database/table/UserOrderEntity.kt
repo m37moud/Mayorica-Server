@@ -4,8 +4,8 @@ import org.ktorm.schema.*
 
 object UserOrderEntity : Table<Nothing>("t_user_request"){
     val id =int("id").primaryKey()
-    val full_name = varchar("full_name")
-    val id_number= varchar("id_number")
+    val fullName = varchar("full_name")
+    val idNumber= varchar("id_number")
     val orderNumber= varchar("order_number")
     val department= varchar("department")
     val latitude = double("latitude")
@@ -13,8 +13,9 @@ object UserOrderEntity : Table<Nothing>("t_user_request"){
     val country= varchar("country")
     val governorate= varchar("governorate")
     val address= varchar("address")
-    val approve_state= int("approve_state")
-    val created_at = datetime("created_at")
-    val updated_at= datetime("updated_at")
+    val approveState= int("approve_state")
+    val sellerId= int("sellerId")
+    val createdAt = datetime("created_at")
+    val updatedAt= datetime("updated_at")
 
 }

@@ -10,8 +10,9 @@ data class UserOrderRequest(
     val latitude: Double,
     val longitude: Double,
     val country: String,
-    val governorate: String,
+    val city: String,
     val address: String,
-    val approve_state: Int = 0,
+    val approveState: Int = 0,
+    val sellerId: Int = -1,
 
     )

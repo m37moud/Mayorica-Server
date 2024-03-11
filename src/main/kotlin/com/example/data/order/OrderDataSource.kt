@@ -1,8 +1,10 @@
 package com.example.data.order
 
 import com.example.models.UserOrder
+import com.example.models.UserOrderCreate
 import com.example.models.UserOrderDto
 import com.example.models.UserOrderStatus
+import com.example.models.response.OrderResponse
 import org.ktorm.schema.Column
 import java.time.LocalDateTime
 
@@ -17,6 +19,7 @@ interface OrderDataSource {
     suspend fun getOrderByDate(createdDate: LocalDateTime): UserOrder?
     suspend fun getOrderByName(name: String): UserOrder?
     suspend fun getOrderByOrderNum(orderNumber: String): UserOrder?
+    suspend fun getOrderByOrderNumDto(orderNumber: String): OrderResponse?
     suspend fun getOrderByNameAndIdNumber(name: String, idNumber: String): UserOrder?
 
     suspend fun updateOrder(userOrder: UserOrder): Int
@@ -25,7 +28,7 @@ interface OrderDataSource {
     /**
      *  no authenticate is required
      */
-    suspend fun createOrderWithOrderStatus(userOrder: UserOrder): Int
+    suspend fun createOrderWithOrderStatus(userOrder: UserOrderCreate): Int
 
     //    suspend fun createOrderStatus(userOrderStatus: UserOrderStatus): Int
     suspend fun getOrderByIdNumber(idNumber: String): UserOrder?
