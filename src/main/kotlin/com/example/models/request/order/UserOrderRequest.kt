@@ -12,7 +12,7 @@ data class UserOrderRequest(
     val country: String,
     val city: String,
     val address: String,
-    val approveState: Int = 0,
+//    val approveState: Int = 0,
     val sellerId: Int = -1,
 
     )

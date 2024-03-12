@@ -20,5 +20,5 @@ data class UserOrderStatus(
     val totalAmount: Double = 0.0,
     val takenAmount: Double = 0.0,
     val availableAmount: Double = 0.0,
-    val note: String = ""
+    val note: String = if (approveState == 0) "your order is created successfully it take from one day to three days to approved" else ""
 )

@@ -18,5 +18,5 @@ data class UserOrderCreate(
      * 3 -> order rejected
      */
     val approveState: Int = 0,
-    val sellerId: Int = 0,
+    val sellerId: Int ,
 )

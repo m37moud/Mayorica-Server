@@ -188,7 +188,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
         }
     }
 
-    suspend fun createUserOrder(userOrder: UserOrderCreate): Int {
+    private suspend fun createUserOrder(userOrder: UserOrderCreate): Int {
         return withContext(Dispatchers.IO) {
             val insertResult = db.insert(UserOrderEntity) {
                 set(it.fullName, userOrder.fullName)
@@ -201,6 +201,7 @@ class MYSqlOrderDataSource(private val db: Database) : OrderDataSource {
                 set(it.governorate, userOrder.city)
                 set(it.address, userOrder.address)
                 set(it.approveState, userOrder.approveState)
+                set(it.sellerId, userOrder.sellerId)
                 set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
             }

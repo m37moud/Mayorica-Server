@@ -5,5 +5,14 @@ import com.example.models.request.order.UserOrderRequest
 
 
 fun UserOrderRequest.toEntity(orderNumber: String) = UserOrderCreate(
-    fullName, idNumber, orderNumber, department, latitude, longitude, country, city, address
+    fullName = fullName,
+    idNumber = idNumber,
+    orderNumber = orderNumber,
+    department = department,
+    latitude = latitude,
+    longitude = longitude,
+    country = country,
+    city = city,
+    address = address,
+    sellerId = sellerId
 )

@@ -45,22 +45,11 @@ fun Route.userOrderRequest() {
     post(CREATE_ORDER_REQUEST) {
         logger.debug { "POST /$CREATE_ORDER_REQUEST" }
 
-        val userOrderRequest = try {
-            call.receive<UserOrderRequest>()
-        } catch (exc: Exception) {
-            call.respond(
-                HttpStatusCode.Conflict,
-                MyResponse(
-                    success = false,
-                    message = "Missing Some Fields",
-                    data = null
-                )
-            )
-            return@post
-        }
-        // check if operation connected db successfully
+
 
         try {
+            val userOrderRequest = call.receive<UserOrderRequest>()
+            // check if operation connected db successfully
             //tried this on a webhook, where call = ApplicationCall inside the PipelineContext block
 
             val clientIP = call.request.origin.remoteAddress.toString()
@@ -76,7 +65,11 @@ fun Route.userOrderRequest() {
                 val generatedOrderNum = generateOrderNumber()
 
 
-                val result = orderDataSource.createOrderWithOrderStatus(userOrderRequest.toEntity(generatedOrderNum))
+                val result = orderDataSource
+                    .createOrderWithOrderStatus(
+                        userOrderRequest
+                            .toEntity(generatedOrderNum)
+                    )
                 if (result > 0) {
                     call.respond(
                         HttpStatusCode.OK,
