@@ -1,10 +1,7 @@
 package com.example.data.order
 
 import com.example.database.table.*
-import com.example.models.CustomerOrderRevenue
-import com.example.models.UserOrderDto
-import com.example.models.UserOrderStatus
-import com.example.models.UserOrderStatusRequestCreate
+import com.example.models.*
 import com.example.utils.toDatabaseString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -116,6 +113,7 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
             val result = db.from(UserOrderStatusEntity)
 //                .innerJoin(AdminUserEntity, on = UserOrderStatusEntity.approveByAdminId eq AdminUserEntity.id)
                 .innerJoin(UserOrderEntity, on = UserOrderStatusEntity.requestUser_id eq UserOrderEntity.id)
+//                .innerJoin(CeramicProviderEntity , on = UserOrderEntity.sellerId eq CeramicProviderEntity.id)
                 .select(
                     UserOrderStatusEntity.id,
                     UserOrderEntity.id,
@@ -129,6 +127,7 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                     UserOrderEntity.country,
                     UserOrderEntity.governorate,
                     UserOrderEntity.address,
+                    UserOrderEntity.sellerId,
                     UserOrderStatusEntity.approve_state,
                     UserOrderStatusEntity.totalAmount,
                     UserOrderStatusEntity.takenAmount,
@@ -319,6 +318,19 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
         }
 
     }
+    suspend fun getCeramicProviderByID(id: Int): CeramicProvider? {
+        return withContext(Dispatchers.IO) {
+            val provider = db.from(CeramicProviderEntity)
+                .select()
+                .where {
+                    CeramicProviderEntity.id eq id
+                }.map {
+                    rowToCeramicProvider(it)
+                }.firstOrNull()
+            provider
+        }
+    }
+
 
 
     private fun rowToUserOrderStatus(row: QueryRowSet?): UserOrderStatus? {
@@ -356,6 +368,7 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
             val country = row[UserOrderEntity.country] ?: ""
             val governorate = row[UserOrderEntity.governorate] ?: ""
             val address = row[UserOrderEntity.address] ?: ""
+            val sellerId = row[UserOrderEntity.sellerId] ?: -1
             val approveState = row[UserOrderStatusEntity.approve_state] ?: -1
             val totalAmount = row[UserOrderStatusEntity.totalAmount] ?: 0.0
             val takenAmount = row[UserOrderStatusEntity.takenAmount] ?: 0.0
@@ -363,6 +376,7 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
             val note = row[UserOrderStatusEntity.note] ?: ""
             val approveDate = row[UserOrderStatusEntity.approveDate]?.toString() ?: ""
             val approveUpdateDate = row[UserOrderStatusEntity.approveUpdateDate]?.toString() ?: ""
+            val seller = getCeramicProviderByID(sellerId)
 
 
             UserOrderDto(
@@ -378,6 +392,7 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                 country = country,
                 governorate = governorate,
                 address = address,
+                seller = seller,
                 approveState = approveState,
                 totalAmount = totalAmount,
                 takenAmount = takenAmount,
@@ -389,4 +404,35 @@ class MYSqlOrderStatusDataSource(private val db: Database) : OrderStatusDataSour
                 )
         }
     }
+    private fun rowToCeramicProvider(row: QueryRowSet?): CeramicProvider? {
+        return if (row == null)
+            null
+        else {
+            val id = row[CeramicProviderEntity.id] ?: -1
+            val adminUserId = row[CeramicProviderEntity.userAdminID] ?: -1
+            val name = row[CeramicProviderEntity.name] ?: ""
+            val latitude = row[CeramicProviderEntity.latitude] ?: 0.0
+            val longitude = row[CeramicProviderEntity.longitude] ?: 0.0
+            val country = row[CeramicProviderEntity.country] ?: ""
+            val governorate = row[CeramicProviderEntity.governorate] ?: ""
+            val address = row[CeramicProviderEntity.address] ?: ""
+            val createdAt = row[CeramicProviderEntity.createdAt] ?: ""
+            val updatedAt = row[CeramicProviderEntity.updatedAt] ?: ""
+
+            CeramicProvider(
+                id = id,
+                userAdminID = adminUserId,
+                name = name,
+                latitude = latitude,
+                longitude = longitude,
+                country = country,
+                city = governorate,
+                address = address,
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString()
+
+            )
+        }
+    }
+
 }
