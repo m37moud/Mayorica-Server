@@ -378,7 +378,7 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
         return withContext(Dispatchers.IO) {
             val providers = db.from(CeramicProviderEntity)
                 .select()
-                .orderBy(CeramicProviderEntity.createdAt.desc())
+                .orderBy(CeramicProviderEntity.createdAt.asc())
                 .mapNotNull {
                     rowToCeramicProvider(it)
                 }

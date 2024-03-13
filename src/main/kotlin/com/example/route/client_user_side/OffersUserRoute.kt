@@ -21,9 +21,7 @@ private const val SINGLE_RANDOM_HOT_OFFERS = "${SINGLE_OFFERS}/random"
 private val logger = KotlinLogging.logger { }
 
 
-fun Route.offersUserRoute(
-//    offersDataSource: OffersDataSource
-) {
+fun Route.offersUserRoute() {
     val offersDataSource: OffersDataSource by inject()
 
     //get all offers //api/v1/user-client/offers
@@ -39,7 +37,7 @@ fun Route.offersUserRoute(
                     MyResponse(
                         success = true,
                         message = "get all Offers successfully",
-                        data = result
+                        data = result.toUserResponse()
                     )
                 )
             } else {
@@ -78,7 +76,7 @@ fun Route.offersUserRoute(
                         MyResponse(
                             success = true,
                             message = "offer is found .",
-                            data = offer
+                            data = offer.toUserResponse()
                         )
                     )
                 } ?: call.respond(

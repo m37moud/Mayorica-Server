@@ -1,5 +1,6 @@
 package com.example.mapper
 
+import com.example.models.News
 import com.example.models.Offer
 import com.example.models.ProductOfferCreate
 import com.example.models.dto.ProductOfferCreateDto
@@ -18,3 +19,4 @@ fun ProductOfferCreateDto.toEntity(adminId: Int) =
 fun Offer.toUserResponse() = OfferUserClientResponse(
     id, title, offerDescription, image, isHotOffer, createdAt, endedAt
 )
+fun List<Offer>.toUserResponse() = map { it.toUserResponse() }

@@ -3,7 +3,9 @@ package com.example.route.client_user_side
 import com.example.data.gallery.categories.type.TypeCategoryDataSource
 import com.example.data.gallery.categories.color.ColorCategoryDataSource
 import com.example.data.gallery.categories.size.SizeCategoryDataSource
+import com.example.mapper.toUserResponse
 import com.example.models.ColorCategoryPage
+import com.example.models.MyResponsePageable
 import com.example.models.SizeCategoryPage
 import com.example.models.TypeCategoryPage
 import com.example.utils.Constants.USER_CLIENT
@@ -39,7 +41,7 @@ fun Route.categoriesUserRoute(
         try {
             // QueryParams: type categories?page=1&perPage=10
             call.request.queryParameters["page"]?.toIntOrNull()?.let {
-                val page = if (it > 0) it else 0
+                val page = if (it > 0) it - 1 else 0
                 val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
 
                 logger.debug { "GET ALL /$TYPE_CATEGORIES?page=$page&perPage=$perPage" }
@@ -50,7 +52,7 @@ fun Route.categoriesUserRoute(
                         HttpStatusCode.OK, MyResponse(
                             success = true,
                             message = "get all type categories successfully",
-                            data = TypeCategoryPage(page, perPage, typeCategoriesList)
+                            data = MyResponsePageable(page + 1, perPage, typeCategoriesList.toUserResponse())
                         )
                     )
                 } else {
@@ -72,7 +74,7 @@ fun Route.categoriesUserRoute(
                         HttpStatusCode.OK, MyResponse(
                             success = true,
                             message = "get all type categories successfully",
-                            data = typeCategoriesList
+                            data = typeCategoriesList.toUserResponse()
                         )
                     )
                 } else {
@@ -102,7 +104,7 @@ fun Route.categoriesUserRoute(
         try {
             // QueryParams: type categories?page=1&perPage=10
             call.request.queryParameters["page"]?.toIntOrNull()?.let {
-                val page = if (it > 0) it else 0
+                val page = if (it > 0) it - 1 else 0
                 val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
 
                 logger.debug { "GET ALL /$SIZE_CATEGORIES?page=$page&perPage=$perPage" }
@@ -114,7 +116,7 @@ fun Route.categoriesUserRoute(
                         MyResponse(
                             success = true,
                             message = "get all size categories successfully",
-                            data = SizeCategoryPage(page, perPage, sizeCategoriesList)
+                            data = MyResponsePageable(page + 1, perPage, sizeCategoriesList.toUserResponse())
                         )
                     )
                 } else {
@@ -136,7 +138,7 @@ fun Route.categoriesUserRoute(
                         HttpStatusCode.OK, MyResponse(
                             success = true,
                             message = "get all size categories successfully",
-                            data = typeCategoriesList
+                            data = typeCategoriesList.toUserResponse()
                         )
                     )
                 } else {
@@ -166,7 +168,7 @@ fun Route.categoriesUserRoute(
         try {
             // QueryParams: type categories?page=1&perPage=10
             call.request.queryParameters["page"]?.toIntOrNull()?.let {
-                val page = if (it > 0) it else 0
+                val page = if (it > 0) it - 1 else 0
                 val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
 
                 logger.debug { "GET ALL /$TYPE_CATEGORIES?page=$page&perPage=$perPage" }
@@ -177,7 +179,7 @@ fun Route.categoriesUserRoute(
                         HttpStatusCode.OK, MyResponse(
                             success = true,
                             message = "get all size categories successfully",
-                            data = ColorCategoryPage(page, perPage, colorCategoriesList)
+                            data = MyResponsePageable(page + 1, perPage, colorCategoriesList.toUserResponse())
                         )
                     )
                 } else {
@@ -193,13 +195,13 @@ fun Route.categoriesUserRoute(
             } ?: run {
                 logger.debug { "GET ALL /$TYPE_CATEGORIES" }
 
-                val typeCategoriesList = typeCategoryDataSource.getAllTypeCategory()
-                if (typeCategoriesList.isNotEmpty()) {
+                val colorCategoriesList = colorCategoryDataSource.getAllColorCategory()
+                if (colorCategoriesList.isNotEmpty()) {
                     call.respond(
                         HttpStatusCode.OK, MyResponse(
                             success = true,
                             message = "get all color categories successfully",
-                            data = typeCategoriesList
+                            data = colorCategoriesList.toUserResponse()
                         )
                     )
                 } else {
@@ -239,7 +241,7 @@ fun Route.categoriesUserRoute(
                         MyResponse(
                             success = true,
                             message = "get size category successfully .",
-                            data = sizeCategoriesList
+                            data = sizeCategoriesList.toUserResponse()
                         )
                     )
                 } else

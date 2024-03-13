@@ -2,6 +2,7 @@ package com.example.route.client_user_side
 
 import com.example.data.offers.OffersDataSource
 import com.example.data.videos.youtube.YoutubeDataSource
+import com.example.mapper.toUserResponse
 import com.example.utils.Constants
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
@@ -34,7 +35,7 @@ fun Route.youtubeLinkUserRoute(
                     message = MyResponse(
                         success = true,
                         message = "get all youtube link successfully",
-                        data = linkList
+                        data = linkList.toUserResponse()
                     )
                 )
 

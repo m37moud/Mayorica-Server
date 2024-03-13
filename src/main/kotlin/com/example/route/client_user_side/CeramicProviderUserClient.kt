@@ -72,7 +72,7 @@ fun Route.getNearlyProvider(
                         MyResponse(
                             success = true,
                             message = "Get All Ceramic Providers Successfully",
-                            data = providers
+                            data = providers.toUserResponse()
                         )
                     )
                     return@get
@@ -122,7 +122,7 @@ fun Route.getNearlyProvider(
                         MyResponse(
                             success = true,
                             message = "Get All Ceramic Providers Successfully",
-                            data = providers
+                            data = providers.toUserResponse()
                         )
                     )
                     return@get

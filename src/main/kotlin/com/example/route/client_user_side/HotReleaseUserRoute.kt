@@ -16,9 +16,7 @@ private const val HOT_RELEASE_PRODUCTS = "${USER_CLIENT}/hot_release_products"
 
 private val logger = KotlinLogging.logger {}
 
-fun Route.hotReleaseUserRoute(
-//    hotReleaseDataSource: HotReleaseDataSource,
-){
+fun Route.hotReleaseUserRoute(){
     val hotReleaseDataSource: HotReleaseDataSource by inject()
 
     //get request -> api/v1/user-client/hot_release_products

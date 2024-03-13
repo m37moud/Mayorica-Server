@@ -1,6 +1,7 @@
 package com.example.route.client_user_side
 
 import com.example.data.contact_us.ContactUsDataSource
+import com.example.mapper.toUserResponse
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
 import io.ktor.http.*
@@ -16,10 +17,7 @@ private const val CONTACT_US = "${USER_CLIENT}/contact-us"
 
 private val logger = KotlinLogging.logger { }
 
-fun Route.contactUsUserRoute(
-//    contactUsDataSource: ContactUsDataSource
-
-) {
+fun Route.contactUsUserRoute() {
     val contactUsDataSource: ContactUsDataSource by inject()
     //get about us //api/v1/user-client/contact-us
     get(CONTACT_US) {
@@ -31,7 +29,7 @@ fun Route.contactUsUserRoute(
                     message = MyResponse(
                         success = true,
                         message = "Contact Us Information Found",
-                        data = it
+                        data = it.toUserResponse()
                     )
                 )
 

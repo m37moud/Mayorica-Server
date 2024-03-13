@@ -1,6 +1,7 @@
 package com.example.route.client_user_side
 
 import com.example.data.about_us.AboutUsDataSource
+import com.example.mapper.toUSerResponse
 import com.example.utils.Constants
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
@@ -14,9 +15,7 @@ import org.koin.ktor.ext.inject
 private const val ABOUT_US = "${USER_CLIENT}/about-us"
 private val logger = KotlinLogging.logger {}
 
-fun Route.aboutUsUserRoute(
-//    aboutUsDataSource: AboutUsDataSource
-) {
+fun Route.aboutUsUserRoute() {
     val aboutUsDataSource: AboutUsDataSource by inject()
 //get about us //api/v1/user-client/about_us
     get(ABOUT_US) {
@@ -30,7 +29,7 @@ fun Route.aboutUsUserRoute(
                     message = MyResponse(
                         success = true,
                         message = "About Us Information Found",
-                        data = result
+                        data = result.toUSerResponse()
                     )
                 )
             } else {

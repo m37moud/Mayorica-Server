@@ -1,6 +1,7 @@
 package com.example.route.client_user_side
 
 import com.example.data.news.NewsDataSource
+import com.example.mapper.toUserResponse
 import com.example.utils.Constants
 import com.example.utils.Constants.USER_CLIENT
 import com.example.utils.MyResponse
@@ -15,9 +16,7 @@ private const val NEWS = "${USER_CLIENT}/news"
 
 private val logger = KotlinLogging.logger { }
 
-fun Route.newsUserRoute(
-//    newsDataSource: NewsDataSource
-) {
+fun Route.newsUserRoute() {
     val newsDataSource: NewsDataSource by inject()
     //get all -> api/v1/user-client/news
     get(NEWS) {
@@ -30,7 +29,7 @@ fun Route.newsUserRoute(
                     message = MyResponse(
                         success = true,
                         message = "get all News  successfully",
-                        data = linkList
+                        data = linkList.toUserResponse()
                     )
                 )
 

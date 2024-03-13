@@ -212,8 +212,8 @@ class MySqlNewsDataSource(private val db: Database) : NewsDataSource {
             val image = row[NewsEntity.image] ?: ""
             val newsDescription = row[NewsEntity.newsDescription] ?: ""
             val userAdminId = row[NewsEntity.userAdminId] ?: -1
-            val createdAt = row[NewsEntity.createdAt] ?: LocalDateTime.now()
-            val updatedAt = row[NewsEntity.updatedAt] ?: LocalDateTime.now()
+            val createdAt = row[NewsEntity.createdAt] ?: ""
+            val updatedAt = row[NewsEntity.updatedAt] ?:""
 
 
 
@@ -223,8 +223,8 @@ class MySqlNewsDataSource(private val db: Database) : NewsDataSource {
                 image = image,
                 newsDescription = newsDescription,
                 userAdminId = userAdminId,
-                createdAt = createdAt.toDatabaseString(),
-                updatedAt = updatedAt.toDatabaseString()
+                createdAt = createdAt.toString(),
+                updatedAt = updatedAt.toString()
 
 
             )
