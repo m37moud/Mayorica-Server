@@ -12,6 +12,8 @@ import org.koin.ktor.ext.inject
 
 
 private const val PROVIDERS = "${USER_CLIENT}/providers"
+private const val ALL_PROVIDERS_PAGEABLE = "${PROVIDERS}-pageable"
+
 private const val PROVIDERS_NEARLY_LOCATION = "${PROVIDERS}/nearlyLocation"
 private const val PROVIDERS_GOVERNORATE = "${PROVIDERS}/governorate"
 private const val PROVIDERS_SEARCH = "${PROVIDERS}/search"
