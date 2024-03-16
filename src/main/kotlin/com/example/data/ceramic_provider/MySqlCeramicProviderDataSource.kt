@@ -8,6 +8,7 @@ import com.example.models.ProviderInformation
 import com.example.models.dto.ProviderDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mu.KotlinLogging
 import org.koin.core.annotation.Singleton
 import org.ktorm.database.Database
 import org.ktorm.dsl.*
@@ -16,14 +17,43 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.Comparator
 
+private val logger = KotlinLogging.logger {  }
 @Singleton
 class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProviderDataSource {
+    override suspend fun getNumberOfProvider() :Int {
+        logger.debug { "getNumberOfProvider: called" }
+        return withContext(Dispatchers.IO){
+            val providers = db.from(CeramicProviderEntity)
+                .select()
+                .mapNotNull {
+                    rowToCeramicProvider(it)
+                }
+            providers.size
+        }
+
+    }
 
 
     override suspend fun getAllCeramicProvider(): List<CeramicProvider> {
         return withContext(Dispatchers.IO) {
             val providers = db.from(CeramicProviderEntity)
                 .select()
+                .mapNotNull {
+                    rowToCeramicProvider(it)
+                }
+            providers
+        }
+    }
+
+    override suspend fun getAllProviderPageable(page: Int, perPage: Int): List<CeramicProvider> {
+        return withContext(Dispatchers.IO) {
+            val myLimit = if (perPage > 100) 100 else perPage
+            val myOffset = (page * perPage)
+
+            val providers = db.from(CeramicProviderEntity)
+                .select()
+                .limit(myLimit)
+                .offset(myOffset)
                 .mapNotNull {
                     rowToCeramicProvider(it)
                 }

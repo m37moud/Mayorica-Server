@@ -20,7 +20,7 @@ import io.ktor.server.routing.*
 import mu.KotlinLogging
 import org.koin.ktor.ext.inject
 
-const val ALL_PRODUCTS = "${USER_CLIENT}/products"
+private const val ALL_PRODUCTS = "${USER_CLIENT}/products"
 private const val ALL_PRODUCTS_PAGEABLE = "${ALL_PRODUCTS}-pageable"
 
 const val ALL_PRODUCTS_RESPONSE = "${USER_CLIENT}/products-response"

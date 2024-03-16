@@ -7,7 +7,14 @@ import com.example.models.dto.ProviderDto
 import org.ktorm.schema.Column
 
 interface CeramicProviderDataSource {
+    suspend fun getNumberOfProvider() :Int
     suspend fun getAllCeramicProvider(): List<CeramicProvider>
+    suspend fun getAllProviderPageable(
+        page: Int,
+        perPage: Int,
+
+    ): List<CeramicProvider>
+
     suspend fun getAllCeramicProviderDto(): List<ProviderDto>
     suspend fun getAllCeramicProviderPageable(
         page: Int,
