@@ -10,6 +10,8 @@ data class ProviderOptions(
     val page: Int?,
     val perPage: Int?,
     val query: String?,
+    val latitude: Double?,
+    val longitude: Double?,
     val sortFiled: Column<*>?,
     val sortDirection: Int?,
 )
@@ -19,10 +21,8 @@ fun getProviderOptions(parameters: Parameters): ProviderOptions {
     val perPage = parameters["perPage"]?.toIntOrNull() ?: 10
 
     val query = parameters["query"]?.trim()
-    val byTypeCategoryId = parameters["typeId"]?.toIntOrNull()
-    val bySizeCategoryId = parameters["sizeId"]?.toIntOrNull()
-    val byColorCategoryId = parameters["colorId"]?.toIntOrNull()
-    val isHot = parameters["isHot"]?.toBoolean()
+    val latitude = parameters["latitude"]?.toDoubleOrNull()
+    val longitude = parameters["longitude"]?.toDoubleOrNull()
 
     val sortFiled = when (parameters["sort_by"] ?: "date") {
         "name" -> CeramicProviderEntity.name
@@ -40,10 +40,12 @@ fun getProviderOptions(parameters: Parameters): ProviderOptions {
         }
     }
     return ProviderOptions(
-        page,
-        perPage,
-        query,
-        sortFiled,
-        sortDirection
+        page = page,
+        perPage = perPage,
+        query = query,
+        latitude = latitude,
+        longitude = longitude,
+        sortFiled = sortFiled,
+        sortDirection = sortDirection
     )
 }

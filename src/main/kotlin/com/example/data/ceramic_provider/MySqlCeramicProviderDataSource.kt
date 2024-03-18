@@ -18,12 +18,13 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.Comparator
 
-private val logger = KotlinLogging.logger {  }
+private val logger = KotlinLogging.logger { }
+
 @Singleton
 class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProviderDataSource {
-    override suspend fun getNumberOfProvider() :Int {
+    override suspend fun getNumberOfProvider(): Int {
         logger.debug { "getNumberOfProvider: called" }
-        return withContext(Dispatchers.IO){
+        return withContext(Dispatchers.IO) {
             val providers = db.from(CeramicProviderEntity)
                 .select()
                 .mapNotNull {
@@ -46,8 +47,10 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
         }
     }
 
-    override suspend fun getAllProviderPageable(
+    override suspend fun getAllOrNearProviderPageable(
         query: String?,
+        latitude: Double?,
+        longitude: Double?,
         page: Int,
         perPage: Int,
         sortField: Column<*>,
@@ -78,6 +81,13 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 .mapNotNull {
                     rowToCeramicProvider(it)
                 }
+            if (latitude != null && longitude != null) {
+                Collections.sort(providers, Comparator<CeramicProvider> { o1, o2 ->
+                    val dist1: Int = o1.calculationByDistance(o1.latitude, o1.longitude, latitude, longitude)
+                    val dist2: Int = o2.calculationByDistance(o2.latitude, o2.longitude, latitude, longitude)
+                    dist1.compareTo(dist2)
+                })
+            }
             providers
         }
     }

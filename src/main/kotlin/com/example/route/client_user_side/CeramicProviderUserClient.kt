@@ -1,7 +1,6 @@
 package com.example.route.client_user_side
 
 import com.example.data.ceramic_provider.CeramicProviderDataSource
-import com.example.mapper.toModelResponse
 import com.example.mapper.toUserResponse
 import com.example.models.MyResponsePageable
 import com.example.models.options.getProviderOptions
@@ -79,15 +78,21 @@ fun Route.getNearlyProvider(
             val providerOption = getProviderOptions(params)
             val providerList =
                 ceramicProvider
-                    .getAllProviderPageable(
+                    .getAllOrNearProviderPageable(
                         query = providerOption.query,
+                        latitude = providerOption.latitude,
+                        longitude = providerOption.longitude,
                         page = providerOption.page!!,
                         perPage = providerOption.perPage!!,
                         sortField = providerOption.sortFiled!!,
                         sortDirection = providerOption.sortDirection!!
                     )
-            if (providerList.isEmpty()) throw NotFoundException("no product is found.")
+            if (providerList.isEmpty()) throw NotFoundException("No Seller is found.")
             val numberOfProvider = ceramicProvider.getNumberOfProvider()
+            val message = if (providerOption.latitude != null && providerOption.longitude != null)
+                "get all Near Seller successfully"
+            else
+                "get all Seller successfully"
             respondWithSuccessfullyResult(
                 statusCode = HttpStatusCode.OK,
                 result = MyResponsePageable(
@@ -95,7 +100,7 @@ fun Route.getNearlyProvider(
                     perPage = numberOfProvider,
                     data = providerList.toUserResponse()
                 ),
-                message = "get all ceramic products successfully"
+                message = message
             )
         } catch (e: Exception) {
             throw UnknownErrorException(e.message ?: "An unknown error occurred  ")

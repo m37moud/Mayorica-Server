@@ -9,8 +9,10 @@ import org.ktorm.schema.Column
 interface CeramicProviderDataSource {
     suspend fun getNumberOfProvider() :Int
     suspend fun getAllCeramicProvider(): List<CeramicProvider>
-    suspend fun getAllProviderPageable(
+    suspend fun getAllOrNearProviderPageable(
         query: String?,
+        latitude: Double?,
+        longitude: Double?,
         page: Int,
         perPage: Int,
         sortField: Column<*>,
