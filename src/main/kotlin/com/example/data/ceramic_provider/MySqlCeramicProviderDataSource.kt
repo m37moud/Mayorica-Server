@@ -2,6 +2,7 @@ package com.example.data.ceramic_provider
 
 import com.example.database.table.AdminUserEntity
 import com.example.database.table.CeramicProviderEntity
+import com.example.database.table.ProductEntity
 import com.example.models.CeramicProvider
 import com.example.models.Country
 import com.example.models.ProviderInformation
@@ -45,7 +46,13 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
         }
     }
 
-    override suspend fun getAllProviderPageable(page: Int, perPage: Int): List<CeramicProvider> {
+    override suspend fun getAllProviderPageable(
+        query: String?,
+        page: Int,
+        perPage: Int,
+        sortField: Column<*>,
+        sortDirection: Int
+    ): List<CeramicProvider> {
         return withContext(Dispatchers.IO) {
             val myLimit = if (perPage > 100) 100 else perPage
             val myOffset = (page * perPage)
@@ -54,6 +61,20 @@ class MySqlCeramicProviderDataSource(private val db: Database) : CeramicProvider
                 .select()
                 .limit(myLimit)
                 .offset(myOffset)
+                .orderBy(
+                    if (sortDirection > 0)
+                        sortField.asc()
+                    else
+                        sortField.desc()
+                )
+                .whereWithConditions {
+                    if (!query.isNullOrEmpty()) {
+                        it += (CeramicProviderEntity.name like "%${query}%") or
+                                (CeramicProviderEntity.country like "%${query}%") or
+                                (CeramicProviderEntity.governorate like "%${query}%")
+                    }
+
+                }
                 .mapNotNull {
                     rowToCeramicProvider(it)
                 }

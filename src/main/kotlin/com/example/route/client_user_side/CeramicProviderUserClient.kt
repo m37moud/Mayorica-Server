@@ -25,7 +25,7 @@ private const val PROVIDERS_NEARLY_LOCATION = "${PROVIDERS}/nearlyLocation"
 private const val PROVIDERS_GOVERNORATE = "${PROVIDERS}/governorate"
 private const val PROVIDERS_SEARCH = "${PROVIDERS}/search"
 
-private val logger = KotlinLogging.logger {  }
+private val logger = KotlinLogging.logger { }
 
 fun Route.getNearlyProvider(
 //    ceramicProvider: CeramicProviderDataSource
@@ -80,10 +80,11 @@ fun Route.getNearlyProvider(
             val providerList =
                 ceramicProvider
                     .getAllProviderPageable(
+                        query = providerOption.query,
                         page = providerOption.page!!,
                         perPage = providerOption.perPage!!,
-//                        sortField = providerOption.sortFiled!!,
-//                        sortDirection = providerOption.sortDirection!!
+                        sortField = providerOption.sortFiled!!,
+                        sortDirection = providerOption.sortDirection!!
                     )
             if (providerList.isEmpty()) throw NotFoundException("no product is found.")
             val numberOfProvider = ceramicProvider.getNumberOfProvider()
@@ -195,7 +196,7 @@ fun Route.getNearlyProvider(
                 return@get
             }
 
-        }?: call.respond(
+        } ?: call.respond(
             HttpStatusCode.BadGateway,
             MyResponse(
                 success = false,

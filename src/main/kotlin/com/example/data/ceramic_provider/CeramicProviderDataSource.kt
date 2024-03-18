@@ -10,9 +10,11 @@ interface CeramicProviderDataSource {
     suspend fun getNumberOfProvider() :Int
     suspend fun getAllCeramicProvider(): List<CeramicProvider>
     suspend fun getAllProviderPageable(
+        query: String?,
         page: Int,
         perPage: Int,
-
+        sortField: Column<*>,
+        sortDirection: Int
     ): List<CeramicProvider>
 
     suspend fun getAllCeramicProviderDto(): List<ProviderDto>
