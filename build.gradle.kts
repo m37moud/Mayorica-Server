@@ -107,8 +107,8 @@ kotlin { // Extension for easy setup
 val buildingJarFileName = "temp-mayorca-server-api.jar"
 val startingJarFileName = "mayorca-server-api.jar"
 
-val serverUser = "m37moud"//mahmoud
-val serverHost = "102.37.213.13"//192.168.1.6
+val serverUser = "mah"//mahmoud
+val serverHost = "192.168.1.89"//192.168.1.6  azure 102.37.213.13
 val serverSshKey = file("keys/id_rsa")
 val deleteLog = true
 val lockFileName = ".serverLock"
