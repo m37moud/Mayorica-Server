@@ -11,6 +11,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mu.KotlinLogging
 import org.koin.ktor.ext.inject
+import io.github.smiley4.ktorswaggerui.dsl.*
 
 private const val ABOUT_US = "${USER_CLIENT}/about-us"
 private val logger = KotlinLogging.logger {}
@@ -18,7 +19,24 @@ private val logger = KotlinLogging.logger {}
 fun Route.aboutUsUserRoute() {
     val aboutUsDataSource: AboutUsDataSource by inject()
 //get about us //api/v1/user-client/about_us
-    get(ABOUT_US) {
+    get(ABOUT_US, {
+        description = "Get ABOUT US"
+        request {
+            pathParameter<Long>("id") {
+                description = "Racket ID"
+            }
+        }
+//        response {
+//            HttpStatusCode.OK to {
+//                description = "ABOUT US"
+//                body<RacketResponse> { description = "ABOUT US" }
+//            }
+//            HttpStatusCode.NotFound to {
+//                description = "ABOUT US not found"
+//                body<RacketError.NotFound> { description = "ABOUT US not found" }
+//            }
+//        }
+    }) {
         logger.debug { "GET ABOUT US $ABOUT_US" }
         try {
 

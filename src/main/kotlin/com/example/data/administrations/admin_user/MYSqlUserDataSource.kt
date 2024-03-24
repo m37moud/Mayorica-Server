@@ -168,7 +168,7 @@ class MYSqlUserDataSource(
                 }
                 .map { row -> row[AdminUserEntity.role] }
                 .firstOrNull()
-            isAdmin == Role.ADMIN.name
+            isAdmin == Role.ADMIN.name || isAdmin == Role.SUPER_ADMIN.name
         }
     }
 

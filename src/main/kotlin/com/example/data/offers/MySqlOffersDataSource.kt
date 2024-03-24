@@ -275,7 +275,6 @@ class MySqlOffersDataSource(private val db: Database) : OffersDataSource {
                 set(it.image, offer.offerImageUrl)
                 set(it.isHotOffer, offer.isHotOffer)
                 set(it.userAdminID, offer.userAdminId)
-                set(it.createdAt, LocalDateTime.now())
                 set(it.updatedAt, LocalDateTime.now())
                 val stringDate = offer.offerEndDate
                 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")

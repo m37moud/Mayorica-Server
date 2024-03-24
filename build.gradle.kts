@@ -8,6 +8,8 @@ val logbackclassic_version: String by project
 // Koin
 val koin_ktor_version: String by project
 val koin_ksp_version: String by project
+// Swagger
+val ktor_swagger_ui_version: String by project
 
 plugins {
     kotlin("jvm") version "1.9.10"
@@ -95,7 +97,12 @@ dependencies {
     implementation("io.insert-koin:koin-logger-slf4j:$koin_ktor_version") // Koin Logger
     implementation("io.insert-koin:koin-annotations:$koin_ksp_version") // Koin Annotations for KSP
     ksp("io.insert-koin:koin-ksp-compiler:$koin_ksp_version") // Koin KSP Compiler for KSP
-
+    // SSL/TLS
+    implementation("io.ktor:ktor-network-tls-certificates:$ktor_version")
+    // CORS
+    implementation("io.ktor:ktor-server-cors:$ktor_version")
+// To generate Swagger UI
+    implementation("io.github.smiley4:ktor-swagger-ui:$ktor_swagger_ui_version")
 
 }
 // Java 17
@@ -109,7 +116,7 @@ val startingJarFileName = "mayorca-server-api.jar"
 
 val serverUser = "root"//mahmoud
 val serverHost = "192.168.1.89"//192.168.1.6  azure 102.37.213.13
-val serverSshKey = file("keys/testauthkey")
+val serverSshKey = file("keys/id_rsa")
 val deleteLog = true
 val lockFileName = ".serverLock"
 

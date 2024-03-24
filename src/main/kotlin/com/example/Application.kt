@@ -45,4 +45,5 @@ fun Application.module() {
 //        config = config
     )
     configureStatusPages()
+//    configureSwagger() // Configure the Swagger plugin
 }
