@@ -40,7 +40,7 @@ fun Route.ordersAdminRoute() {
         get(ORDER_RESPONSE) {
             logger.debug { "get /$ORDER_RESPONSE" }
 
-            logger.debug { "GET ALL pageable /$ORDER_RESPONSE_PAGEABLE" }
+            logger.debug { "GET ALL pageable /$ORDER_RESPONSE" }
 
             val userId = extractAdminId()
             val isAdmin = userDataSource.isAdmin(userId)
